@@ -14,6 +14,9 @@ export default function MenuMobile() {
   const links = [
     { href: `/${locale}`, label: t('inicio') },
     { href: `/${locale}/historias`, label: t('historias') },
+    { href: `/${locale}/painel`, label: t('painel') },
+    { href: `/${locale}/favoritos`, label: t('favoritos') },
+    { href: `/${locale}/configuracoes`, label: t('configuracoes') },
   ]
 
   return (

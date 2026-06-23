@@ -24,6 +24,7 @@ export default function EntrarPage() {
       setErro(t('erroLogin'))
     } else {
       router.push(`/${locale}/painel`)
+      router.refresh()
     }
   }
 

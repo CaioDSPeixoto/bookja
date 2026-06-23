@@ -53,14 +53,21 @@ export async function excluirProjeto(id: string, locale: string) {
 export async function listarProjetos() {
   const { supabase, user } = await obterUsuarioOuErro()
 
+  console.log('[DEBUG] listarProjetos - user.id:', user.id)
+
   const { data, error } = await supabase
     .from('projeto')
     .select('*, documento(count)')
     .eq('dono_id', user.id)
-    .order('created_at', { ascending: false })
+    .order('criado_em', { ascending: false })
 
-  if (error) throw new Error(error.message)
-  return data
+  console.log('[DEBUG] listarProjetos - data:', data?.length, 'error:', error)
+
+  if (error) {
+    console.error('Erro listarProjetos:', error)
+    return []
+  }
+  return data ?? []
 }
 
 export async function obterProjeto(id: string) {

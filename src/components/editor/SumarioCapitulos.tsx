@@ -1,0 +1,116 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+import { Plus, ChevronUp, ChevronDown, Trash2 } from 'lucide-react'
+import { reordenarDocumentos, excluirDocumento } from '@/lib/documentos/actions'
+import { useState } from 'react'
+
+type Capitulo = {
+  id: string
+  titulo: string
+  ordem: number
+}
+
+interface Props {
+  capitulos: Capitulo[]
+  capituloAtivoId: string | null
+  onSelecionar: (id: string) => void
+  onNovo: () => void
+  projetoId: string
+  onReordenar: () => void
+}
+
+export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecionar, onNovo, projetoId, onReordenar }: Props) {
+  const t = useTranslations('editor')
+  const [hoverId, setHoverId] = useState<string | null>(null)
+
+  async function mover(index: number, direcao: -1 | 1) {
+    const novoIndex = index + direcao
+    if (novoIndex < 0 || novoIndex >= capitulos.length) return
+    const novaOrdem = capitulos.map((c, i) => {
+      if (i === index) return { id: c.id, ordem: capitulos[novoIndex].ordem }
+      if (i === novoIndex) return { id: c.id, ordem: capitulos[index].ordem }
+      return { id: c.id, ordem: c.ordem }
+    })
+    await reordenarDocumentos(projetoId, novaOrdem)
+    onReordenar()
+  }
+
+  async function handleExcluir(id: string) {
+    await excluirDocumento(id)
+    onReordenar()
+  }
+
+  return (
+    <aside className="flex w-56 flex-col border-r border-gray-100 bg-white">
+      <div className="border-b border-gray-100 px-4 py-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          {t('sumario')}
+        </h2>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto p-2">
+        {capitulos.map((cap, index) => {
+          const ativo = cap.id === capituloAtivoId
+          return (
+            <div
+              key={cap.id}
+              className="relative"
+              onMouseEnter={() => setHoverId(cap.id)}
+              onMouseLeave={() => setHoverId(null)}
+            >
+              <button
+                onClick={() => onSelecionar(cap.id)}
+                className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-200 ${
+                  ativo
+                    ? 'bg-indigo-600 font-medium text-white shadow-md'
+                    : 'text-gray-700 hover:bg-indigo-50'
+                }`}
+              >
+                <span className="block truncate">
+                  {cap.titulo || t('capitulo', { numero: index + 1 })}
+                </span>
+              </button>
+
+              {hoverId === cap.id && !ativo && (
+                <div className="absolute right-1 top-1/2 flex -translate-y-1/2 gap-0.5">
+                  <button
+                    onClick={() => mover(index, -1)}
+                    className="rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    disabled={index === 0}
+                  >
+                    <ChevronUp size={14} />
+                  </button>
+                  <button
+                    onClick={() => mover(index, 1)}
+                    className="rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    disabled={index === capitulos.length - 1}
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleExcluir(cap.id)}
+                    className="rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                    title={t('excluirCapitulo')}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </nav>
+
+      <div className="border-t border-gray-100 p-3">
+        <button
+          onClick={onNovo}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 py-2.5 text-sm text-gray-500 transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
+        >
+          <Plus size={16} />
+          {t('novoCapitulo')}
+        </button>
+      </div>
+    </aside>
+  )
+}

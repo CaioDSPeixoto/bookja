@@ -36,7 +36,7 @@ export async function buscarPerfilPublico(nomeUsuario: string) {
     .select('id, titulo, sinopse, status')
     .eq('dono_id', perfil.id)
     .eq('status', 'publicado')
-    .order('created_at', { ascending: false })
+    .order('criado_em', { ascending: false })
 
   const { data: leituras } = await supabase
     .from('leitura_atual')

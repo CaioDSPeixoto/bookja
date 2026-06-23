@@ -25,15 +25,28 @@ export default function CadastroPage() {
       return
     }
     const supabase = criarClienteBrowser()
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
       options: { data: { nome_usuario: nomeUsuario } },
     })
     if (error) {
+      console.error('Erro signUp:', error.message, error)
       setErro(t('erroCadastro'))
-    } else {
+    } else if (data.session) {
+      // Login automático (confirmação de email desabilitada)
       router.push(`/${locale}/painel`)
+      router.refresh()
+    } else {
+      // Confirmação de email necessária - tenta logar direto
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password: senha })
+      if (loginError) {
+        // Email precisa confirmação - mostra mensagem
+        setErro('Conta criada! Verifique seu e-mail para confirmar o cadastro.')
+      } else {
+        router.push(`/${locale}/painel`)
+        router.refresh()
+      }
     }
   }
 

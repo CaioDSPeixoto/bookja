@@ -33,6 +33,11 @@ export default async function Cabecalho() {
           <Link href={`/${locale}/historias`} className="text-sm font-medium hover:text-indigo-600">
             {t('historias')}
           </Link>
+          {user && (
+            <Link href={`/${locale}/painel`} className="text-sm font-medium hover:text-indigo-600">
+              {t('painel')}
+            </Link>
+          )}
         </nav>
 
         {/* Direita */}
@@ -44,10 +49,10 @@ export default async function Cabecalho() {
               <Link href={`/${locale}/notificacoes`} className="p-2 hover:bg-gray-100 rounded-md" aria-label={t('notificacoes')}>
                 <Bell className="h-5 w-5" aria-hidden="true" />
               </Link>
-              <span className="flex items-center gap-1 text-sm">
+              <Link href={`/${locale}/configuracoes`} className="flex items-center gap-1 text-sm hover:text-indigo-600 transition-colors">
                 <User className="h-4 w-4" aria-hidden="true" />
                 {user.email?.split('@')[0]}
-              </span>
+              </Link>
               <form action={sairComLocale}>
                 <button className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                   <LogOut className="h-4 w-4" aria-hidden="true" />
