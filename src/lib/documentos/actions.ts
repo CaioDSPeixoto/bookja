@@ -19,8 +19,8 @@ async function verificarAcesso(supabase: Awaited<ReturnType<typeof criarClienteS
   if (projeto.dono_id === user.id) return user.id
 
   const { data: colaborador } = await supabase
-    .from('colaborador')
-    .select('id')
+    .from('projeto_colaborador')
+    .select('usuario_id')
     .eq('projeto_id', projetoId)
     .eq('usuario_id', user.id)
     .single()

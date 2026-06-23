@@ -66,7 +66,7 @@ export default function ColaboradoresPage({ params }: { params: Promise<{ id: st
             value={nomeUsuario}
             onChange={(e) => setNomeUsuario(e.target.value)}
             required
-            className="mt-1 rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
         </div>
         <div>
@@ -75,13 +75,13 @@ export default function ColaboradoresPage({ params }: { params: Promise<{ id: st
             id="papel-colab"
             value={papel}
             onChange={(e) => setPapel(e.target.value)}
-            className="mt-1 rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           >
             <option value="coautor">{t('coautor')}</option>
             <option value="revisor">{t('revisor')}</option>
           </select>
         </div>
-        <button type="submit" className="inline-flex items-center gap-1 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+        <button type="submit" className="inline-flex items-center gap-1 rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">
           <UserPlus size={16} />
           {t('convidar')}
         </button>

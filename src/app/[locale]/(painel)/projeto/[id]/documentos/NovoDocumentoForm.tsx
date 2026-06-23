@@ -27,7 +27,7 @@ export default function NovoDocumentoForm({ projetoId, locale }: { projetoId: st
     return (
       <button
         onClick={() => setAberto(true)}
-        className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+        className="flex items-center gap-2 rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
       >
         <Plus size={16} />
         {t('novoDocumento')}
@@ -56,7 +56,7 @@ export default function NovoDocumentoForm({ projetoId, locale }: { projetoId: st
         <option value="nota">{t('nota')}</option>
         <option value="outro">{t('outro')}</option>
       </select>
-      <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
+      <button type="submit" className="rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700">
         {t('novoDocumento')}
       </button>
       <button type="button" onClick={() => setAberto(false)} className="rounded px-3 py-2 text-sm text-gray-600 hover:bg-gray-100">

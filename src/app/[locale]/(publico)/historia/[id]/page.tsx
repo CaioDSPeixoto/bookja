@@ -43,7 +43,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
           <h1 className="text-3xl font-bold">{historia.titulo}</h1>
           <p className="mt-2 text-gray-600">
             {t('por')}{' '}
-            <Link href={`/${locale}/perfil/${perfil.nome_usuario}`} className="font-medium text-blue-600 hover:underline">
+            <Link href={`/${locale}/autor/${perfil.nome_usuario}`} className="font-medium text-blue-600 hover:underline">
               {perfil.nome_exibicao || perfil.nome_usuario}
             </Link>
           </p>
@@ -54,7 +54,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
               {colaboradores.map((c, i) => (
                 <span key={i} className="text-sm text-gray-600">
                   {i > 0 && ', '}
-                  <Link href={`/${locale}/perfil/${c.perfil.nome_usuario}`} className="hover:text-blue-600">
+                  <Link href={`/${locale}/autor/${c.perfil.nome_usuario}`} className="hover:text-blue-600">
                     {c.perfil.nome_exibicao || c.perfil.nome_usuario}
                   </Link>
                 </span>
