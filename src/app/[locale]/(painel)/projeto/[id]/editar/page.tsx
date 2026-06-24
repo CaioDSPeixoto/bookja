@@ -5,20 +5,15 @@ import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Trash2, FileText, PenLine, Eye, Users, Check, Tag, Upload } from 'lucide-react'
+import { Trash2, FileText, PenLine, Eye, Upload, Check, Tag, Users, Plus, Save } from 'lucide-react'
 import { obterProjeto, atualizarProjeto, excluirProjeto } from '@/lib/projetos/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 
 const statusOpcoes = ['rascunho', 'revisao', 'publicado'] as const
 const statusCores: Record<string, string> = {
-  rascunho: 'border-gray-300 bg-gray-50 text-gray-700',
-  revisao: 'border-yellow-400 bg-yellow-50 text-yellow-700',
-  publicado: 'border-green-400 bg-green-50 text-green-700',
-}
-const statusCoresAtivo: Record<string, string> = {
-  rascunho: 'border-gray-500 bg-gray-100 text-gray-900 ring-2 ring-gray-300',
-  revisao: 'border-yellow-500 bg-yellow-100 text-yellow-900 ring-2 ring-yellow-300',
-  publicado: 'border-green-500 bg-green-100 text-green-900 ring-2 ring-green-300',
+  rascunho: 'bg-gray-100 text-gray-700',
+  revisao: 'bg-yellow-100 text-yellow-700',
+  publicado: 'bg-green-100 text-green-700',
 }
 
 export default function EditarProjetoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +21,7 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
   const tGeral = useTranslations('geral')
   const locale = useLocale()
   const router = useRouter()
-  const [projeto, setProjeto] = useState<{ titulo: string; sinopse?: string; status: string; documento?: { id: string; titulo?: string }[] } | null>(null)
+  const [projeto, setProjeto] = useState<{ titulo: string; sinopse?: string; status: string; documento?: { id: string; titulo?: string; tipo?: string }[] } | null>(null)
   const [titulo, setTitulo] = useState('')
   const [sinopse, setSinopse] = useState('')
   const [status, setStatus] = useState('rascunho')
@@ -46,7 +41,6 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
         setSinopse(data.sinopse || '')
         setStatus(data.status)
       })
-      // Carregar tags
       const supabase = criarClienteBrowser()
       supabase.from('tag').select('*').order('categoria').then(({ data }) => {
         setTodasTags(data || [])
@@ -68,8 +62,7 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
     }
   }
 
-  async function handleSalvar(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSalvar() {
     setSalvando(true)
     await atualizarProjeto(id, { titulo, sinopse: sinopse || null, status })
     setSalvando(false)
@@ -79,7 +72,12 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
 
   async function handleExcluir() {
     await excluirProjeto(id, locale)
-    router.push(`/${locale}/painel`)
+    router.push(`/${locale}/biblioteca`)
+  }
+
+  function ciclarStatus() {
+    const idx = statusOpcoes.indexOf(status as typeof statusOpcoes[number])
+    setStatus(statusOpcoes[(idx + 1) % statusOpcoes.length])
   }
 
   if (!projeto) {
@@ -91,74 +89,75 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="mb-8 text-3xl font-bold text-gray-900">{tGeral('editar')}</h1>
-
-      <form onSubmit={handleSalvar} className="space-y-6">
-        {/* Informações */}
-        <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Informações</h2>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="titulo-editar-projeto" className="block text-sm font-medium text-gray-700">{t('titulo')}</label>
-              <input
-                id="titulo-editar-projeto"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                required
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-base focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-            </div>
-            <div>
-              <label htmlFor="sinopse-editar-projeto" className="block text-sm font-medium text-gray-700">{t('sinopse')}</label>
-              <textarea
-                id="sinopse-editar-projeto"
-                value={sinopse}
-                onChange={(e) => setSinopse(e.target.value)}
-                rows={4}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-base focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-            </div>
+    <div className="mx-auto max-w-4xl px-4 py-4">
+      {/* Toolbar fixa */}
+      <div className="sticky top-0 z-10 -mx-4 mb-6 flex items-center gap-2 border-b bg-white/95 px-4 py-3 backdrop-blur">
+        <input
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          className="mr-auto min-w-0 flex-1 truncate border-none bg-transparent text-lg font-bold text-gray-900 focus:outline-none focus:ring-0"
+          required
+        />
+        <button onClick={ciclarStatus} type="button" className={`rounded-full px-3 py-1 text-xs font-medium ${statusCores[status]}`}>
+          {t(status)}
+        </button>
+        <button onClick={handleSalvar} disabled={salvando} className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+          {salvoFeedback ? <><Check size={14} /> Salvo</> : <><Save size={14} /> {tGeral('salvar')}</>}
+        </button>
+        <Link href={`/${locale}/projeto/${id}/escrita`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+          <PenLine size={14} /> Editor
+        </Link>
+        <Link href={`/${locale}/projeto/${id}/importar`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+          <Upload size={14} />
+        </Link>
+        <Link href={`/${locale}/projeto/${id}/previa`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+          <Eye size={14} />
+        </Link>
+        {!confirmarExcluir ? (
+          <button onClick={() => setConfirmarExcluir(true)} type="button" className="rounded-md p-1.5 text-red-500 hover:bg-red-50">
+            <Trash2 size={14} />
+          </button>
+        ) : (
+          <div className="flex items-center gap-1">
+            <button onClick={handleExcluir} type="button" className="rounded-md bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Excluir</button>
+            <button onClick={() => setConfirmarExcluir(false)} type="button" className="rounded-md border px-2 py-1 text-xs text-gray-600 hover:bg-gray-50">Não</button>
           </div>
-        </section>
+        )}
+      </div>
 
-        {/* Status */}
-        <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">{t('status')}</h2>
-          <div className="flex gap-3">
-            {statusOpcoes.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatus(s)}
-                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${status === s ? statusCoresAtivo[s] : statusCores[s]} hover:opacity-80`}
-              >
-                {t(s)}
-              </button>
-            ))}
-          </div>
+      <div className="space-y-6">
+        {/* Sinopse */}
+        <section className="rounded-lg border p-4">
+          <label className="mb-1 block text-xs font-medium text-gray-500">{t('sinopse')}</label>
+          <textarea
+            value={sinopse}
+            onChange={(e) => setSinopse(e.target.value)}
+            rows={3}
+            className="w-full resize-none border-none bg-transparent text-sm text-gray-800 focus:outline-none focus:ring-0"
+            placeholder="Sinopse do projeto..."
+          />
         </section>
 
         {/* Tags */}
-        <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
-            <Tag size={14} /> {t('tags')}
-          </h2>
+        <section className="rounded-lg border p-4">
+          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+            <Tag size={12} /> {t('tags')}
+          </h3>
           {todasTags.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {Array.from(new Set(todasTags.map(t => t.categoria))).map(cat => (
                 <div key={cat}>
-                  <span className="mb-1 block text-xs font-medium text-gray-400 capitalize">{cat.replace('_', ' ')}</span>
-                  <div className="flex flex-wrap gap-2">
+                  <span className="text-[10px] font-medium uppercase text-gray-400">{cat.replace('_', ' ')}</span>
+                  <div className="mt-0.5 flex flex-wrap gap-1">
                     {todasTags.filter(t => t.categoria === cat).map(tag => (
                       <button
                         key={tag.id}
                         type="button"
                         onClick={() => toggleTag(tag.id)}
-                        className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${
                           tagsSelecionadas.includes(tag.id)
-                            ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         }`}
                       >
                         {tag.nome}
@@ -169,123 +168,48 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">Carregando tags...</p>
+            <p className="text-xs text-gray-400">Carregando...</p>
           )}
         </section>
 
-        {/* Ações */}
-        <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Ações</h2>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href={`/${locale}/projeto/${id}/escrita`}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-indigo-700 hover:shadow-md"
-            >
-              <PenLine size={16} />
-              Abrir Editor
-            </Link>
-            <Link
-              href={`/${locale}/projeto/${id}/previa`}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50"
-            >
-              <Eye size={16} />
-              Prévia
-            </Link>
-            <Link
-              href={`/${locale}/projeto/${id}/colaboradores`}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50"
-            >
-              <Users size={16} />
-              Colaboradores
-            </Link>
-            <Link
-              href={`/${locale}/projeto/${id}/importar`}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50"
-            >
-              <Upload size={16} />
-              Importar
-            </Link>
-          </div>
-        </section>
-
-        {/* Salvar + Excluir */}
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            disabled={salvando}
-            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white transition-all hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {salvoFeedback ? (
-              <><Check size={16} /> Salvo</>
-            ) : salvando ? (
-              <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> {tGeral('carregando')}</>
-            ) : (
-              tGeral('salvar')
-            )}
-          </button>
-
-          {!confirmarExcluir ? (
-            <button
-              type="button"
-              onClick={() => setConfirmarExcluir(true)}
-              className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-50"
-            >
-              <Trash2 size={16} />
-              {tGeral('excluir')}
-            </button>
+        {/* Documentos */}
+        <section className="rounded-lg border p-4">
+          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+            <FileText size={12} /> {t('documentos')}
+          </h3>
+          {projeto.documento && projeto.documento.length > 0 ? (
+            <ul className="divide-y">
+              {projeto.documento.map((doc) => (
+                <li key={doc.id}>
+                  <Link
+                    href={`/${locale}/projeto/${id}/escrita?doc=${doc.id}`}
+                    className="flex items-center gap-2 py-2 text-sm text-gray-700 hover:text-indigo-600"
+                  >
+                    <FileText size={14} className="text-gray-400" />
+                    <span className="flex-1">{doc.titulo || 'Sem título'}</span>
+                    {doc.tipo && <span className="text-[10px] text-gray-400">{doc.tipo}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-red-600">Confirmar exclusão?</span>
-              <button
-                type="button"
-                onClick={handleExcluir}
-                className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
-              >
-                Sim, excluir
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmarExcluir(false)}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-            </div>
+            <p className="text-xs text-gray-400">{tGeral('semResultados')}</p>
           )}
-        </div>
-      </form>
+        </section>
 
-      {/* Documentos */}
-      <section className="mt-10">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">{t('documentos')}</h2>
+        {/* Colaboradores */}
+        <section className="rounded-lg border p-4">
+          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+            <Users size={12} /> Colaboradores
+          </h3>
           <Link
-            href={`/${locale}/projeto/${id}/escrita`}
-            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-700 hover:shadow-md"
+            href={`/${locale}/projeto/${id}/colaboradores`}
+            className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700"
           >
-            <FileText size={16} />
-            {t('documentos')}
+            <Plus size={12} /> Gerenciar
           </Link>
-        </div>
-
-        {projeto.documento && projeto.documento.length > 0 ? (
-          <ul className="space-y-2">
-            {projeto.documento.map((doc: { id: string; titulo?: string }) => (
-              <li key={doc.id}>
-                <Link
-                  href={`/${locale}/projeto/${id}/doc/${doc.id}`}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-indigo-200 hover:shadow-sm"
-                >
-                  <FileText size={16} className="text-indigo-400" />
-                  <span className="font-medium text-gray-700">{doc.titulo || 'Sem título'}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-gray-400">{tGeral('semResultados')}</p>
-        )}
-      </section>
+        </section>
+      </div>
     </div>
   )
 }

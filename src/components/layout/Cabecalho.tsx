@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { getTranslations, getLocale } from 'next-intl/server'
-import { BookOpen, Bell, LogOut, User } from 'lucide-react'
+import { BookOpen, Bell } from 'lucide-react'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { sair } from '@/lib/auth/actions'
 import SeletorIdioma from './SeletorIdioma'
 import MenuMobile from './MenuMobile'
+import DropdownPerfil from './DropdownPerfil'
 
 export default async function Cabecalho() {
   const t = await getTranslations('navegacao')
@@ -13,6 +14,16 @@ export default async function Cabecalho() {
 
   const supabase = await criarClienteServidor()
   const { data: { user } } = await supabase.auth.getUser()
+
+  let nomeUsuario = ''
+  if (user) {
+    const { data: perfil } = await supabase
+      .from('perfil')
+      .select('nome_usuario')
+      .eq('id', user.id)
+      .single()
+    nomeUsuario = perfil?.nome_usuario || user.email?.split('@')[0] || ''
+  }
 
   const sairComLocale = sair.bind(null, locale)
 
@@ -34,8 +45,8 @@ export default async function Cabecalho() {
             {t('historias')}
           </Link>
           {user && (
-            <Link href={`/${locale}/painel`} className="text-sm font-medium hover:text-indigo-600">
-              {t('painel')}
+            <Link href={`/${locale}/biblioteca`} className="text-sm font-medium hover:text-indigo-600">
+              {t('biblioteca')}
             </Link>
           )}
         </nav>
@@ -45,20 +56,16 @@ export default async function Cabecalho() {
           <SeletorIdioma />
 
           {user ? (
-            <div className="hidden md:flex items-center gap-3">
-              <Link href={`/${locale}/notificacoes`} className="p-2 hover:bg-gray-100 rounded-md" aria-label={t('notificacoes')}>
+            <div className="hidden md:flex items-center gap-2">
+              <Link href={`/${locale}/notificacoes`} className="p-2 hover:bg-gray-100 rounded-full" aria-label={t('notificacoes')}>
                 <Bell className="h-5 w-5" aria-hidden="true" />
               </Link>
-              <Link href={`/${locale}/configuracoes`} className="flex items-center gap-1 text-sm hover:text-indigo-600 transition-colors">
-                <User className="h-4 w-4" aria-hidden="true" />
-                {user.email?.split('@')[0]}
-              </Link>
-              <form action={sairComLocale}>
-                <button className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                  <LogOut className="h-4 w-4" aria-hidden="true" />
-                  {tAuth('sair')}
-                </button>
-              </form>
+              <DropdownPerfil
+                nomeUsuario={nomeUsuario}
+                email={user.email || ''}
+                locale={locale}
+                sairAction={sairComLocale}
+              />
             </div>
           ) : (
             <div className="hidden md:flex items-center gap-2">

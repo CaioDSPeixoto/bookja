@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Eye } from 'lucide-react'
 import { listarDocumentos, criarDocumento } from '@/lib/documentos/actions'
@@ -23,6 +24,7 @@ type Documento = {
 export default function EscritaPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('editor')
   const locale = useLocale()
+  const searchParams = useSearchParams()
   const [projetoId, setProjetoId] = useState('')
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [capituloAtivoId, setCapituloAtivoId] = useState<string | null>(null)
@@ -44,7 +46,9 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
       const docs = await recarregar(id)
       const caps = docs.filter((d: Documento) => d.tipo === 'capitulo')
       if (caps.length > 0 && !capituloAtivoId) {
-        setCapituloAtivoId(caps[0].id)
+        const docParam = searchParams.get('doc')
+        const found = docParam && caps.find((c: Documento) => c.id === docParam)
+        setCapituloAtivoId(found ? found.id : caps[0].id)
       }
       setCarregando(false)
     })

@@ -23,7 +23,7 @@ export default function EntrarPage() {
     if (error) {
       setErro(t('erroLogin'))
     } else {
-      router.push(`/${locale}/painel`)
+      router.push(`/${locale}/biblioteca`)
       router.refresh()
     }
   }

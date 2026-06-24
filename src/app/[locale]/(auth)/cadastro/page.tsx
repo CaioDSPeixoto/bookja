@@ -35,7 +35,7 @@ export default function CadastroPage() {
       setErro(t('erroCadastro'))
     } else if (data.session) {
       // Login automático (confirmação de email desabilitada)
-      router.push(`/${locale}/painel`)
+      router.push(`/${locale}/biblioteca`)
       router.refresh()
     } else {
       // Confirmação de email necessária - tenta logar direto
@@ -44,7 +44,7 @@ export default function CadastroPage() {
         // Email precisa confirmação - mostra mensagem
         setErro('Conta criada! Verifique seu e-mail para confirmar o cadastro.')
       } else {
-        router.push(`/${locale}/painel`)
+        router.push(`/${locale}/biblioteca`)
         router.refresh()
       }
     }

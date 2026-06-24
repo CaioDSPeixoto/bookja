@@ -47,7 +47,7 @@ export async function excluirProjeto(id: string, locale: string) {
     .eq('dono_id', user.id)
 
   if (error) throw new Error(error.message)
-  redirect(`/${locale}/painel`)
+  redirect(`/${locale}/biblioteca`)
 }
 
 export async function listarProjetos() {

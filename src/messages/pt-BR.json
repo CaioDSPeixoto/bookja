@@ -29,11 +29,13 @@
   "navegacao": {
     "inicio": "Início",
     "historias": "Histórias",
-    "painel": "Painel",
+    "biblioteca": "Minha Biblioteca",
     "favoritos": "Favoritos",
     "notificacoes": "Notificações",
     "configuracoes": "Configurações",
-    "novoProjeto": "Novo projeto"
+    "novoProjeto": "Novo projeto",
+    "meuPerfil": "Meu perfil",
+    "sair": "Sair"
   },
   "inicio": {
     "titulo": "Descubra histórias incríveis",
@@ -52,7 +54,8 @@
     "revisao": "Em revisão",
     "publicado": "Publicado",
     "criarProjeto": "Criar projeto",
-    "meusProjetos": "Meus projetos",
+    "todos": "Todos",
+    "meusProjetos": "Minha Biblioteca",
     "semProjetos": "Você ainda não tem projetos. Crie seu primeiro projeto!",
     "colaboradores": "Colaboradores",
     "tags": "Tags",

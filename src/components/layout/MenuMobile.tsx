@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
-import { useLocale } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
 
@@ -14,8 +13,7 @@ export default function MenuMobile() {
   const links = [
     { href: `/${locale}`, label: t('inicio') },
     { href: `/${locale}/historias`, label: t('historias') },
-    { href: `/${locale}/painel`, label: t('painel') },
-    { href: `/${locale}/favoritos`, label: t('favoritos') },
+    { href: `/${locale}/biblioteca`, label: t('biblioteca') },
     { href: `/${locale}/configuracoes`, label: t('configuracoes') },
   ]
 
