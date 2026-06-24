@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { getTranslations, getLocale } from 'next-intl/server'
-import { BookOpen, Bell } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { sair } from '@/lib/auth/actions'
 import SeletorIdioma from './SeletorIdioma'
 import MenuMobile from './MenuMobile'
 import DropdownPerfil from './DropdownPerfil'
+import NotificacoesPopup from './NotificacoesPopup'
 
 export default async function Cabecalho() {
   const t = await getTranslations('navegacao')
@@ -16,13 +17,15 @@ export default async function Cabecalho() {
   const { data: { user } } = await supabase.auth.getUser()
 
   let nomeUsuario = ''
+  let nomeExibicao = ''
   if (user) {
     const { data: perfil } = await supabase
       .from('perfil')
-      .select('nome_usuario')
+      .select('nome_usuario, nome_exibicao')
       .eq('id', user.id)
       .single()
     nomeUsuario = perfil?.nome_usuario || user.email?.split('@')[0] || ''
+    nomeExibicao = perfil?.nome_exibicao || ''
   }
 
   const sairComLocale = sair.bind(null, locale)
@@ -57,11 +60,10 @@ export default async function Cabecalho() {
 
           {user ? (
             <div className="hidden md:flex items-center gap-2">
-              <Link href={`/${locale}/notificacoes`} className="p-2 hover:bg-gray-100 rounded-full" aria-label={t('notificacoes')}>
-                <Bell className="h-5 w-5" aria-hidden="true" />
-              </Link>
+              <NotificacoesPopup locale={locale} />
               <DropdownPerfil
                 nomeUsuario={nomeUsuario}
+                nomeExibicao={nomeExibicao}
                 email={user.email || ''}
                 locale={locale}
                 sairAction={sairComLocale}

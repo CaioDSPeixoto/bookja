@@ -21,6 +21,7 @@ export default function NovoProjetoPage() {
   // Tags
   const [tags, setTags] = useState<TagItem[]>([])
   const [tagsSelecionadas, setTagsSelecionadas] = useState<string[]>([])
+  const [erroClassificacao, setErroClassificacao] = useState(false)
 
   // Colaboradores
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
@@ -49,6 +50,12 @@ export default function NovoProjetoPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    const temClassificacao = tagsSelecionadas.some(id => tags.find(t => t.id === id && t.categoria === 'publico_alvo'))
+    if (!temClassificacao) {
+      setErroClassificacao(true)
+      return
+    }
+    setErroClassificacao(false)
     setEnviando(true)
     const formData = new FormData(e.currentTarget)
     try {
@@ -65,7 +72,7 @@ export default function NovoProjetoPage() {
         await convidarColaborador(id, c.nomeUsuario, c.papel)
       }
 
-      router.push(`/${locale}/projeto/${id}/escrita`)
+      router.push(`/${locale}/projeto/${id}/editar`)
     } catch {
       setEnviando(false)
     }
@@ -113,8 +120,13 @@ export default function NovoProjetoPage() {
               <Tag size={14} /> Tags
             </h2>
             {Object.entries(tagsPorCategoria).map(([categoria, items]) => (
-              <div key={categoria} className="mb-2">
-                <span className="text-xs font-medium uppercase text-gray-400">{categoria}</span>
+              <div key={categoria} className={`mb-2 ${categoria === 'publico_alvo' ? `rounded-lg p-2 ${erroClassificacao ? 'border-2 border-red-400' : 'border border-gray-200'}` : ''}`}>
+                <span className="text-xs font-medium uppercase text-gray-400">
+                  {categoria === 'publico_alvo' ? 'Classificação etária (obrigatório)' : categoria}
+                </span>
+                {categoria === 'publico_alvo' && erroClassificacao && (
+                  <p className="text-xs text-red-500">Selecione uma classificação etária</p>
+                )}
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {items.map(tag => (
                     <button

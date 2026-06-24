@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { useTranslations, useLocale } from 'next-intl'
 import { MessageCircle, Trash2 } from 'lucide-react'
 import { criarComentario, excluirComentario, listarComentarios, responderComentario } from '@/lib/comentarios/actions'
 import { Estrelas } from './Estrelas'
@@ -25,6 +26,7 @@ interface ListaComentariosProps {
 
 export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaComentariosProps) {
   const t = useTranslations('comentarios')
+  const locale = useLocale()
   const [comentarios, setComentarios] = useState<Comentario[]>([])
   const [conteudo, setConteudo] = useState('')
   const [nota, setNota] = useState(0)
@@ -86,7 +88,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">{c.perfil.nome_exibicao || c.perfil.nome_usuario}</span>
+            <Link href={`/${locale}/perfil/${c.perfil.nome_usuario}`} className="text-sm font-medium hover:text-blue-600 hover:underline">{c.perfil.nome_exibicao || c.perfil.nome_usuario}</Link>
             <span className="text-xs text-gray-400">{dataRelativa(c.criado_em)}</span>
             {c.nota && <Estrelas valor={c.nota} tamanho={12} />}
           </div>

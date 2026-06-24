@@ -73,7 +73,7 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
   }
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
+    <div className="flex h-[calc(100vh-4rem)] flex-col bg-gray-50">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">

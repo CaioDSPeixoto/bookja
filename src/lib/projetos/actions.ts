@@ -25,7 +25,7 @@ export async function criarProjeto(formData: FormData) {
   return data.id
 }
 
-export async function atualizarProjeto(id: string, dados: { titulo?: string; sinopse?: string | null; status?: string }) {
+export async function atualizarProjeto(id: string, dados: { titulo?: string; sinopse?: string | null; status?: string; capa_url?: string | null }) {
   const { supabase, user } = await obterUsuarioOuErro()
 
   const { error } = await supabase

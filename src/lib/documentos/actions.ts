@@ -45,7 +45,7 @@ export async function criarDocumento(projetoId: string, titulo: string, tipo: Ti
 
   const { data, error } = await supabase
     .from('documento')
-    .insert({ projeto_id: projetoId, titulo, tipo, ordem })
+    .insert({ projeto_id: projetoId, titulo, tipo, ordem, publico: true })
     .select()
     .single()
 

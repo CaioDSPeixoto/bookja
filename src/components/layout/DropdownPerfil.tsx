@@ -6,12 +6,13 @@ import { User, Settings, LogOut, ChevronDown } from 'lucide-react'
 
 interface Props {
   nomeUsuario: string
+  nomeExibicao: string
   email: string
   locale: string
   sairAction: () => Promise<void>
 }
 
-export default function DropdownPerfil({ nomeUsuario, email, locale, sairAction }: Props) {
+export default function DropdownPerfil({ nomeUsuario, nomeExibicao, email, locale, sairAction }: Props) {
   const [aberto, setAberto] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -23,7 +24,7 @@ export default function DropdownPerfil({ nomeUsuario, email, locale, sairAction 
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const inicial = (nomeUsuario || email)[0].toUpperCase()
+  const inicial = (nomeExibicao || nomeUsuario || email)[0].toUpperCase()
 
   return (
     <div ref={ref} className="relative">
@@ -42,7 +43,7 @@ export default function DropdownPerfil({ nomeUsuario, email, locale, sairAction 
       {aberto && (
         <div className="absolute right-0 mt-2 w-56 rounded-md border bg-white py-1 shadow-lg">
           <div className="border-b px-4 py-2">
-            <p className="text-sm font-medium">{nomeUsuario}</p>
+            <p className="text-sm font-medium">{nomeExibicao || nomeUsuario}</p>
             <p className="text-xs text-gray-500">{email}</p>
           </div>
           <Link

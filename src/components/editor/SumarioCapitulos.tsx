@@ -23,22 +23,34 @@ interface Props {
 export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecionar, onNovo, projetoId, onReordenar }: Props) {
   const t = useTranslations('editor')
   const [hoverId, setHoverId] = useState<string | null>(null)
+  const [operando, setOperando] = useState<string | null>(null)
 
   async function mover(index: number, direcao: -1 | 1) {
     const novoIndex = index + direcao
     if (novoIndex < 0 || novoIndex >= capitulos.length) return
-    const novaOrdem = capitulos.map((c, i) => {
-      if (i === index) return { id: c.id, ordem: capitulos[novoIndex].ordem }
-      if (i === novoIndex) return { id: c.id, ordem: capitulos[index].ordem }
-      return { id: c.id, ordem: c.ordem }
-    })
-    await reordenarDocumentos(projetoId, novaOrdem)
-    onReordenar()
+    const id = capitulos[index].id
+    setOperando(id)
+    try {
+      const novaOrdem = capitulos.map((c, i) => {
+        if (i === index) return { id: c.id, ordem: capitulos[novoIndex].ordem }
+        if (i === novoIndex) return { id: c.id, ordem: capitulos[index].ordem }
+        return { id: c.id, ordem: c.ordem }
+      })
+      await reordenarDocumentos(projetoId, novaOrdem)
+      onReordenar()
+    } finally {
+      setOperando(null)
+    }
   }
 
   async function handleExcluir(id: string) {
-    await excluirDocumento(id)
-    onReordenar()
+    setOperando(id)
+    try {
+      await excluirDocumento(id)
+      onReordenar()
+    } finally {
+      setOperando(null)
+    }
   }
 
   return (
@@ -73,18 +85,18 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
               </button>
 
               {hoverId === cap.id && !ativo && (
-                <div className="absolute right-1 top-1/2 flex -translate-y-1/2 gap-0.5">
+                <div className={`absolute right-1 top-1/2 flex -translate-y-1/2 gap-0.5 ${operando === cap.id ? 'opacity-50' : ''}`}>
                   <button
                     onClick={() => mover(index, -1)}
                     className="rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                    disabled={index === 0}
+                    disabled={index === 0 || operando === cap.id}
                   >
                     <ChevronUp size={14} />
                   </button>
                   <button
                     onClick={() => mover(index, 1)}
                     className="rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                    disabled={index === capitulos.length - 1}
+                    disabled={index === capitulos.length - 1 || operando === cap.id}
                   >
                     <ChevronDown size={14} />
                   </button>
@@ -92,8 +104,13 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
                     onClick={() => handleExcluir(cap.id)}
                     className="rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
                     title={t('excluirCapitulo')}
+                    disabled={operando === cap.id}
                   >
-                    <Trash2 size={14} />
+                    {operando === cap.id ? (
+                      <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
                   </button>
                 </div>
               )}

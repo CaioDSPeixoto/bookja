@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { useTranslations, useLocale } from 'next-intl'
 import { MessageSquare, Send, Trash2, Reply, SmilePlus } from 'lucide-react'
 import { listarMural, criarComentarioMural, excluirComentarioMural, reagirMural } from '@/lib/mural/actions'
 
@@ -30,6 +31,7 @@ export default function MuralPerfil({
   usuarioLogadoId: string | null
 }) {
   const t = useTranslations('mural')
+  const locale = useLocale()
   const [comentarios, setComentarios] = useState<Comentario[]>([])
   const [respostas, setRespostas] = useState<Comentario[]>([])
   const [reacoes, setReacoes] = useState<Reacao[]>([])
@@ -150,7 +152,7 @@ export default function MuralPerfil({
                       {(autor?.nome_exibicao || autor?.nome_usuario || '?').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <span className="text-sm font-medium">{autor?.nome_exibicao || autor?.nome_usuario}</span>
+                      <Link href={`/${locale}/perfil/${autor?.nome_usuario}`} className="text-sm font-medium hover:text-blue-600 hover:underline">{autor?.nome_exibicao || autor?.nome_usuario}</Link>
                       <span className="ml-2 text-xs text-gray-400">{tempoRelativo(c.criado_em)}</span>
                     </div>
                   </div>
@@ -216,7 +218,7 @@ export default function MuralPerfil({
                       return (
                         <li key={r.id} className="flex items-start justify-between">
                           <div>
-                            <span className="text-xs font-medium">{autorR?.nome_exibicao || autorR?.nome_usuario}</span>
+                            <Link href={`/${locale}/perfil/${autorR?.nome_usuario}`} className="text-xs font-medium hover:text-blue-600 hover:underline">{autorR?.nome_exibicao || autorR?.nome_usuario}</Link>
                             <span className="ml-1 text-xs text-gray-400">{tempoRelativo(r.criado_em)}</span>
                             <p className="text-sm text-gray-600">{r.conteudo}</p>
                           </div>

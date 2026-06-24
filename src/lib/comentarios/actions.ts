@@ -1,6 +1,7 @@
 'use server'
 
 import { criarClienteServidor } from '@/lib/supabase/server'
+import { criarNotificacao } from '@/lib/notificacoes/actions'
 
 export async function criarComentario(
   projetoId: string,
@@ -29,6 +30,22 @@ export async function criarComentario(
   })
 
   if (error) throw new Error(error.message)
+
+  // Notificar dono do projeto (se não for o próprio autor)
+  const { data: projetoDono } = await supabase
+    .from('projeto')
+    .select('autor_id')
+    .eq('id', projetoId)
+    .single()
+
+  if (projetoDono && projetoDono.autor_id !== user.id) {
+    await criarNotificacao({
+      usuario_id: projetoDono.autor_id,
+      tipo: 'comentario',
+      projeto_id: projetoId,
+      mensagem: `Novo comentário no seu projeto`,
+    })
+  }
 
   if (nota) {
     const { data: stats } = await supabase

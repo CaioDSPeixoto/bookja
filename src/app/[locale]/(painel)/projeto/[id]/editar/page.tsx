@@ -5,8 +5,9 @@ import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Trash2, FileText, PenLine, Eye, Upload, Check, Tag, Users, Plus, Save } from 'lucide-react'
+import { Trash2, FileText, PenLine, Eye, Upload, Check, Tag, Users, Plus, Save, ChevronDown, ChevronRight, ImageIcon, X } from 'lucide-react'
 import { obterProjeto, atualizarProjeto, excluirProjeto } from '@/lib/projetos/actions'
+import { listarColaboradores } from '@/lib/colaboradores/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 
 const statusOpcoes = ['rascunho', 'revisao', 'publicado'] as const
@@ -27,10 +28,16 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
   const [status, setStatus] = useState('rascunho')
   const [salvando, setSalvando] = useState(false)
   const [salvoFeedback, setSalvoFeedback] = useState(false)
-  const [confirmarExcluir, setConfirmarExcluir] = useState(false)
+  const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false)
   const [id, setId] = useState('')
   const [todasTags, setTodasTags] = useState<{ id: number; nome: string; categoria: string }[]>([])
   const [tagsSelecionadas, setTagsSelecionadas] = useState<number[]>([])
+  const [temCoautores, setTemCoautores] = useState(false)
+  const [abertos, setAbertos] = useState({ sinopse: true, tags: true, capitulos: true, colaboradores: false })
+  const [capaUrl, setCapaUrl] = useState<string | null>(null)
+  const [uploadingCapa, setUploadingCapa] = useState(false)
+
+  function toggle(key: keyof typeof abertos) { setAbertos(p => ({ ...p, [key]: !p[key] })) }
 
   useEffect(() => {
     params.then(({ id }) => {
@@ -40,6 +47,10 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
         setTitulo(data.titulo)
         setSinopse(data.sinopse || '')
         setStatus(data.status)
+        setCapaUrl(data.capa_url || null)
+      })
+      listarColaboradores(id).then((cols) => {
+        setTemCoautores(cols.length > 0)
       })
       const supabase = criarClienteBrowser()
       supabase.from('tag').select('*').order('categoria').then(({ data }) => {
@@ -80,6 +91,26 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
     setStatus(statusOpcoes[(idx + 1) % statusOpcoes.length])
   }
 
+  async function handleUploadCapa(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingCapa(true)
+    const ext = file.name.split('.').pop()
+    const path = `${id}/${Date.now()}.${ext}`
+    const supabase = criarClienteBrowser()
+    const { error } = await supabase.storage.from('capas').upload(path, file)
+    if (error) { setUploadingCapa(false); return }
+    const { data: { publicUrl } } = supabase.storage.from('capas').getPublicUrl(path)
+    await atualizarProjeto(id, { capa_url: publicUrl })
+    setCapaUrl(publicUrl)
+    setUploadingCapa(false)
+  }
+
+  async function handleRemoverCapa() {
+    await atualizarProjeto(id, { capa_url: null })
+    setCapaUrl(null)
+  }
+
   if (!projeto) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -113,103 +144,168 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
         <Link href={`/${locale}/projeto/${id}/previa`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
           <Eye size={14} />
         </Link>
-        {!confirmarExcluir ? (
-          <button onClick={() => setConfirmarExcluir(true)} type="button" className="rounded-md p-1.5 text-red-500 hover:bg-red-50">
-            <Trash2 size={14} />
-          </button>
-        ) : (
-          <div className="flex items-center gap-1">
-            <button onClick={handleExcluir} type="button" className="rounded-md bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Excluir</button>
-            <button onClick={() => setConfirmarExcluir(false)} type="button" className="rounded-md border px-2 py-1 text-xs text-gray-600 hover:bg-gray-50">Não</button>
-          </div>
-        )}
+        <button onClick={() => setMostrarModalExcluir(true)} type="button" className="rounded-md p-1.5 text-red-500 hover:bg-red-50">
+          <Trash2 size={14} />
+        </button>
       </div>
 
       <div className="space-y-6">
+        {/* Capa */}
+        <section className="rounded-lg border p-4">
+          <span className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+            <ImageIcon size={12} /> Capa
+          </span>
+          {capaUrl ? (
+            <div className="relative inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={capaUrl} alt="Capa" className="h-[280px] w-[200px] rounded-md object-cover" />
+              <button type="button" onClick={handleRemoverCapa} className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600">
+                <X size={12} />
+              </button>
+            </div>
+          ) : (
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700">
+              <Upload size={14} />
+              {uploadingCapa ? 'Enviando...' : 'Enviar capa'}
+              <input type="file" accept="image/*" onChange={handleUploadCapa} className="hidden" disabled={uploadingCapa} />
+            </label>
+          )}
+        </section>
+
         {/* Sinopse */}
         <section className="rounded-lg border p-4">
-          <label className="mb-1 block text-xs font-medium text-gray-500">{t('sinopse')}</label>
-          <textarea
-            value={sinopse}
-            onChange={(e) => setSinopse(e.target.value)}
-            rows={3}
-            className="w-full resize-none border-none bg-transparent text-sm text-gray-800 focus:outline-none focus:ring-0"
-            placeholder="Sinopse do projeto..."
-          />
+          <button type="button" onClick={() => toggle('sinopse')} className="mb-1 flex w-full items-center gap-1 text-xs font-medium text-gray-500">
+            {abertos.sinopse ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            {t('sinopse')}
+          </button>
+          {abertos.sinopse && (
+            <textarea
+              value={sinopse}
+              onChange={(e) => setSinopse(e.target.value)}
+              rows={3}
+              className="w-full resize-none border-none bg-transparent text-sm text-gray-800 focus:outline-none focus:ring-0"
+              placeholder="Sinopse do projeto..."
+            />
+          )}
         </section>
 
         {/* Tags */}
         <section className="rounded-lg border p-4">
-          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+          <button type="button" onClick={() => toggle('tags')} className="mb-2 flex w-full items-center gap-1.5 text-xs font-medium text-gray-500">
+            {abertos.tags ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
             <Tag size={12} /> {t('tags')}
-          </h3>
-          {todasTags.length > 0 ? (
-            <div className="space-y-2">
-              {Array.from(new Set(todasTags.map(t => t.categoria))).map(cat => (
-                <div key={cat}>
-                  <span className="text-[10px] font-medium uppercase text-gray-400">{cat.replace('_', ' ')}</span>
-                  <div className="mt-0.5 flex flex-wrap gap-1">
-                    {todasTags.filter(t => t.categoria === cat).map(tag => (
-                      <button
-                        key={tag.id}
-                        type="button"
-                        onClick={() => toggleTag(tag.id)}
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                          tagsSelecionadas.includes(tag.id)
-                            ? 'bg-indigo-100 text-indigo-700'
-                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                        }`}
-                      >
-                        {tag.nome}
-                      </button>
-                    ))}
+          </button>
+          {abertos.tags && (
+            todasTags.length > 0 ? (
+              <div className="space-y-2">
+                {Array.from(new Set(todasTags.map(t => t.categoria))).map(cat => (
+                  <div key={cat}>
+                    <span className="text-[10px] font-medium uppercase text-gray-400">{cat.replace('_', ' ')}</span>
+                    <div className="mt-0.5 flex flex-wrap gap-1">
+                      {todasTags.filter(t => t.categoria === cat).map(tag => (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => toggleTag(tag.id)}
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                            tagsSelecionadas.includes(tag.id)
+                              ? 'bg-indigo-100 text-indigo-700'
+                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                          }`}
+                        >
+                          {tag.nome}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-gray-400">Carregando...</p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">Carregando...</p>
+            )
           )}
         </section>
 
-        {/* Documentos */}
+        {/* Capítulos */}
         <section className="rounded-lg border p-4">
-          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-500">
-            <FileText size={12} /> {t('documentos')}
-          </h3>
-          {projeto.documento && projeto.documento.length > 0 ? (
-            <ul className="divide-y">
-              {projeto.documento.map((doc) => (
-                <li key={doc.id}>
-                  <Link
-                    href={`/${locale}/projeto/${id}/escrita?doc=${doc.id}`}
-                    className="flex items-center gap-2 py-2 text-sm text-gray-700 hover:text-indigo-600"
-                  >
-                    <FileText size={14} className="text-gray-400" />
-                    <span className="flex-1">{doc.titulo || 'Sem título'}</span>
-                    {doc.tipo && <span className="text-[10px] text-gray-400">{doc.tipo}</span>}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-xs text-gray-400">{tGeral('semResultados')}</p>
+          <button type="button" onClick={() => toggle('capitulos')} className="mb-2 flex w-full items-center gap-1.5 text-xs font-medium text-gray-500">
+            {abertos.capitulos ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            <FileText size={12} /> Capítulos
+          </button>
+          {abertos.capitulos && (
+            projeto.documento && projeto.documento.length > 0 ? (
+              <ul className="divide-y">
+                {projeto.documento.map((doc) => (
+                  <li key={doc.id}>
+                    <Link
+                      href={`/${locale}/projeto/${id}/escrita?doc=${doc.id}`}
+                      className="flex items-center gap-2 py-2 text-sm text-gray-700 hover:text-indigo-600"
+                    >
+                      <FileText size={14} className="text-gray-400" />
+                      <span className="flex-1">{doc.titulo || 'Sem título'}</span>
+                      {doc.tipo && <span className="text-[10px] text-gray-400">{doc.tipo}</span>}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-gray-400">{tGeral('semResultados')}</p>
+            )
           )}
         </section>
 
         {/* Colaboradores */}
         <section className="rounded-lg border p-4">
-          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+          <button type="button" onClick={() => toggle('colaboradores')} className="mb-2 flex w-full items-center gap-1.5 text-xs font-medium text-gray-500">
+            {abertos.colaboradores ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
             <Users size={12} /> Colaboradores
-          </h3>
-          <Link
-            href={`/${locale}/projeto/${id}/colaboradores`}
-            className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700"
-          >
-            <Plus size={12} /> Gerenciar
-          </Link>
+          </button>
+          {abertos.colaboradores && (
+            <Link
+              href={`/${locale}/projeto/${id}/colaboradores`}
+              className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700"
+            >
+              <Plus size={12} /> Gerenciar
+            </Link>
+          )}
         </section>
       </div>
+
+      {/* Modal de exclusão */}
+      {mostrarModalExcluir && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setMostrarModalExcluir(false)}>
+          <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">Excluir projeto</h2>
+            <p className="mb-4 text-sm text-gray-600">
+              Tem certeza que deseja excluir &quot;{titulo}&quot;? Esta ação não pode ser desfeita.
+            </p>
+            {temCoautores && (
+              <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm text-amber-800">
+                  Este projeto possui co-autores. A exclusão requer confirmação de um co-autor.
+                </p>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setMostrarModalExcluir(false)}
+                className="rounded-md border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleExcluir}
+                disabled={temCoautores}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Confirmar exclusão
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

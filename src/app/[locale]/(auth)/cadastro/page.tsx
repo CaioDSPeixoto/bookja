@@ -13,6 +13,7 @@ export default function CadastroPage() {
   const locale = useLocale()
   const [email, setEmail] = useState('')
   const [nomeUsuario, setNomeUsuario] = useState('')
+  const [dataNascimento, setDataNascimento] = useState('')
   const [senha, setSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
   const [erro, setErro] = useState('')
@@ -28,13 +29,13 @@ export default function CadastroPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: { data: { nome_usuario: nomeUsuario } },
+      options: { data: { nome_usuario: nomeUsuario, data_nascimento: dataNascimento } },
     })
     if (error) {
       console.error('Erro signUp:', error.message, error)
       setErro(t('erroCadastro'))
     } else if (data.session) {
-      // Login automático (confirmação de email desabilitada)
+      await supabase.from('perfil').update({ data_nascimento: dataNascimento }).eq('id', data.user!.id)
       router.push(`/${locale}/biblioteca`)
       router.refresh()
     } else {
@@ -75,6 +76,17 @@ export default function CadastroPage() {
             onChange={(e) => setNomeUsuario(e.target.value)}
             required
             autoComplete="username"
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label htmlFor="data-nascimento-cadastro" className="block text-sm font-medium text-gray-700">Data de nascimento</label>
+          <input
+            id="data-nascimento-cadastro"
+            type="date"
+            value={dataNascimento}
+            onChange={(e) => setDataNascimento(e.target.value)}
+            required
             className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
