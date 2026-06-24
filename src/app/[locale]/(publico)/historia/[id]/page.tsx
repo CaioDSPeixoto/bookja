@@ -38,7 +38,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
             {historia.capa_url ? (
               <img src={historia.capa_url} alt={historia.titulo} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+              <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
                 <BookOpen size={64} className="text-gray-300" />
               </div>
             )}
@@ -50,7 +50,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
           <h1 className="text-3xl font-bold">{historia.titulo}</h1>
           <p className="mt-2 text-gray-600">
             {t('por')}{' '}
-            <Link href={`/${locale}/perfil/${perfil.nome_usuario}`} className="font-medium text-blue-600 hover:underline">
+            <Link href={`/${locale}/perfil/${perfil.nome_usuario}`} className="font-medium text-indigo-600 hover:underline">
               {perfil.nome_exibicao || perfil.nome_usuario}
             </Link>
           </p>
@@ -61,7 +61,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
               {colaboradores.map((c, i) => (
                 <span key={i} className="text-sm text-gray-600">
                   {i > 0 && ', '}
-                  <Link href={`/${locale}/perfil/${c.perfil.nome_usuario}`} className="hover:text-blue-600">
+                  <Link href={`/${locale}/perfil/${c.perfil.nome_usuario}`} className="hover:text-indigo-600">
                     {c.perfil.nome_exibicao || c.perfil.nome_usuario}
                   </Link>
                 </span>
@@ -92,7 +92,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
                 <Link
                   key={tag.id}
                   href={`/${locale}/historias?tag=${tag.id}`}
-                  className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700 hover:bg-blue-100"
+                  className="rounded-full bg-indigo-50 px-3 py-1 text-sm text-indigo-700 hover:bg-indigo-100"
                 >
                   {tag.nome}
                 </Link>

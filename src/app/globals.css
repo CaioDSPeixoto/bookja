@@ -75,3 +75,62 @@ body {
   height: 0;
   pointer-events: none;
 }
+
+.prose-reader {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.125rem;
+  line-height: 2;
+  color: #1f2937;
+}
+
+.prose-reader p {
+  margin-bottom: 1.25rem;
+}
+
+.prose-reader h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
+.prose-reader h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.prose-reader h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.prose-reader ul, .prose-reader ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose-reader ul {
+  list-style-type: disc;
+}
+
+.prose-reader ol {
+  list-style-type: decimal;
+}
+
+.prose-reader blockquote {
+  border-left: 3px solid #c7d2fe;
+  padding-left: 1rem;
+  color: #6b7280;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.prose-reader hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2rem 0;
+}

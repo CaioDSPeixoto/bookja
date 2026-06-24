@@ -27,7 +27,7 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
         {perfil.avatar_url ? (
           <img src={perfil.avatar_url} alt={perfil.nome_exibicao || ''} className="h-20 w-20 rounded-full object-cover" />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-600 text-2xl font-bold text-white">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-indigo-600 text-2xl font-bold text-white">
             {iniciais}
           </div>
         )}
@@ -51,7 +51,7 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {projetos.map((p: { id: string; titulo: string; sinopse?: string }) => (
-              <Link key={p.id} href={`/${locale}/historia/${p.id}`} className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-colors">
+              <Link key={p.id} href={`/${locale}/historia/${p.id}`} className="rounded-lg border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition-colors">
                 <h3 className="font-medium">{p.titulo}</h3>
                 {p.sinopse && <p className="mt-1 text-sm text-gray-500 line-clamp-2">{p.sinopse}</p>}
               </Link>

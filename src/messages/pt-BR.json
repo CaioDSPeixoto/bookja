@@ -38,12 +38,17 @@
     "sair": "Sair"
   },
   "inicio": {
-    "titulo": "Descubra histórias incríveis",
-    "subtitulo": "Leia, escreva e compartilhe histórias com a comunidade",
+    "heroTitulo": "Onde histórias ganham vida",
+    "heroSubtitulo": "Leia, escreva e compartilhe histórias com uma comunidade de leitores e escritores",
+    "buscarPlaceholder": "Buscar histórias, autores ou tags...",
+    "explorar": "Explorar histórias",
+    "escrever": "Escrever uma história",
+    "continuarLendo": "Continuar lendo",
     "popularesSemana": "Populares da semana",
     "maisAcessados": "Mais acessados",
     "melhorAvaliados": "Melhor avaliados",
     "novidades": "Novidades",
+    "verTodas": "Ver todas",
     "emBreve": "Em breve"
   },
   "projeto": {
@@ -167,6 +172,8 @@
     "voltarHistoria": "Voltar para a história",
     "apoiarAutor": "Apoiar o autor",
     "chavePix": "Chave PIX",
+    "copiarPix": "Copiar chave PIX",
+    "pixCopiado": "Copiado!",
     "naoEncontrada": "História não encontrada",
     "semCapitulos": "Nenhum capítulo publicado ainda"
   },

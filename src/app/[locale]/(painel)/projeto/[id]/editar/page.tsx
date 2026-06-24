@@ -5,12 +5,11 @@ import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Trash2, FileText, PenLine, Eye, Upload, Check, Tag, Users, Plus, Save, ChevronDown, ChevronRight, ImageIcon, X } from 'lucide-react'
+import { Trash2, FileText, PenLine, Eye, Upload, Check, Tag, Users, Plus, Save, ChevronDown, ChevronRight, ImageIcon, X, Globe } from 'lucide-react'
 import { obterProjeto, atualizarProjeto, excluirProjeto } from '@/lib/projetos/actions'
 import { listarColaboradores } from '@/lib/colaboradores/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 
-const statusOpcoes = ['rascunho', 'revisao', 'publicado'] as const
 const statusCores: Record<string, string> = {
   rascunho: 'bg-gray-100 text-gray-700',
   revisao: 'bg-yellow-100 text-yellow-700',
@@ -29,6 +28,7 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
   const [salvando, setSalvando] = useState(false)
   const [salvoFeedback, setSalvoFeedback] = useState(false)
   const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false)
+  const [mostrarModalPublicar, setMostrarModalPublicar] = useState(false)
   const [id, setId] = useState('')
   const [todasTags, setTodasTags] = useState<{ id: number; nome: string; categoria: string }[]>([])
   const [tagsSelecionadas, setTagsSelecionadas] = useState<number[]>([])
@@ -86,9 +86,19 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
     router.push(`/${locale}/biblioteca`)
   }
 
-  function ciclarStatus() {
-    const idx = statusOpcoes.indexOf(status as typeof statusOpcoes[number])
-    setStatus(statusOpcoes[(idx + 1) % statusOpcoes.length])
+  async function handlePublicar() {
+    setStatus('publicado')
+    await atualizarProjeto(id, { titulo, sinopse: sinopse || null, status: 'publicado' })
+    setMostrarModalPublicar(false)
+    setSalvoFeedback(true)
+    setTimeout(() => setSalvoFeedback(false), 2000)
+  }
+
+  async function handleDespublicar() {
+    setStatus('rascunho')
+    await atualizarProjeto(id, { titulo, sinopse: sinopse || null, status: 'rascunho' })
+    setSalvoFeedback(true)
+    setTimeout(() => setSalvoFeedback(false), 2000)
   }
 
   async function handleUploadCapa(e: React.ChangeEvent<HTMLInputElement>) {
@@ -130,6 +140,9 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
     setCapaUrl(null)
   }
 
+  const temCapitulos = (projeto?.documento?.length || 0) > 0
+  const podePublicar = titulo.length > 0 && temCapitulos
+
   if (!projeto) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -148,17 +161,23 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
           className="mr-auto min-w-0 flex-1 truncate border-none bg-transparent text-lg font-bold text-gray-900 focus:outline-none focus:ring-0"
           required
         />
-        <button onClick={ciclarStatus} type="button" className={`rounded-full px-3 py-1 text-xs font-medium ${statusCores[status]}`}>
+        <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusCores[status]}`}>
           {t(status)}
-        </button>
+        </span>
+        {status !== 'publicado' ? (
+          <button onClick={() => setMostrarModalPublicar(true)} type="button" className="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700">
+            <Globe size={14} /> Publicar
+          </button>
+        ) : (
+          <button onClick={handleDespublicar} type="button" className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+            Despublicar
+          </button>
+        )}
         <button onClick={handleSalvar} disabled={salvando} className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
           {salvoFeedback ? <><Check size={14} /> Salvo</> : <><Save size={14} /> {tGeral('salvar')}</>}
         </button>
         <Link href={`/${locale}/projeto/${id}/escrita`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-          <PenLine size={14} /> Editor
-        </Link>
-        <Link href={`/${locale}/projeto/${id}/importar`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-          <Upload size={14} />
+          <PenLine size={14} /> Escrever
         </Link>
         <Link href={`/${locale}/projeto/${id}/previa`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
           <Eye size={14} />
@@ -252,24 +271,29 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
             <FileText size={12} /> Capítulos
           </button>
           {abertos.capitulos && (
-            projeto.documento && projeto.documento.length > 0 ? (
-              <ul className="divide-y">
-                {projeto.documento.map((doc) => (
-                  <li key={doc.id}>
-                    <Link
-                      href={`/${locale}/projeto/${id}/escrita?doc=${doc.id}`}
-                      className="flex items-center gap-2 py-2 text-sm text-gray-700 hover:text-indigo-600"
-                    >
-                      <FileText size={14} className="text-gray-400" />
-                      <span className="flex-1">{doc.titulo || 'Sem título'}</span>
-                      {doc.tipo && <span className="text-[10px] text-gray-400">{doc.tipo}</span>}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-xs text-gray-400">{tGeral('semResultados')}</p>
-            )
+            <>
+              {projeto.documento && projeto.documento.length > 0 ? (
+                <ul className="divide-y">
+                  {projeto.documento.map((doc) => (
+                    <li key={doc.id}>
+                      <Link
+                        href={`/${locale}/projeto/${id}/escrita?doc=${doc.id}`}
+                        className="flex items-center gap-2 py-2 text-sm text-gray-700 hover:text-indigo-600"
+                      >
+                        <FileText size={14} className="text-gray-400" />
+                        <span className="flex-1">{doc.titulo || 'Sem título'}</span>
+                        {doc.tipo && <span className="text-[10px] text-gray-400">{doc.tipo}</span>}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-gray-400">{tGeral('semResultados')}</p>
+              )}
+              <Link href={`/${locale}/projeto/${id}/importar`} className="mt-3 inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700">
+                <Upload size={14} /> Importar
+              </Link>
+            </>
           )}
         </section>
 
@@ -289,6 +313,41 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
           )}
         </section>
       </div>
+
+      {/* Modal de publicação */}
+      {mostrarModalPublicar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setMostrarModalPublicar(false)}>
+          <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Publicar história</h2>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                {titulo.length > 0 ? <span className="text-green-600">✅</span> : <span className="text-red-500">❌</span>}
+                Título definido
+              </li>
+              <li className="flex items-center gap-2">
+                {sinopse.length > 0 ? <span className="text-green-600">✅</span> : <span className="text-yellow-500">⚠️</span>}
+                Sinopse preenchida
+              </li>
+              <li className="flex items-center gap-2">
+                {capaUrl ? <span className="text-green-600">✅</span> : <span className="text-yellow-500">⚠️</span>}
+                Capa adicionada
+              </li>
+              <li className="flex items-center gap-2">
+                {temCapitulos ? <span className="text-green-600">✅</span> : <span className="text-red-500">❌</span>}
+                Pelo menos 1 capítulo
+              </li>
+            </ul>
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setMostrarModalPublicar(false)} className="rounded-md border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Voltar e ajustar
+              </button>
+              <button type="button" onClick={handlePublicar} disabled={!podePublicar} className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50">
+                Publicar agora
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de exclusão */}
       {mostrarModalExcluir && (

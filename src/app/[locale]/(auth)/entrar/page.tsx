@@ -41,7 +41,7 @@ export default function EntrarPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div>
@@ -53,20 +53,20 @@ export default function EntrarPage() {
             onChange={(e) => setSenha(e.target.value)}
             required
             autoComplete="current-password"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         {erro && <p className="text-sm text-red-600" role="alert">{erro}</p>}
         <button
           type="submit"
-          className="w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="w-full rounded bg-indigo-600 py-2 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           {t('entrar')}
         </button>
       </form>
       <p className="mt-4 text-center text-sm text-gray-600">
         {t('semConta')}{' '}
-        <Link href={`/${locale}/cadastro`} className="text-blue-600 hover:underline">
+        <Link href={`/${locale}/cadastro`} className="text-indigo-600 hover:underline">
           {t('cadastrar')}
         </Link>
       </p>

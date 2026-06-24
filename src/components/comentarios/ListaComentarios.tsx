@@ -88,7 +88,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Link href={`/${locale}/perfil/${c.perfil.nome_usuario}`} className="text-sm font-medium hover:text-blue-600 hover:underline">{c.perfil.nome_exibicao || c.perfil.nome_usuario}</Link>
+            <Link href={`/${locale}/perfil/${c.perfil.nome_usuario}`} className="text-sm font-medium hover:text-indigo-600 hover:underline">{c.perfil.nome_exibicao || c.perfil.nome_usuario}</Link>
             <span className="text-xs text-gray-400">{dataRelativa(c.criado_em)}</span>
             {c.nota && <Estrelas valor={c.nota} tamanho={12} />}
           </div>
@@ -98,7 +98,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
             {!isReply && usuarioId && (
               <button
                 onClick={() => setRespondendoId(respondendoId === c.id ? null : c.id)}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600"
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600"
               >
                 <MessageCircle size={12} /> {t('responder')}
               </button>
@@ -120,7 +120,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
               <button
                 onClick={() => handleResponder(c.id)}
                 disabled={enviando}
-                className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
               >
                 {t('enviar')}
               </button>
@@ -143,7 +143,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
             onChange={(e) => setConteudo(e.target.value)}
             placeholder={t('escrever')}
             rows={3}
-            className="w-full rounded-lg border px-4 py-2 text-sm resize-none focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-lg border px-4 py-2 text-sm resize-none focus:border-indigo-500 focus:outline-none"
           />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -153,7 +153,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
             <button
               type="submit"
               disabled={enviando || !conteudo.trim()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               {t('enviar')}
             </button>

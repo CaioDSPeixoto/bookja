@@ -31,11 +31,11 @@ export default async function CatalogoPage({
             name="busca"
             defaultValue={sp.busca}
             placeholder={t('buscar')}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-indigo-500 focus:outline-none"
           />
         </div>
         {sp.tag && <input type="hidden" name="tag" value={sp.tag} />}
-        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+        <button type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">
           {t('titulo')}
         </button>
       </form>
@@ -44,7 +44,7 @@ export default async function CatalogoPage({
       <div className="mb-6 flex flex-wrap gap-2">
         <Link
           href={`/${locale}/historias${sp.busca ? `?busca=${sp.busca}` : ''}`}
-          className={`rounded-full px-3 py-1 text-sm ${!sp.tag ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+          className={`rounded-full px-3 py-1 text-sm ${!sp.tag ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
         >
           {t('todasTags')}
         </Link>
@@ -52,7 +52,7 @@ export default async function CatalogoPage({
           <Link
             key={tag.id}
             href={`/${locale}/historias?tag=${tag.id}${sp.busca ? `&busca=${sp.busca}` : ''}`}
-            className={`rounded-full px-3 py-1 text-sm ${sp.tag === tag.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            className={`rounded-full px-3 py-1 text-sm ${sp.tag === tag.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
           >
             {tag.nome}
           </Link>
