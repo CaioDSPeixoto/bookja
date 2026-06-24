@@ -24,6 +24,10 @@ export async function GET(
     const supabase = await criarClienteServidor()
     const { data: { user } } = await supabase.auth.getUser()
 
+    if (!user) {
+      return NextResponse.json({ erro: 'Autenticação necessária' }, { status: 401 })
+    }
+
     // Fetch project
     const { data: projeto } = await supabase
       .from('projeto')
