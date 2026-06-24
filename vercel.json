@@ -1,4 +1,4 @@
 {
-  "installCommand": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --prefer-offline --no-audit --no-fund",
+  "installCommand": "npm install --no-audit --no-fund --no-optional",
   "framework": "nextjs"
 }
