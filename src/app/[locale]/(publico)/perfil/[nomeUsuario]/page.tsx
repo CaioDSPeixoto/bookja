@@ -3,7 +3,9 @@ import { getTranslations } from 'next-intl/server'
 import { Copy, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { buscarPerfilPublico } from '@/lib/perfil/actions'
+import { criarClienteServidor } from '@/lib/supabase/server'
 import BotaoCopiarPix from './BotaoCopiarPix'
+import MuralPerfil from '@/components/mural/MuralPerfil'
 
 export default async function PerfilAutorPage({ params }: { params: Promise<{ locale: string; nomeUsuario: string }> }) {
   const { locale, nomeUsuario } = await params
@@ -11,6 +13,10 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
   const dados = await buscarPerfilPublico(nomeUsuario)
 
   if (!dados) notFound()
+
+  const supabase = await criarClienteServidor()
+  const { data: { user } } = await supabase.auth.getUser()
+  const usuarioLogadoId = user?.id || null
 
   const { perfil, projetos, leituras } = dados
   const iniciais = (perfil.nome_exibicao || perfil.nome_usuario || '?').slice(0, 2).toUpperCase()
@@ -70,6 +76,8 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
           </div>
         </section>
       )}
+
+      <MuralPerfil perfilId={perfil.id} usuarioLogadoId={usuarioLogadoId} />
     </div>
   )
 }

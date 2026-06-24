@@ -1,6 +1,7 @@
 'use server'
 
 import { criarClienteServidor } from '@/lib/supabase/server'
+import { criarNotificacao } from '@/lib/notificacoes/actions'
 
 async function obterUsuarioOuErro() {
   const supabase = await criarClienteServidor()
@@ -37,6 +38,19 @@ export async function convidarColaborador(projetoId: string, nomeUsuario: string
     .insert({ projeto_id: projetoId, usuario_id: convidado.id, papel, convidado_em: new Date().toISOString() })
 
   if (error) throw new Error(error.message)
+
+  const { data: projeto } = await supabase
+    .from('projeto')
+    .select('titulo')
+    .eq('id', projetoId)
+    .single()
+
+  await criarNotificacao({
+    usuario_id: convidado.id,
+    tipo: 'convite',
+    projeto_id: projetoId,
+    mensagem: projeto?.titulo || 'Projeto',
+  })
 }
 
 export async function removerColaborador(projetoId: string, usuarioId: string) {

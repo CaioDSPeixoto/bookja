@@ -88,9 +88,9 @@ export async function buscarTagsDisponiveis() {
 
 export async function registrarVisualizacao(projetoId: string, usuarioId?: string) {
   const supabase = await criarClienteServidor()
-  await supabase.from('projeto_visualizacao').insert({
-    projeto_id: projetoId,
-    usuario_id: usuarioId || null,
+  await supabase.rpc('incrementar_visualizacao', {
+    p_projeto_id: projetoId,
+    p_usuario_id: usuarioId || null,
   })
 }
 

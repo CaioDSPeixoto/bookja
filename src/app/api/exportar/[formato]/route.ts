@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { exportarEpub } from '@/lib/exportacao/epub'
 import { exportarDocx } from '@/lib/exportacao/docx'
+import { exportarPdf } from '@/lib/exportacao/pdf'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -11,8 +12,8 @@ export async function GET(
 ) {
   try {
     const { formato } = await params
-    if (formato !== 'epub' && formato !== 'docx') {
-      return NextResponse.json({ erro: 'Formato inválido. Use: epub, docx' }, { status: 400 })
+    if (formato !== 'epub' && formato !== 'docx' && formato !== 'pdf') {
+      return NextResponse.json({ erro: 'Formato inválido. Use: epub, docx, pdf' }, { status: 400 })
     }
 
     const projetoId = request.nextUrl.searchParams.get('projetoId')
@@ -90,6 +91,10 @@ export async function GET(
       buffer = await exportarEpub({ titulo: projeto.titulo, sinopse: projeto.sinopse, autor }, documentos)
       contentType = 'application/epub+zip'
       extensao = 'epub'
+    } else if (formato === 'pdf') {
+      buffer = await exportarPdf({ titulo: projeto.titulo, autor }, documentos)
+      contentType = 'application/pdf'
+      extensao = 'pdf'
     } else {
       buffer = await exportarDocx({ titulo: projeto.titulo, autor }, documentos)
       contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'

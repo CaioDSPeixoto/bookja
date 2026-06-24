@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Trash2, FileText, PenLine, Eye, Users, Check, Tag } from 'lucide-react'
+import { Trash2, FileText, PenLine, Eye, Users, Check, Tag, Upload } from 'lucide-react'
 import { obterProjeto, atualizarProjeto, excluirProjeto } from '@/lib/projetos/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 
@@ -197,6 +197,13 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
             >
               <Users size={16} />
               Colaboradores
+            </Link>
+            <Link
+              href={`/${locale}/projeto/${id}/importar`}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50"
+            >
+              <Upload size={16} />
+              Importar
             </Link>
           </div>
         </section>

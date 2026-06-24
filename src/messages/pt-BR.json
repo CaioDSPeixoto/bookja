@@ -176,5 +176,51 @@
     "anterior": "Anterior",
     "proxima": "Próxima",
     "pagina": "Página {atual} de {total}"
+  },
+  "importacao": {
+    "titulo": "Importar documento",
+    "descricao": "Importe um arquivo EPUB ou DOCX para o seu projeto. Os capítulos serão detectados automaticamente.",
+    "arrasteOuClique": "Arraste um arquivo aqui ou clique para selecionar",
+    "formatosAceitos": "Formatos aceitos: .epub, .docx (máximo 5MB)",
+    "selecionarArquivo": "Selecionar arquivo",
+    "processando": "Processando arquivo...",
+    "formatoInvalido": "Formato não suportado. Use .epub ou .docx",
+    "erroProcessar": "Erro ao processar o arquivo. Tente novamente.",
+    "erroImportar": "Erro ao importar. Tente novamente.",
+    "capitulosDetectados": "{count, plural, one {# capítulo detectado} other {# capítulos detectados}}",
+    "trocarArquivo": "Trocar arquivo",
+    "selecionados": "{count} de {total} selecionados",
+    "selecionarTodos": "Selecionar todos",
+    "confirmarImportacao": "Importar {count, plural, one {# capítulo} other {# capítulos}}",
+    "importando": "Importando capítulos...",
+    "sucesso": "Importação concluída!",
+    "capitulosImportados": "{count, plural, one {# capítulo importado} other {# capítulos importados}} com sucesso",
+    "irParaEditor": "Ir para o editor"
+  },
+  "exportacao": {
+    "exportar": "Exportar",
+    "epub": "EPUB",
+    "docx": "DOCX",
+    "pdf": "PDF"
+  },
+  "mural": {
+    "titulo": "Mural",
+    "placeholder": "Deixe uma mensagem no mural...",
+    "placeholderResposta": "Escreva uma resposta...",
+    "enviar": "Enviar",
+    "responder": "Responder",
+    "excluir": "Excluir",
+    "vazio": "Nenhuma mensagem no mural ainda. Seja o primeiro!",
+    "loginParaComentar": "Faça login para deixar uma mensagem no mural."
+  },
+  "notificacoes": {
+    "titulo": "Notificações",
+    "vazio": "Nenhuma notificação ainda.",
+    "marcarTodasLidas": "Marcar todas como lidas",
+    "aceitar": "Aceitar",
+    "aceito": "Aceito!",
+    "convite": "Você foi convidado para colaborar no projeto",
+    "novoComentario": "Novo comentário em",
+    "novaResposta": "Nova resposta em"
   }
 }

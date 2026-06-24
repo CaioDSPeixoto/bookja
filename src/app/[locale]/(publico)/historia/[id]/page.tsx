@@ -5,6 +5,7 @@ import { Eye, Star, BookOpen } from 'lucide-react'
 import { buscarHistoriaPublica, registrarVisualizacao } from '@/lib/historias/queries'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { ListaComentarios } from '@/components/comentarios/ListaComentarios'
+import { BotaoFavoritar } from '@/components/historia/BotaoFavoritar'
 
 export default async function HistoriaPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params
@@ -16,6 +17,12 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
   const supabase = await criarClienteServidor()
   const { data: { user } } = await supabase.auth.getUser()
   await registrarVisualizacao(id, user?.id)
+
+  let favoritado = false
+  if (user) {
+    const { data } = await supabase.from('favorito').select('usuario_id').eq('usuario_id', user.id).eq('projeto_id', id).single()
+    favoritado = !!data
+  }
 
   const perfil = historia.perfil as { nome_usuario: string; nome_exibicao: string; avatar_url?: string }
   const colaboradores = (historia.projeto_colaborador as Array<{ papel: string; perfil: { nome_usuario: string; nome_exibicao: string } }>) || []
@@ -75,6 +82,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
             {historia.contagem_avaliacoes > 0 && (
               <span>{historia.contagem_avaliacoes} {t('avaliacoes')}</span>
             )}
+            <BotaoFavoritar projetoId={id} favoritado={favoritado} usuarioLogado={!!user} />
           </div>
 
           {/* Tags */}
