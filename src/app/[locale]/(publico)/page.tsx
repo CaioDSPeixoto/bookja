@@ -23,7 +23,7 @@ export default async function PaginaInicial({ params }: { params: Promise<{ loca
     { titulo: t('maisAcessados'), dados: acessados },
     { titulo: t('melhorAvaliados'), dados: avaliados },
     { titulo: t('novidades'), dados: novidades },
-  ].filter((s) => s.dados.length > 0)
+  ].filter((s) => s.dados && s.dados.length > 0)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function renderCard(p: any) {
@@ -58,7 +58,7 @@ export default async function PaginaInicial({ params }: { params: Promise<{ loca
             <section key={secao.titulo}>
               <h2 className="mb-4 text-xl font-bold">{secao.titulo}</h2>
               <div className="flex gap-4 overflow-x-auto pb-4">
-                {secao.dados.map((p) => (
+                {secao.dados!.map((p) => (
                   <div key={p.id} className="w-48 flex-shrink-0">
                     {renderCard(p)}
                   </div>

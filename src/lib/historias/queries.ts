@@ -2,8 +2,50 @@ import { criarClienteServidor } from '@/lib/supabase/server'
 
 const POR_PAGINA = 12
 
+// Mapeia tags de classificação etária para idade mínima
+const CLASSIFICACAO_IDADE: Record<string, number> = {
+  'Livre': 0,
+  '+12': 12,
+  '+16': 16,
+  '+18': 18,
+}
+
+async function obterIdadeUsuario(): Promise<number | null> {
+  const supabase = await criarClienteServidor()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: perfil } = await supabase
+    .from('perfil')
+    .select('data_nascimento')
+    .eq('id', user.id)
+    .single()
+
+  if (!perfil?.data_nascimento) return null
+
+  const nascimento = new Date(perfil.data_nascimento)
+  const hoje = new Date()
+  let idade = hoje.getFullYear() - nascimento.getFullYear()
+  const m = hoje.getMonth() - nascimento.getMonth()
+  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--
+  return idade
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function filtrarPorIdade(projetos: any[], idadeUsuario: number | null): any[] {
+  if (idadeUsuario === null) return projetos
+  return projetos.filter(p => {
+    const tags = (p.projeto_tag || []).map((pt: { tag: { nome: string; categoria: string } }) => pt.tag)
+    const classificacao = tags.find((t: { categoria: string }) => t.categoria === 'publico_alvo')
+    if (!classificacao) return true
+    const idadeMinima = CLASSIFICACAO_IDADE[classificacao.nome] ?? 0
+    return idadeUsuario >= idadeMinima
+  })
+}
+
 export async function buscarHistoriaPublica(id: string) {
   const supabase = await criarClienteServidor()
+  const idadeUsuario = await obterIdadeUsuario()
 
   const { data, error } = await supabase
     .from('projeto')
@@ -20,6 +62,14 @@ export async function buscarHistoriaPublica(id: string) {
 
   if (error || !data) return null
 
+  // Verificar classificação etária
+  const tags = ((data.projeto_tag || []) as Array<{ tag: { nome: string; categoria: string } }>).map(pt => pt.tag)
+  const classificacao = tags.find(t => t.categoria === 'publico_alvo')
+  if (classificacao && idadeUsuario !== null) {
+    const idadeMinima = CLASSIFICACAO_IDADE[classificacao.nome] ?? 0
+    if (idadeUsuario < idadeMinima) return null
+  }
+
   const documentosPublicos = (data.documento as Array<{ id: string; titulo: string; tipo: string; publico: boolean; ordem: number }>)
     .filter((d) => d.publico)
     .sort((a, b) => a.ordem - b.ordem)
@@ -29,6 +79,7 @@ export async function buscarHistoriaPublica(id: string) {
 
 export async function buscarCatalogo(filtros: { busca?: string; tagId?: string; pagina?: number }) {
   const supabase = await criarClienteServidor()
+  const idadeUsuario = await obterIdadeUsuario()
   const pagina = filtros.pagina || 1
   const de = (pagina - 1) * POR_PAGINA
   const ate = de + POR_PAGINA - 1
@@ -61,6 +112,9 @@ export async function buscarCatalogo(filtros: { busca?: string; tagId?: string; 
   if (filtros.tagId) {
     projetos = projetos.filter((p: { projeto_tag: unknown[] }) => p.projeto_tag.length > 0)
   }
+
+  // Filtrar por classificação etária
+  projetos = filtrarPorIdade(projetos, idadeUsuario)
 
   const total = count || 0
   return { projetos, total, totalPaginas: Math.ceil(total / POR_PAGINA) }
@@ -96,10 +150,11 @@ export async function registrarVisualizacao(projetoId: string, usuarioId?: strin
 
 const CAMPOS_CARD = `id, titulo, sinopse, capa_url, media_avaliacao, contagem_avaliacoes, contagem_visualizacoes, publicado_em,
   perfil:dono_id(nome_usuario, nome_exibicao, avatar_url),
-  projeto_tag(tag:tag_id(id, nome))`
+  projeto_tag(tag:tag_id(id, nome, categoria))`
 
 export async function buscarPopularesSemana() {
   const supabase = await criarClienteServidor()
+  const idadeUsuario = await obterIdadeUsuario()
   const semanaAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   const { data: vis } = await supabase
@@ -125,43 +180,46 @@ export async function buscarPopularesSemana() {
     .in('id', topIds)
     .eq('status', 'publicado')
 
-  return data || []
+  return filtrarPorIdade(data || [], idadeUsuario).slice(0, 10)
 }
 
 export async function buscarMaisAcessados() {
   const supabase = await criarClienteServidor()
+  const idadeUsuario = await obterIdadeUsuario()
   const { data } = await supabase
     .from('projeto')
     .select(CAMPOS_CARD)
     .eq('status', 'publicado')
     .order('contagem_visualizacoes', { ascending: false })
-    .limit(10)
+    .limit(20)
 
-  return data || []
+  return filtrarPorIdade(data || [], idadeUsuario).slice(0, 10)
 }
 
 export async function buscarMelhorAvaliados() {
   const supabase = await criarClienteServidor()
+  const idadeUsuario = await obterIdadeUsuario()
   const { data } = await supabase
     .from('projeto')
     .select(CAMPOS_CARD)
     .eq('status', 'publicado')
     .gte('contagem_avaliacoes', 1)
     .order('media_avaliacao', { ascending: false })
-    .limit(10)
+    .limit(20)
 
-  return data || []
+  return filtrarPorIdade(data || [], idadeUsuario).slice(0, 10)
 }
 
 export async function buscarNovidades() {
   const supabase = await criarClienteServidor()
+  const idadeUsuario = await obterIdadeUsuario()
   const { data } = await supabase
     .from('projeto')
     .select(CAMPOS_CARD)
     .eq('status', 'publicado')
     .not('publicado_em', 'is', null)
     .order('publicado_em', { ascending: false })
-    .limit(10)
+    .limit(20)
 
-  return data || []
+  return filtrarPorIdade(data || [], idadeUsuario).slice(0, 10)
 }
