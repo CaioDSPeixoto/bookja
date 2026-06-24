@@ -93,17 +93,36 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
 
   async function handleUploadCapa(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !file.type.startsWith('image/')) return
+    if (file.size > 5 * 1024 * 1024) return
     setUploadingCapa(true)
-    const ext = file.name.split('.').pop()
-    const path = `${id}/${Date.now()}.${ext}`
-    const supabase = criarClienteBrowser()
-    const { error } = await supabase.storage.from('capas').upload(path, file)
-    if (error) { setUploadingCapa(false); return }
-    const { data: { publicUrl } } = supabase.storage.from('capas').getPublicUrl(path)
-    await atualizarProjeto(id, { capa_url: publicUrl })
-    setCapaUrl(publicUrl)
-    setUploadingCapa(false)
+    try {
+      const dataUrl = await redimensionarImagem(file, 400, 600)
+      await atualizarProjeto(id, { capa_url: dataUrl })
+      setCapaUrl(dataUrl)
+    } finally {
+      setUploadingCapa(false)
+    }
+  }
+
+  function redimensionarImagem(file: File, maxW: number, maxH: number): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let w = img.width, h = img.height
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW / w, maxH / h)
+          w = Math.round(w * ratio)
+          h = Math.round(h * ratio)
+        }
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.8))
+      }
+      img.src = URL.createObjectURL(file)
+    })
   }
 
   async function handleRemoverCapa() {
