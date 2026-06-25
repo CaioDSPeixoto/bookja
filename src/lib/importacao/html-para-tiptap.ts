@@ -30,6 +30,13 @@ function sanitizarHTML(html: string): string {
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/\s+on\w+\s*=\s*"[^"]*"/gi, '')
     .replace(/\s+on\w+\s*=\s*'[^']*'/gi, '')
+    // Strip anchor bookmarks (id/name only, no href) — remove entirely including content
+    .replace(/<a\s+(?:id|name)\s*=\s*["'][^"']*["'][^>]*>[\s\S]*?<\/a>/gi, '')
+    .replace(/<a\s+(?:id|name)\s*=\s*["'][^"']*["'][^>]*\/?>/gi, '')
+    // Strip anchor links (with href) — keep text content
+    .replace(/<a\s[^>]*href[^>]*>([\s\S]*?)<\/a>/gi, '$1')
+    // Strip other non-semantic inline tags (span, sup, sub, etc.) — keep text content
+    .replace(/<\/?(span|sup|sub|font|abbr|cite|code|small|big|mark|ins|del|s|strike|tt|var|samp|kbd|wbr)(\s[^>]*)?>/gi, '')
 }
 
 function extrairTexto(html: string): string {
@@ -38,7 +45,7 @@ function extrairTexto(html: string): string {
 
 function parseInline(html: string, marks: TiptapMark[] = []): TiptapNode[] {
   const nodes: TiptapNode[] = []
-  const regex = /<(strong|b|em|i|u)>([\s\S]*?)<\/\1>|([^<]+)|<br\s*\/?>/gi
+  const regex = /<(strong|b|em|i|u)>([\s\S]*?)<\/\1>|([^<]+)|<br\s*\/?>|<[^>]*>/gi
   let match: RegExpExecArray | null
 
   while ((match = regex.exec(html)) !== null) {
@@ -58,6 +65,7 @@ function parseInline(html: string, marks: TiptapMark[] = []): TiptapNode[] {
         nodes.push(...inner)
       }
     }
+    // Unrecognized tags (caught by <[^>]*>) are silently skipped
   }
 
   return nodes
@@ -102,7 +110,6 @@ function parseBlocks(html: string): TiptapNode[] {
       const items: TiptapNode[] = []
       while ((liMatch = liRegex.exec(inner)) !== null) {
         const liContent = liMatch[1]
-        // Check for nested lists
         if (/<[uo]l/i.test(liContent)) {
           const nestedBlocks = parseBlocks(liContent)
           items.push({ type: 'listItem', content: nestedBlocks.length > 0 ? nestedBlocks : [{ type: 'paragraph', content: [{ type: 'text', text: extrairTexto(liContent) }] }] })
@@ -121,7 +128,6 @@ function parseBlocks(html: string): TiptapNode[] {
       const content = parseInline(inner)
       nodes.push({ type: 'paragraph', content: content.length > 0 ? content : [{ type: 'text', text: ' ' }] })
     } else if (tag === 'li') {
-      // standalone li outside list
       const content = parseInline(inner)
       nodes.push({ type: 'paragraph', content: content.length > 0 ? content : [{ type: 'text', text: extrairTexto(inner) }] })
     }

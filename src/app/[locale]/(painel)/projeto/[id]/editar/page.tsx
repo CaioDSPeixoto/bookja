@@ -33,7 +33,7 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
   const [todasTags, setTodasTags] = useState<{ id: number; nome: string; categoria: string }[]>([])
   const [tagsSelecionadas, setTagsSelecionadas] = useState<number[]>([])
   const [temCoautores, setTemCoautores] = useState(false)
-  const [abertos, setAbertos] = useState({ sinopse: true, tags: true, capitulos: true, colaboradores: false })
+  const [abertos, setAbertos] = useState({ sinopse: false, tags: false, capitulos: true, colaboradores: false })
   const [capaUrl, setCapaUrl] = useState<string | null>(null)
   const [uploadingCapa, setUploadingCapa] = useState(false)
 
@@ -153,38 +153,59 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-4">
-      {/* Toolbar fixa */}
-      <div className="sticky top-0 z-10 -mx-4 mb-6 flex items-center gap-2 border-b bg-white/95 px-4 py-3 backdrop-blur">
+      {/* Toolbar fixa - responsive */}
+      <div className="sticky top-0 z-10 -mx-4 mb-6 border-b bg-white/95 px-4 py-3 backdrop-blur">
+        {/* Linha 1: Título */}
         <input
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
-          className="mr-auto min-w-0 flex-1 truncate border-none bg-transparent text-lg font-bold text-gray-900 focus:outline-none focus:ring-0"
+          className="mb-2 w-full truncate border-none bg-transparent text-lg font-bold text-gray-900 focus:outline-none focus:ring-0"
           required
         />
-        <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusCores[status]}`}>
-          {t(status)}
-        </span>
-        {status !== 'publicado' ? (
-          <button onClick={() => setMostrarModalPublicar(true)} type="button" className="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700">
-            <Globe size={14} /> Publicar
+        {/* Linha 2: Ações */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Status */}
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium sm:px-3 sm:py-1 sm:text-xs ${statusCores[status]}`}>
+            {t(status)}
+          </span>
+
+          {/* Publicar/Despublicar */}
+          {status !== 'publicado' ? (
+            <button onClick={() => setMostrarModalPublicar(true)} type="button" className="inline-flex shrink-0 items-center gap-1 rounded-md bg-green-600 px-2 py-1.5 text-[11px] font-medium text-white hover:bg-green-700 sm:gap-1.5 sm:px-3 sm:text-xs">
+              <Globe size={13} />
+              <span className="hidden sm:inline">Publicar</span>
+            </button>
+          ) : (
+            <button onClick={handleDespublicar} type="button" className="inline-flex shrink-0 items-center gap-1 rounded-md border border-gray-300 px-2 py-1.5 text-[11px] font-medium text-gray-700 hover:bg-gray-50 sm:gap-1.5 sm:px-3 sm:text-xs">
+              <span className="hidden sm:inline">Despublicar</span>
+              <span className="sm:hidden">✕</span>
+            </button>
+          )}
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Salvar - ação principal */}
+          <button onClick={handleSalvar} disabled={salvando} className="inline-flex shrink-0 items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-indigo-700 disabled:opacity-50 sm:gap-1.5 sm:text-xs">
+            {salvoFeedback ? <><Check size={13} /> <span className="hidden sm:inline">Salvo</span></> : <><Save size={13} /> <span className="hidden sm:inline">{tGeral('salvar')}</span></>}
           </button>
-        ) : (
-          <button onClick={handleDespublicar} type="button" className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-            Despublicar
+
+          {/* Escrever */}
+          <Link href={`/${locale}/projeto/${id}/escrita`} title="Escrever" className="inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1.5 text-[11px] font-medium text-gray-700 hover:bg-gray-50 sm:gap-1.5 sm:px-3 sm:text-xs">
+            <PenLine size={13} />
+            <span className="hidden md:inline">Escrever</span>
+          </Link>
+
+          {/* Prévia */}
+          <Link href={`/${locale}/projeto/${id}/previa`} title="Prévia" className="inline-flex shrink-0 items-center rounded-md border px-2 py-1.5 text-gray-700 hover:bg-gray-50">
+            <Eye size={13} />
+          </Link>
+
+          {/* Excluir */}
+          <button onClick={() => setMostrarModalExcluir(true)} type="button" title="Excluir" className="shrink-0 rounded-md p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600">
+            <Trash2 size={14} />
           </button>
-        )}
-        <button onClick={handleSalvar} disabled={salvando} className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-          {salvoFeedback ? <><Check size={14} /> Salvo</> : <><Save size={14} /> {tGeral('salvar')}</>}
-        </button>
-        <Link href={`/${locale}/projeto/${id}/escrita`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-          <PenLine size={14} /> Escrever
-        </Link>
-        <Link href={`/${locale}/projeto/${id}/previa`} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-          <Eye size={14} />
-        </Link>
-        <button onClick={() => setMostrarModalExcluir(true)} type="button" className="rounded-md p-1.5 text-red-500 hover:bg-red-50">
-          <Trash2 size={14} />
-        </button>
+        </div>
       </div>
 
       <div className="space-y-6">

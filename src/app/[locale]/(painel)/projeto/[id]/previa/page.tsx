@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { listarDocumentos } from '@/lib/documentos/actions'
+import { renderizarConteudoHTML } from '@/lib/historias/renderizar'
 import BotaoImprimir from './BotaoImprimir'
 
 export default async function PreviaPage({
@@ -43,9 +44,10 @@ export default async function PreviaPage({
             <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">
               {cap.titulo || `${t('capitulo', { numero: index + 1 })}`}
             </h2>
-            <div className="whitespace-pre-wrap text-lg leading-8 text-gray-800">
-              {typeof cap.conteudo === 'string' ? cap.conteudo : ''}
-            </div>
+            <div
+              className="prose-reader text-lg leading-8 text-gray-800"
+              dangerouslySetInnerHTML={{ __html: renderizarConteudoHTML(cap.conteudo) }}
+            />
           </article>
         ))}
 
