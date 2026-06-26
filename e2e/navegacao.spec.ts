@@ -8,7 +8,7 @@ test.describe('Navegação e i18n', () => {
 
   test('página inicial carrega com título correto', async ({ page }) => {
     await page.goto('/pt-BR')
-    await expect(page.locator('h1')).toContainText('Descubra histórias incríveis')
+    await expect(page.locator('h1')).toContainText('Onde histórias ganham vida')
   })
 
   test('cabeçalho contém logo Bookja', async ({ page }) => {

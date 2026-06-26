@@ -31,6 +31,7 @@ test.describe('Autenticação - Páginas', () => {
     // Preenche nome de usuário
     const inputs = page.locator('input[type="text"]')
     await inputs.first().fill('meuuser')
+    await page.fill('input[type="date"]', '2000-01-01')
     // Preenche senhas diferentes
     const senhaInputs = page.locator('input[type="password"]')
     await senhaInputs.nth(0).fill('123456')

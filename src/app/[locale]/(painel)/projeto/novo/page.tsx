@@ -8,7 +8,7 @@ import { criarProjeto } from '@/lib/projetos/actions'
 import { convidarColaborador } from '@/lib/colaboradores/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 
-type TagItem = { id: string; nome: string; categoria: string }
+type TagItem = { id: number; nome: string; categoria: string | null }
 type Colaborador = { nomeUsuario: string; papel: string }
 
 export default function NovoProjetoPage() {
@@ -20,7 +20,7 @@ export default function NovoProjetoPage() {
 
   // Tags
   const [tags, setTags] = useState<TagItem[]>([])
-  const [tagsSelecionadas, setTagsSelecionadas] = useState<string[]>([])
+  const [tagsSelecionadas, setTagsSelecionadas] = useState<number[]>([])
   const [erroClassificacao, setErroClassificacao] = useState(false)
 
   // Colaboradores
@@ -35,7 +35,7 @@ export default function NovoProjetoPage() {
     })
   }, [])
 
-  function toggleTag(id: string) {
+  function toggleTag(id: number) {
     setTagsSelecionadas(prev =>
       prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
     )
@@ -79,7 +79,8 @@ export default function NovoProjetoPage() {
   }
 
   const tagsPorCategoria = tags.reduce<Record<string, TagItem[]>>((acc, tag) => {
-    ;(acc[tag.categoria] ??= []).push(tag)
+    const categoria = tag.categoria ?? 'geral'
+    ;(acc[categoria] ??= []).push(tag)
     return acc
   }, {})
 

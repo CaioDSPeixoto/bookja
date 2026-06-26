@@ -3,6 +3,8 @@
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
+export type StatusProjeto = 'rascunho' | 'revisao' | 'publicado'
+
 async function obterUsuarioOuErro() {
   const supabase = await criarClienteServidor()
   const { data: { user } } = await supabase.auth.getUser()
@@ -25,12 +27,56 @@ export async function criarProjeto(formData: FormData) {
   return data.id
 }
 
-export async function atualizarProjeto(id: string, dados: { titulo?: string; sinopse?: string | null; status?: string; capa_url?: string | null }) {
+export async function atualizarProjeto(id: string, dados: { titulo?: string; sinopse?: string | null; status?: StatusProjeto; capa_url?: string | null }) {
   const { supabase, user } = await obterUsuarioOuErro()
 
   const { error } = await supabase
     .from('projeto')
     .update(dados)
+    .eq('id', id)
+    .eq('dono_id', user.id)
+
+  if (error) throw new Error(error.message)
+}
+
+export async function publicarProjeto(id: string, dados: { titulo?: string; sinopse?: string | null }) {
+  const { supabase, user } = await obterUsuarioOuErro()
+
+  const { data: documentos, error: erroDocumentos } = await supabase
+    .from('documento')
+    .select('id')
+    .eq('projeto_id', id)
+    .eq('tipo', 'capitulo')
+    .limit(1)
+
+  if (erroDocumentos) throw new Error(erroDocumentos.message)
+  if (!documentos || documentos.length === 0) throw new Error('Projeto precisa ter pelo menos um capítulo')
+
+  const { error } = await supabase
+    .from('projeto')
+    .update({
+      ...dados,
+      status: 'publicado',
+      publicado_em: new Date().toISOString(),
+      atualizado_em: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('dono_id', user.id)
+
+  if (error) throw new Error(error.message)
+}
+
+export async function despublicarProjeto(id: string, dados: { titulo?: string; sinopse?: string | null }) {
+  const { supabase, user } = await obterUsuarioOuErro()
+
+  const { error } = await supabase
+    .from('projeto')
+    .update({
+      ...dados,
+      status: 'rascunho',
+      publicado_em: null,
+      atualizado_em: new Date().toISOString(),
+    })
     .eq('id', id)
     .eq('dono_id', user.id)
 
@@ -53,18 +99,13 @@ export async function excluirProjeto(id: string, locale: string) {
 export async function listarProjetos() {
   const { supabase, user } = await obterUsuarioOuErro()
 
-  console.log('[DEBUG] listarProjetos - user.id:', user.id)
-
   const { data, error } = await supabase
     .from('projeto')
     .select('*, documento(count)')
     .eq('dono_id', user.id)
     .order('criado_em', { ascending: false })
 
-  console.log('[DEBUG] listarProjetos - data:', data?.length, 'error:', error)
-
   if (error) {
-    console.error('Erro listarProjetos:', error)
     return []
   }
   return data ?? []

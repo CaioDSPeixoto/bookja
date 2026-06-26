@@ -2,23 +2,16 @@
 
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { criarNotificacao } from '@/lib/notificacoes/actions'
+import { obterUsuarioAutenticado, verificarDonoProjeto } from '@/lib/projetos/acesso'
 
 async function obterUsuarioOuErro() {
   const supabase = await criarClienteServidor()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Não autenticado')
+  const user = await obterUsuarioAutenticado(supabase)
   return { supabase, user }
 }
 
 async function verificarDono(supabase: Awaited<ReturnType<typeof criarClienteServidor>>, projetoId: string, userId: string) {
-  const { data } = await supabase
-    .from('projeto')
-    .select('id')
-    .eq('id', projetoId)
-    .eq('dono_id', userId)
-    .single()
-
-  if (!data) throw new Error('Sem permissão')
+  await verificarDonoProjeto(supabase, projetoId, userId)
 }
 
 export async function convidarColaborador(projetoId: string, nomeUsuario: string, papel: string) {

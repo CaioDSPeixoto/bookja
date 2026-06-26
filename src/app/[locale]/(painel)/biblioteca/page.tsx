@@ -10,7 +10,7 @@ import { listarProjetos } from '@/lib/projetos/actions'
 type Projeto = {
   id: string
   titulo: string
-  sinopse?: string
+  sinopse: string | null
   status: string
   criado_em: string
   documento?: { count: number }[]

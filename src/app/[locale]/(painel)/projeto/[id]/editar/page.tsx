@@ -6,7 +6,7 @@ import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Trash2, FileText, PenLine, Eye, Upload, Check, Tag, Users, Plus, Save, ChevronDown, ChevronRight, ImageIcon, X, Globe } from 'lucide-react'
-import { obterProjeto, atualizarProjeto, excluirProjeto } from '@/lib/projetos/actions'
+import { obterProjeto, atualizarProjeto, excluirProjeto, publicarProjeto, despublicarProjeto, type StatusProjeto } from '@/lib/projetos/actions'
 import { listarColaboradores } from '@/lib/colaboradores/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 
@@ -21,16 +21,16 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
   const tGeral = useTranslations('geral')
   const locale = useLocale()
   const router = useRouter()
-  const [projeto, setProjeto] = useState<{ titulo: string; sinopse?: string; status: string; documento?: { id: string; titulo?: string; tipo?: string }[] } | null>(null)
+  const [projeto, setProjeto] = useState<{ titulo: string; sinopse: string | null; status: string; documento?: { id: string; titulo: string; tipo: string }[] } | null>(null)
   const [titulo, setTitulo] = useState('')
   const [sinopse, setSinopse] = useState('')
-  const [status, setStatus] = useState('rascunho')
+  const [status, setStatus] = useState<StatusProjeto>('rascunho')
   const [salvando, setSalvando] = useState(false)
   const [salvoFeedback, setSalvoFeedback] = useState(false)
   const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false)
   const [mostrarModalPublicar, setMostrarModalPublicar] = useState(false)
   const [id, setId] = useState('')
-  const [todasTags, setTodasTags] = useState<{ id: number; nome: string; categoria: string }[]>([])
+  const [todasTags, setTodasTags] = useState<{ id: number; nome: string; categoria: string | null }[]>([])
   const [tagsSelecionadas, setTagsSelecionadas] = useState<number[]>([])
   const [temCoautores, setTemCoautores] = useState(false)
   const [abertos, setAbertos] = useState({ sinopse: false, tags: false, capitulos: true, colaboradores: false })
@@ -88,7 +88,7 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
 
   async function handlePublicar() {
     setStatus('publicado')
-    await atualizarProjeto(id, { titulo, sinopse: sinopse || null, status: 'publicado' })
+    await publicarProjeto(id, { titulo, sinopse: sinopse || null })
     setMostrarModalPublicar(false)
     setSalvoFeedback(true)
     setTimeout(() => setSalvoFeedback(false), 2000)
@@ -96,7 +96,7 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
 
   async function handleDespublicar() {
     setStatus('rascunho')
-    await atualizarProjeto(id, { titulo, sinopse: sinopse || null, status: 'rascunho' })
+    await despublicarProjeto(id, { titulo, sinopse: sinopse || null })
     setSalvoFeedback(true)
     setTimeout(() => setSalvoFeedback(false), 2000)
   }
@@ -257,11 +257,11 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
           {abertos.tags && (
             todasTags.length > 0 ? (
               <div className="space-y-2">
-                {Array.from(new Set(todasTags.map(t => t.categoria))).map(cat => (
+                {Array.from(new Set(todasTags.map(t => t.categoria ?? 'geral'))).map(cat => (
                   <div key={cat}>
                     <span className="text-[10px] font-medium uppercase text-gray-400">{cat.replace('_', ' ')}</span>
                     <div className="mt-0.5 flex flex-wrap gap-1">
-                      {todasTags.filter(t => t.categoria === cat).map(tag => (
+                      {todasTags.filter(t => (t.categoria ?? 'geral') === cat).map(tag => (
                         <button
                           key={tag.id}
                           type="button"

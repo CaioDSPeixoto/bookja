@@ -32,7 +32,6 @@ export default function CadastroPage() {
       options: { data: { nome_usuario: nomeUsuario, data_nascimento: dataNascimento } },
     })
     if (error) {
-      console.error('Erro signUp:', error.message, error)
       setErro(t('erroCadastro'))
     } else if (data.session) {
       await supabase.from('perfil').update({ data_nascimento: dataNascimento }).eq('id', data.user!.id)

@@ -26,7 +26,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
 
   const perfil = historia.perfil as { nome_usuario: string; nome_exibicao: string; avatar_url?: string }
   const colaboradores = (historia.projeto_colaborador as Array<{ papel: string; perfil: { nome_usuario: string; nome_exibicao: string } }>) || []
-  const tags = ((historia.projeto_tag as Array<{ tag: { id: string; nome: string } }>) || []).map((pt) => pt.tag)
+  const tags = ((historia.projeto_tag as Array<{ tag: { id: number; nome: string } }>) || []).map((pt) => pt.tag)
   const capitulos = historia.documento as Array<{ id: string; titulo: string; ordem: number }>
 
   return (

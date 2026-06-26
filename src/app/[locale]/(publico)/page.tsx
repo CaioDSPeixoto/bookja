@@ -10,6 +10,27 @@ import { criarClienteServidor } from '@/lib/supabase/server'
 import { Search, BookOpen, PenLine } from 'lucide-react'
 import Link from 'next/link'
 
+type LeituraAtual = {
+  projeto_id: string
+  ultimo_documento_id: string | null
+  projeto: { id: string; titulo: string } | null
+  documento: { id: string; titulo: string } | null
+}
+
+type Relacao<T> = T | T[] | null
+
+type LeituraAtualQuery = {
+  projeto_id: string
+  ultimo_documento_id: string | null
+  projeto: Relacao<{ id: string; titulo: string }>
+  documento: Relacao<{ id: string; titulo: string }>
+}
+
+function obterRelacaoUnica<T>(relacao: Relacao<T>): T | null {
+  if (Array.isArray(relacao)) return relacao[0] || null
+  return relacao
+}
+
 export default async function PaginaInicial({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const t = await getTranslations('inicio')
@@ -25,14 +46,22 @@ export default async function PaginaInicial({ params }: { params: Promise<{ loca
   ])
 
   // Buscar leituras atuais se logado
-  let leiturasAtuais: Array<{ id: string; titulo: string; ultimo_capitulo_titulo: string; capitulo_id: string; historia_id: string }> = []
+  let leiturasAtuais: LeituraAtual[] = []
   if (user) {
     const { data } = await supabase
       .from('leitura_atual')
-      .select('id, titulo, ultimo_capitulo_titulo, capitulo_id, historia_id')
+      .select('projeto_id, ultimo_documento_id, projeto:projeto_id(id, titulo), documento:ultimo_documento_id(id, titulo)')
       .eq('usuario_id', user.id)
+      .order('atualizado_em', { ascending: false })
       .limit(6)
-    leiturasAtuais = data || []
+    leiturasAtuais = ((data || []) as LeituraAtualQuery[])
+      .map((leitura) => ({
+        projeto_id: leitura.projeto_id,
+        ultimo_documento_id: leitura.ultimo_documento_id,
+        projeto: obterRelacaoUnica(leitura.projeto),
+        documento: obterRelacaoUnica(leitura.documento),
+      }))
+      .filter((leitura) => leitura.ultimo_documento_id && leitura.projeto && leitura.documento)
   }
 
   const secoes = [
@@ -93,13 +122,13 @@ export default async function PaginaInicial({ params }: { params: Promise<{ loca
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {leiturasAtuais.map((leitura) => (
                 <Link
-                  key={leitura.id}
-                  href={`/${locale}/historia/${leitura.historia_id}/capitulo/${leitura.capitulo_id}`}
+                  key={`${leitura.projeto_id}:${leitura.ultimo_documento_id || ''}`}
+                  href={`/${locale}/historia/${leitura.projeto_id}/ler/${leitura.ultimo_documento_id}`}
                   className="flex items-center gap-4 rounded-xl border border-gray-200 p-4 transition-all hover:border-indigo-200 hover:shadow-lg"
                 >
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold text-gray-900">{leitura.titulo}</h3>
-                    <p className="truncate text-sm text-gray-500">{leitura.ultimo_capitulo_titulo}</p>
+                    <h3 className="truncate font-semibold text-gray-900">{leitura.projeto?.titulo}</h3>
+                    <p className="truncate text-sm text-gray-500">{leitura.documento?.titulo}</p>
                   </div>
                   <BookOpen className="h-5 w-5 flex-shrink-0 text-indigo-600" />
                 </Link>

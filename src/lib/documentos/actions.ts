@@ -1,31 +1,14 @@
 'use server'
 
 import { criarClienteServidor } from '@/lib/supabase/server'
+import { obterUsuarioAutenticado, verificarAcessoProjeto } from '@/lib/projetos/acesso'
+import type { Json } from '@/types/database'
 
 type TipoDocumento = 'capitulo' | 'ficha_personagem' | 'biblia' | 'nota' | 'outro'
 
 async function verificarAcesso(supabase: Awaited<ReturnType<typeof criarClienteServidor>>, projetoId: string) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Não autenticado')
-
-  const { data: projeto } = await supabase
-    .from('projeto')
-    .select('dono_id')
-    .eq('id', projetoId)
-    .single()
-
-  if (!projeto) throw new Error('Projeto não encontrado')
-
-  if (projeto.dono_id === user.id) return user.id
-
-  const { data: colaborador } = await supabase
-    .from('projeto_colaborador')
-    .select('usuario_id')
-    .eq('projeto_id', projetoId)
-    .eq('usuario_id', user.id)
-    .single()
-
-  if (!colaborador) throw new Error('Sem permissão')
+  const user = await obterUsuarioAutenticado(supabase)
+  await verificarAcessoProjeto(supabase, projetoId, user.id)
   return user.id
 }
 
@@ -55,7 +38,7 @@ export async function criarDocumento(projetoId: string, titulo: string, tipo: Ti
 
 export async function atualizarDocumento(
   id: string,
-  dados: { titulo?: string; conteudo?: unknown; contagem_palavras?: number; publico?: boolean }
+  dados: { titulo?: string; conteudo?: Json | null; contagem_palavras?: number; publico?: boolean }
 ) {
   const supabase = await criarClienteServidor()
 

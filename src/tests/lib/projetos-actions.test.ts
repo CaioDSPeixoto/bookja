@@ -26,6 +26,7 @@ function setupChain(dados: unknown = null, erro: unknown = null) {
     update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     single: vi.fn(() => ({ data: dados, error: erro })),
     then: undefined,
@@ -62,6 +63,42 @@ describe('Server Actions - Projetos (lógica de validação)', () => {
     expect(mockFrom).toHaveBeenCalledWith('projeto')
     expect(chain.eq).toHaveBeenCalledWith('id', 'proj-1')
   })
+
+  it('publicarProjeto marca status e data de publicação', async () => {
+    const documentosChain = setupChain([{ id: 'doc-1' }])
+    const projetoChain = setupChain(null)
+    mockFrom.mockReturnValueOnce(documentosChain).mockReturnValueOnce(projetoChain)
+    const { publicarProjeto } = await import('@/lib/projetos/actions')
+
+    await publicarProjeto('proj-1', { titulo: 'Livro', sinopse: 'Resumo' })
+
+    expect(mockFrom).toHaveBeenNthCalledWith(1, 'documento')
+    expect(mockFrom).toHaveBeenNthCalledWith(2, 'projeto')
+    expect(projetoChain.update).toHaveBeenCalledWith(expect.objectContaining({
+      titulo: 'Livro',
+      sinopse: 'Resumo',
+      status: 'publicado',
+      publicado_em: expect.any(String),
+      atualizado_em: expect.any(String),
+    }))
+    expect(projetoChain.eq).toHaveBeenCalledWith('dono_id', 'user-123')
+  })
+
+  it('despublicarProjeto volta para rascunho e limpa publicado_em', async () => {
+    const chain = setupChain(null)
+    const { despublicarProjeto } = await import('@/lib/projetos/actions')
+
+    await despublicarProjeto('proj-1', { titulo: 'Livro' })
+
+    expect(mockFrom).toHaveBeenCalledWith('projeto')
+    expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({
+      titulo: 'Livro',
+      status: 'rascunho',
+      publicado_em: null,
+      atualizado_em: expect.any(String),
+    }))
+    expect(chain.eq).toHaveBeenCalledWith('dono_id', 'user-123')
+  })
 })
 
 describe('Validações de segurança - Projetos', () => {
@@ -71,6 +108,8 @@ describe('Validações de segurança - Projetos', () => {
     expect(actionsCode).toBeDefined()
     expect(actionsCode.criarProjeto).toBeDefined()
     expect(actionsCode.atualizarProjeto).toBeDefined()
+    expect(actionsCode.publicarProjeto).toBeDefined()
+    expect(actionsCode.despublicarProjeto).toBeDefined()
     expect(actionsCode.excluirProjeto).toBeDefined()
     expect(actionsCode.listarProjetos).toBeDefined()
     expect(actionsCode.obterProjeto).toBeDefined()

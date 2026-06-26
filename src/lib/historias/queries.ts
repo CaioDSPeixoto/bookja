@@ -100,7 +100,7 @@ export async function buscarCatalogo(filtros: { busca?: string; tagId?: string; 
   }
 
   if (filtros.tagId) {
-    query = query.eq('projeto_tag.tag_id', filtros.tagId)
+    query = query.eq('projeto_tag.tag_id', Number(filtros.tagId))
   }
 
   const { data, count, error } = await query
@@ -135,7 +135,7 @@ export async function buscarTagsDisponiveis() {
   for (const tag of data || []) {
     const cat = tag.categoria || 'geral'
     if (!agrupadas[cat]) agrupadas[cat] = []
-    agrupadas[cat].push({ id: tag.id, nome: tag.nome })
+    agrupadas[cat].push({ id: String(tag.id), nome: tag.nome })
   }
   return agrupadas
 }

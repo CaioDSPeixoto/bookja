@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { criarClienteServidor } from '@/lib/supabase/server'
+import { verificarAcessoProjeto } from '@/lib/projetos/acesso'
+import type { Json } from '@/types/database'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 interface Capitulo {
   titulo: string
-  conteudo: unknown
+  conteudo: Json | null
 }
 
 export async function POST(request: NextRequest) {
@@ -34,28 +36,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ erro: 'Nenhum capítulo para importar' }, { status: 400 })
     }
 
-    // Verify project ownership
-    const { data: projeto } = await supabase
-      .from('projeto')
-      .select('dono_id')
-      .eq('id', projetoId)
-      .single()
-
-    if (!projeto) {
-      return NextResponse.json({ erro: 'Projeto não encontrado' }, { status: 404 })
-    }
-
-    if (projeto.dono_id !== user.id) {
-      const { data: colab } = await supabase
-        .from('projeto_colaborador')
-        .select('usuario_id')
-        .eq('projeto_id', projetoId)
-        .eq('usuario_id', user.id)
-        .single()
-
-      if (!colab) {
-        return NextResponse.json({ erro: 'Sem permissão neste projeto' }, { status: 403 })
+    try {
+      await verificarAcessoProjeto(supabase, projetoId, user.id)
+    } catch (error) {
+      const mensagem = error instanceof Error ? error.message : 'Sem permissão neste projeto'
+      if (mensagem === 'Projeto não encontrado') {
+        return NextResponse.json({ erro: mensagem }, { status: 404 })
       }
+      return NextResponse.json({ erro: 'Sem permissão neste projeto' }, { status: 403 })
     }
 
     // Get current max order

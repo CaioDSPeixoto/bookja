@@ -34,13 +34,13 @@ export async function criarComentario(
   // Notificar dono do projeto (se não for o próprio autor)
   const { data: projetoDono } = await supabase
     .from('projeto')
-    .select('autor_id')
+    .select('dono_id')
     .eq('id', projetoId)
     .single()
 
-  if (projetoDono && projetoDono.autor_id !== user.id) {
+  if (projetoDono && projetoDono.dono_id !== user.id) {
     await criarNotificacao({
-      usuario_id: projetoDono.autor_id,
+      usuario_id: projetoDono.dono_id,
       tipo: 'comentario',
       projeto_id: projetoId,
       mensagem: `Novo comentário no seu projeto`,

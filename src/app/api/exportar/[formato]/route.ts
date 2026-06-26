@@ -3,6 +3,7 @@ import { criarClienteServidor } from '@/lib/supabase/server'
 import { exportarEpub } from '@/lib/exportacao/epub'
 import { exportarDocx } from '@/lib/exportacao/docx'
 import { exportarPdf } from '@/lib/exportacao/pdf'
+import { obterUsuarioOpcional, verificarAcessoProjeto } from '@/lib/projetos/acesso'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -22,11 +23,7 @@ export async function GET(
     }
 
     const supabase = await criarClienteServidor()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ erro: 'Autenticação necessária' }, { status: 401 })
-    }
+    const user = await obterUsuarioOpcional(supabase)
 
     // Fetch project
     const { data: projeto } = await supabase
@@ -41,24 +38,16 @@ export async function GET(
 
     // Check access: published OR owner/collaborator
     const isPublicado = projeto.status === 'publicado'
-    let temAcesso = isPublicado
-
-    if (!temAcesso && user) {
-      if (projeto.dono_id === user.id) {
-        temAcesso = true
-      } else {
-        const { data: colab } = await supabase
-          .from('projeto_colaborador')
-          .select('usuario_id')
-          .eq('projeto_id', projetoId)
-          .eq('usuario_id', user.id)
-          .single()
-        temAcesso = !!colab
+    if (!isPublicado) {
+      try {
+        await verificarAcessoProjeto(supabase, projetoId, user?.id ?? null)
+      } catch (error) {
+        const mensagem = error instanceof Error ? error.message : 'Sem permissão para exportar este projeto'
+        if (mensagem === 'Não autenticado') {
+          return NextResponse.json({ erro: 'Autenticação necessária' }, { status: 401 })
+        }
+        return NextResponse.json({ erro: 'Sem permissão para exportar este projeto' }, { status: 403 })
       }
-    }
-
-    if (!temAcesso) {
-      return NextResponse.json({ erro: 'Sem permissão para exportar este projeto' }, { status: 403 })
     }
 
     // Fetch author name

@@ -14,7 +14,7 @@ export async function listarMural(perfilId: string) {
 
   const { data, error } = await supabase
     .from('mural_comentario')
-    .select('id, conteudo, criado_em, pai_id, autor:autor_id(id, nome_usuario, nome_exibicao, avatar_url)')
+    .select('id, conteudo, criado_em, pai_id, autor:perfil!mural_comentario_autor_id_fkey(id, nome_usuario, nome_exibicao, avatar_url)')
     .eq('perfil_id', perfilId)
     .is('pai_id', null)
     .order('criado_em', { ascending: false })
@@ -28,7 +28,7 @@ export async function listarMural(perfilId: string) {
   if (ids.length > 0) {
     const { data: resp } = await supabase
       .from('mural_comentario')
-      .select('id, conteudo, criado_em, pai_id, autor:autor_id(id, nome_usuario, nome_exibicao, avatar_url)')
+      .select('id, conteudo, criado_em, pai_id, autor:perfil!mural_comentario_autor_id_fkey(id, nome_usuario, nome_exibicao, avatar_url)')
       .in('pai_id', ids)
       .order('criado_em', { ascending: true })
     respostas = resp || []

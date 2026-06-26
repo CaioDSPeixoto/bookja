@@ -7,6 +7,7 @@ import { renderizarConteudoHTML } from '@/lib/historias/renderizar'
 import BarraProgresso from '@/components/leitura/BarraProgresso'
 import HeaderLeitura from '@/components/leitura/HeaderLeitura'
 import BotaoCopiarPix from '@/components/leitura/BotaoCopiarPix'
+import { registrarLeituraAtual } from '@/lib/leitura/actions'
 
 export default async function LeituraPage({ params }: { params: Promise<{ locale: string; id: string; docId: string }> }) {
   const { locale, id, docId } = await params
@@ -46,6 +47,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
 
   const htmlConteudo = renderizarConteudoHTML(documento.conteudo)
   const perfilAutor = projeto.perfil as { chave_pix?: string } | null
+  await registrarLeituraAtual(id, docId)
 
   return (
     <>

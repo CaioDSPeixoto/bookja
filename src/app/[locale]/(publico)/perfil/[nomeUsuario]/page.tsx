@@ -50,7 +50,7 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
           <p className="text-gray-500">{t('semHistorias')}</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
-            {projetos.map((p: { id: string; titulo: string; sinopse?: string }) => (
+            {projetos.map((p: { id: string; titulo: string; sinopse: string | null }) => (
               <Link key={p.id} href={`/${locale}/historia/${p.id}`} className="rounded-lg border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition-colors">
                 <h3 className="font-medium">{p.titulo}</h3>
                 {p.sinopse && <p className="mt-1 text-sm text-gray-500 line-clamp-2">{p.sinopse}</p>}
