@@ -82,6 +82,7 @@ export async function verificarAcessoProjeto(
     .select('usuario_id')
     .eq('projeto_id', projetoId)
     .eq('usuario_id', usuarioId)
+    .not('aceito_em', 'is', null)
     .single()
 
   if (!colaborador) throw new Error('Sem permissão')

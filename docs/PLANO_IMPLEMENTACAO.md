@@ -34,6 +34,8 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 - Removidos warnings de lint em hooks, imagens, imports e testes.
 - Adicionados `playwright-report/` e `test-results/` ao `.gitignore`.
 - Corrigida regra de classificação etária para bloquear conteúdo restrito quando a idade é desconhecida.
+- Corrigida autorização de colaboradores para exigir `aceito_em is not null`.
+- Adicionada migration `010_colaborador_aceite_obrigatorio.sql` com `eh_colaborador` revisada, policy de aceite e trigger para impedir alteração indevida do convite.
 
 ## Achados prioritários
 
@@ -87,7 +89,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
    - Local: policies e ações que checam `projeto_colaborador.usuario_id`.
    - Problema: a existência da linha já autoriza acesso; `aceito_em` é usado na UI, mas não na autorização.
    - Impacto: usuário convidado pode acessar antes de aceitar.
-   - Ação: decidir regra; se aceite for obrigatório, atualizar RLS/helpers para exigir `aceito_em is not null`.
+   - Status: corrigido em 2026-06-26. Acesso de colaborador exige `aceito_em is not null`; convites pendentes continuam visíveis para o dono.
 
 9. Classificação etária não bloqueia usuário sem data de nascimento
    - Local: `src/lib/historias/queries.ts`

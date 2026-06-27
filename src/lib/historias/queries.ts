@@ -71,7 +71,7 @@ export async function buscarHistoriaPublica(id: string) {
     .select(`
       *,
       perfil:dono_id(nome_usuario, nome_exibicao, avatar_url, chave_pix),
-      projeto_colaborador(usuario_id, papel, perfil:usuario_id(nome_usuario, nome_exibicao, avatar_url)),
+      projeto_colaborador(usuario_id, papel, aceito_em, perfil:usuario_id(nome_usuario, nome_exibicao, avatar_url)),
       projeto_tag(tag:tag_id(id, nome, categoria)),
       documento(id, titulo, tipo, publico, ordem)
     `)

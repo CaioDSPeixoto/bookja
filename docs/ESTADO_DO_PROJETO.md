@@ -246,6 +246,7 @@ Migrations em `supabase/migrations` definem:
 - `004_fix_rls_recursion.sql` corrige recursão entre `projeto` e `projeto_colaborador` usando funções `security definer`.
 - `003_lock_rpc.sql` adiciona lock atômico com advisory lock.
 - `007_incrementar_visualizacoes_rpc.sql` adiciona RPC para visualizações.
+- `010_colaborador_aceite_obrigatorio.sql` exige `aceito_em` para acesso efetivo de colaborador, adiciona policy de aceite e trigger para limitar o update do convite.
 
 ### Storage
 
@@ -351,7 +352,6 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Internacionalizar strings hardcoded em páginas e componentes do painel/editor.
 - Revisar uso de `any` e casts em queries Supabase enquanto os tipos oficiais não forem gerados.
 - Substituir os tipos manuais de Supabase por tipos gerados pela Supabase CLI quando houver acesso ao projeto remoto.
-- Definir comportamento de convites: `projeto_colaborador` permite `aceito_em`, mas o fluxo de notificação/aceite precisa ser verificado de ponta a ponta.
 
 ### Concluído recentemente
 
@@ -372,6 +372,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Warnings de lint removidos: hooks estabilizados, imports/mocks limpos e imagens migradas para `next/image`.
 - Artefatos locais do Playwright adicionados ao `.gitignore`.
 - Classificação etária corrigida: conteúdo acima de Livre é ocultado quando a idade é desconhecida.
+- Colaboradores pendentes não recebem acesso efetivo antes do aceite; `eh_colaborador` e o helper de acesso exigem `aceito_em`.
 
 ### Baixa prioridade
 
