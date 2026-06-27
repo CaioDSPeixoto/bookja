@@ -49,6 +49,9 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 - Server Actions de projetos passaram a validar UUID, título e status no servidor e a ocultar mensagens técnicas do Supabase.
 - Server Actions de documentos passaram a validar UUID, tipo, conteúdo JSON, contagem de palavras e ordem antes de mutações.
 - Adicionados testes unitários para validação e erros públicos em projetos/documentos.
+- Server Actions de colaboradores passaram a validar UUID, nome de usuário e papel antes de convidar/remover/listar/aceitar convite.
+- Server Actions de comentários passaram a validar UUID, conteúdo, nota e emoji antes de comentar/responder/reagir/listar.
+- Adicionados testes unitários para validação e erros públicos em colaboradores/comentários.
 
 ## Achados prioritários
 
@@ -120,13 +123,13 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Locais: importação/exportação e Server Actions.
     - Problema: `error.message` é retornado ao usuário em vários pontos.
     - Impacto: vazamento de detalhe interno e experiência inconsistente.
-    - Status: parcialmente corrigido em 2026-06-27 nas APIs de importação/exportação/lock e nas Server Actions de projetos/documentos. Ainda falta revisar colaboradores, comentários, mural, perfil, favoritos e notificações, além de adicionar logging interno estruturado.
+    - Status: parcialmente corrigido em 2026-06-27 nas APIs de importação/exportação/lock e nas Server Actions de projetos/documentos/colaboradores/comentários. Ainda falta revisar mural, perfil, favoritos e notificações, além de adicionar logging interno estruturado.
 
 12. Validação de entrada ainda é pontual e duplicada
     - Locais: Server Actions e rotas em `src/app/api`.
     - Problema: cada fluxo valida manualmente UUID, payload, status e permissões; outros fluxos aceitam objetos parciais sem schema.
     - Impacto: regras divergentes, mensagens inconsistentes e maior chance de aceitar dados inválidos.
-    - Status: parcialmente corrigido em 2026-06-27 nas rotas de importação/exportação/lock e nas Server Actions de projetos/documentos com helpers comuns para UUID e JSON. Próximo passo: definir schemas compartilhados para comentários, colaboradores, mural, perfil, favoritos e notificações.
+    - Status: parcialmente corrigido em 2026-06-27 nas rotas de importação/exportação/lock e nas Server Actions de projetos/documentos/colaboradores/comentários com helpers comuns para UUID e JSON. Próximo passo: definir schemas compartilhados para mural, perfil, favoritos e notificações.
 
 ### P2 - Robustez e qualidade
 
