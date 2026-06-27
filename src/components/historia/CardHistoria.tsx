@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Star } from 'lucide-react'
 
 interface CardHistoriaProps {
@@ -16,7 +17,7 @@ export function CardHistoria({ titulo, autor, sinopse, tags, avaliacao, capa_url
     <Link href={href} className="group block overflow-hidden rounded-lg border border-gray-200 transition hover:shadow-lg">
       <div className="aspect-[3/4] w-full bg-gray-100">
         {capa_url ? (
-          <img src={capa_url} alt={titulo} className="h-full w-full object-cover" />
+          <Image src={capa_url} alt={titulo} width={360} height={480} className="h-full w-full object-cover" unoptimized />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
             <span className="text-4xl font-bold text-gray-300">{titulo.charAt(0)}</span>

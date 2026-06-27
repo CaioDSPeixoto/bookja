@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { MessageCircle, Trash2 } from 'lucide-react'
@@ -34,12 +34,12 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
   const [respostaTexto, setRespostaTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
 
-  async function carregar() {
+  const carregar = useCallback(async () => {
     const dados = await listarComentarios(projetoId, documentoId)
     setComentarios(dados as Comentario[])
-  }
+  }, [projetoId, documentoId])
 
-  useEffect(() => { carregar() }, [projetoId, documentoId])
+  useEffect(() => { carregar() }, [carregar])
 
   async function handleEnviar(e: React.FormEvent) {
     e.preventDefault()

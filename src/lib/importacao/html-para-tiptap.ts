@@ -10,14 +10,6 @@ interface TiptapNode {
   attrs?: Record<string, unknown>
 }
 
-const BLOCK_TAGS: Record<string, string> = {
-  p: 'paragraph',
-  h1: 'heading', h2: 'heading', h3: 'heading',
-  h4: 'heading', h5: 'heading', h6: 'heading',
-  ul: 'bulletList', ol: 'orderedList', li: 'listItem',
-  blockquote: 'blockquote',
-}
-
 const MARK_TAGS: Record<string, string> = {
   strong: 'bold', b: 'bold',
   em: 'italic', i: 'italic',

@@ -155,7 +155,10 @@ export default async function PaginaInicial({ params }: { params: Promise<{ loca
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {secao.dados!.map((p) => {
                   const perfil = Array.isArray(p.perfil) ? p.perfil[0] : p.perfil
-                  const tags = (p.projeto_tag || []).map((pt: { tag: { id: string; nome: string } }) => pt.tag)
+                  const tags = (p.projeto_tag || []).map((pt) => ({
+                    id: String(pt.tag.id),
+                    nome: pt.tag.nome,
+                  }))
                   return (
                     <div key={p.id} className="rounded-xl border border-gray-200 transition-all hover:border-indigo-200 hover:shadow-lg">
                       <CardHistoria

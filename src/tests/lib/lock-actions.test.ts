@@ -4,7 +4,6 @@ const mockUser = { id: 'user-1', email: 'a@b.com' }
 const mockUpsert = vi.fn()
 const mockDelete = vi.fn()
 const mockUpdate = vi.fn()
-const mockSelect = vi.fn()
 
 const mockSupabase = {
   auth: { getUser: vi.fn(() => ({ data: { user: mockUser }, error: null })) },
@@ -48,7 +47,7 @@ describe('Lock de Edição - Actions', () => {
 
   it('renovarLock atualiza expira_em', async () => {
     const { renovarLock } = await import('@/lib/lock/actions')
-    const resultado = await renovarLock('doc-1')
+    await renovarLock('doc-1')
 
     expect(mockSupabase.from).toHaveBeenCalledWith('documento_lock')
   })

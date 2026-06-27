@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { Eye, Star, BookOpen } from 'lucide-react'
 import { buscarHistoriaPublica, registrarVisualizacao } from '@/lib/historias/queries'
@@ -36,7 +37,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
         <div className="w-full flex-shrink-0 md:w-64">
           <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100">
             {historia.capa_url ? (
-              <img src={historia.capa_url} alt={historia.titulo} className="h-full w-full object-cover" />
+              <Image src={historia.capa_url} alt={historia.titulo} width={384} height={512} className="h-full w-full object-cover" unoptimized />
             ) : (
               <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
                 <BookOpen size={64} className="text-gray-300" />

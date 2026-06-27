@@ -261,6 +261,7 @@ Clientes:
 - Browser: `src/lib/supabase/client.ts`, usa `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 - Server: `src/lib/supabase/server.ts`, usa cookies de `next/headers`.
 - Middleware: `src/lib/supabase/middleware.ts`, atualiza sessão via cookies antes do roteamento de locale.
+- Middleware importa o entrypoint específico de `createServerClient` para evitar incluir o browser client no bundle Edge.
 - Todos os clients Supabase estão tipados com `Database` de `src/types/database.ts`.
 - `src/types/database.ts` contém tipos manuais provisórios alinhados às migrations, incluindo relacionamentos necessários para embeds PostgREST e retorno da RPC `adquirir_lock_documento`.
 
@@ -286,6 +287,7 @@ Headers configurados em `next.config.ts`:
 - `Permissions-Policy` bloqueando câmera, microfone e geolocalização.
 - `Strict-Transport-Security`
 - `X-DNS-Prefetch-Control`
+- `images.remotePatterns` permite imagens hospedadas em `*.supabase.co`.
 
 ## Padrões de projeto observados
 
@@ -333,7 +335,7 @@ Configuração:
 
 - `playwright.config.ts`
 
-Observação: ainda é necessário validar o E2E em ambiente com dependências instaladas e servidor funcional.
+Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. `playwright-report/` e `test-results/` são artefatos locais ignorados pelo Git.
 
 ## Pendências e riscos atuais
 
@@ -350,7 +352,6 @@ Observação: ainda é necessário validar o E2E em ambiente com dependências i
 - Revisar uso de `any` e casts em queries Supabase enquanto os tipos oficiais não forem gerados.
 - Substituir os tipos manuais de Supabase por tipos gerados pela Supabase CLI quando houver acesso ao projeto remoto.
 - Definir comportamento de convites: `projeto_colaborador` permite `aceito_em`, mas o fluxo de notificação/aceite precisa ser verificado de ponta a ponta.
-- Rever regra de classificação etária: usuário sem `data_nascimento` não é filtrado atualmente.
 
 ### Concluído recentemente
 
@@ -367,6 +368,10 @@ Observação: ainda é necessário validar o E2E em ambiente com dependências i
 - Atualizado `@supabase/ssr` para `^0.12.0`, compatível com `@supabase/supabase-js` atual.
 - Tipados os clients Supabase e corrigidos contratos revelados pela build: campos nullable, `tag.id` numérico, `Json` em documentos/importação e `StatusProjeto`.
 - Declarados relacionamentos Supabase usados por embeds em projetos, documentos, colaboradores, tags, comentários, mural, favoritos, leitura atual e locks.
+- E2E validado localmente com `.env.local` ignorado pelo Git.
+- Warnings de lint removidos: hooks estabilizados, imports/mocks limpos e imagens migradas para `next/image`.
+- Artefatos locais do Playwright adicionados ao `.gitignore`.
+- Classificação etária corrigida: conteúdo acima de Livre é ocultado quando a idade é desconhecida.
 
 ### Baixa prioridade
 

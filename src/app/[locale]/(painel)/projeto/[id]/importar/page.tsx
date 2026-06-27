@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import { Upload, FileText, Check, X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -17,7 +16,6 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
   const t = useTranslations('importacao')
   const tGeral = useTranslations('geral')
   const locale = useLocale()
-  const router = useRouter()
   const [projetoId, setProjetoId] = useState('')
   const [etapa, setEtapa] = useState<'upload' | 'preview' | 'importando' | 'sucesso'>('upload')
   const [capitulos, setCapitulos] = useState<CapituloPreview[]>([])
@@ -25,9 +23,9 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
   const [carregando, setCarregando] = useState(false)
   const [nomeArquivo, setNomeArquivo] = useState('')
 
-  useState(() => {
+  useEffect(() => {
     params.then(({ id }) => setProjetoId(id))
-  })
+  }, [params])
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0]

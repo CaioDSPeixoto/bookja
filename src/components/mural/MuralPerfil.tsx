@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useCallback, useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { MessageSquare, Send, Trash2, Reply, SmilePlus } from 'lucide-react'
@@ -41,14 +41,14 @@ export default function MuralPerfil({
   const [emojiAberto, setEmojiAberto] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  useEffect(() => { carregar() }, [perfilId])
-
-  async function carregar() {
+  const carregar = useCallback(async () => {
     const dados = await listarMural(perfilId)
     setComentarios(dados.comentarios as Comentario[])
     setRespostas(dados.respostas as Comentario[])
     setReacoes(dados.reacoes)
-  }
+  }, [perfilId])
+
+  useEffect(() => { carregar() }, [carregar])
 
   function handleEnviar(e: React.FormEvent) {
     e.preventDefault()

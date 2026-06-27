@@ -52,7 +52,7 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
       }
       setCarregando(false)
     })
-  }, [params, recarregar, capituloAtivoId])
+  }, [params, recarregar, capituloAtivoId, searchParams])
 
   const handleNovoCapitulo = async () => {
     const novoDoc = await criarDocumento(projetoId, '', 'capitulo')

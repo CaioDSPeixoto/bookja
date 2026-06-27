@@ -31,15 +31,34 @@ async function obterIdadeUsuario(): Promise<number | null> {
   return idade
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function filtrarPorIdade(projetos: any[], idadeUsuario: number | null): any[] {
-  if (idadeUsuario === null) return projetos
+type TagClassificacao = {
+  nome: string
+  categoria: string | null
+}
+
+type ProjetoComTags = {
+  projeto_tag?: Array<{ tag: TagClassificacao | null }>
+}
+
+function obterIdadeMinima(tags: TagClassificacao[]): number {
+  const classificacao = tags.find((tag) => tag.categoria === 'publico_alvo')
+  if (!classificacao) return 0
+  return CLASSIFICACAO_IDADE[classificacao.nome] ?? 0
+}
+
+export function permitePorIdade(tags: TagClassificacao[], idadeUsuario: number | null): boolean {
+  const idadeMinima = obterIdadeMinima(tags)
+  if (idadeMinima === 0) return true
+  if (idadeUsuario === null) return false
+  return idadeUsuario >= idadeMinima
+}
+
+function filtrarPorIdade<T extends ProjetoComTags>(projetos: T[], idadeUsuario: number | null): T[] {
   return projetos.filter(p => {
-    const tags = (p.projeto_tag || []).map((pt: { tag: { nome: string; categoria: string } }) => pt.tag)
-    const classificacao = tags.find((t: { categoria: string }) => t.categoria === 'publico_alvo')
-    if (!classificacao) return true
-    const idadeMinima = CLASSIFICACAO_IDADE[classificacao.nome] ?? 0
-    return idadeUsuario >= idadeMinima
+    const tags = (p.projeto_tag || [])
+      .map((pt) => pt.tag)
+      .filter((tag): tag is TagClassificacao => Boolean(tag))
+    return permitePorIdade(tags, idadeUsuario)
   })
 }
 
@@ -63,12 +82,8 @@ export async function buscarHistoriaPublica(id: string) {
   if (error || !data) return null
 
   // Verificar classificação etária
-  const tags = ((data.projeto_tag || []) as Array<{ tag: { nome: string; categoria: string } }>).map(pt => pt.tag)
-  const classificacao = tags.find(t => t.categoria === 'publico_alvo')
-  if (classificacao && idadeUsuario !== null) {
-    const idadeMinima = CLASSIFICACAO_IDADE[classificacao.nome] ?? 0
-    if (idadeUsuario < idadeMinima) return null
-  }
+  const tags = ((data.projeto_tag || []) as Array<{ tag: TagClassificacao }>).map(pt => pt.tag)
+  if (!permitePorIdade(tags, idadeUsuario)) return null
 
   const documentosPublicos = (data.documento as Array<{ id: string; titulo: string; tipo: string; publico: boolean; ordem: number }>)
     .filter((d) => d.publico)

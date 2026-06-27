@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { Copy, BookOpen } from 'lucide-react'
+import Image from 'next/image'
+import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { buscarPerfilPublico } from '@/lib/perfil/actions'
 import { criarClienteServidor } from '@/lib/supabase/server'
@@ -25,7 +26,7 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
         {perfil.avatar_url ? (
-          <img src={perfil.avatar_url} alt={perfil.nome_exibicao || ''} className="h-20 w-20 rounded-full object-cover" />
+          <Image src={perfil.avatar_url} alt={perfil.nome_exibicao || ''} width={80} height={80} className="h-20 w-20 rounded-full object-cover" unoptimized />
         ) : (
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-indigo-600 text-2xl font-bold text-white">
             {iniciais}

@@ -2,13 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock supabase responses
 const mockFrom = vi.fn()
-const mockSelect = vi.fn()
-const mockInsert = vi.fn()
-const mockUpdate = vi.fn()
-const mockDelete = vi.fn()
-const mockEq = vi.fn()
-const mockSingle = vi.fn()
-const mockOrder = vi.fn()
 
 const mockUser = { id: 'user-123', email: 'test@test.com' }
 
@@ -58,7 +51,7 @@ describe('Server Actions - Projetos (lógica de validação)', () => {
     const chain = setupChain({ id: 'proj-1', dono_id: 'user-123' })
     const { obterProjeto } = await import('@/lib/projetos/actions')
 
-    const resultado = await obterProjeto('proj-1')
+    await obterProjeto('proj-1')
 
     expect(mockFrom).toHaveBeenCalledWith('projeto')
     expect(chain.eq).toHaveBeenCalledWith('id', 'proj-1')

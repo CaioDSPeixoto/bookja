@@ -30,6 +30,10 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 - Atualizado `@supabase/ssr` para `^0.12.0`, compatível com `@supabase/supabase-js` `2.108.x`.
 - Declarados relacionamentos Supabase usados por embeds: projetos/documentos, colaboradores/perfis, tags, comentários, mural, favoritos, leitura atual e locks.
 - Ajustados contratos TypeScript para `null`, ids numéricos de tags, conteúdo `Json` e status restrito de projeto.
+- Validado `npm run test:e2e` localmente com `.env.local` ignorado pelo Git.
+- Removidos warnings de lint em hooks, imagens, imports e testes.
+- Adicionados `playwright-report/` e `test-results/` ao `.gitignore`.
+- Corrigida regra de classificação etária para bloquear conteúdo restrito quando a idade é desconhecida.
 
 ## Achados prioritários
 
@@ -63,7 +67,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
    - Local: `playwright.config.ts.bak`
    - Problema: `npm run test:e2e` existe, mas a configuração ativa não está no nome esperado.
    - Impacto: fluxo E2E pode não rodar como esperado.
-   - Status: configuração restaurada em 2026-06-26; validação E2E ainda depende de ambiente com dependências instaladas.
+   - Status: concluído em 2026-06-26. Configuração restaurada e `npm run test:e2e` validado localmente.
 
 ### P1 - Segurança, consistência e dados
 
@@ -89,7 +93,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
    - Local: `src/lib/historias/queries.ts`
    - Problema: `idadeUsuario === null` retorna todos os projetos.
    - Impacto: conteúdo +18 pode aparecer para visitante ou usuário sem idade.
-   - Ação: definir política: ocultar conteúdo com restrição quando idade for desconhecida, ou exigir login/data para acessar.
+   - Status: corrigido em 2026-06-26. Conteúdo com classificação acima de Livre é ocultado quando a idade é desconhecida.
 
 10. Upload de capa persiste base64 no banco
     - Local: `src/app/[locale]/(painel)/projeto/[id]/editar/page.tsx`
