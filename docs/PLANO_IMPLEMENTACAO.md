@@ -54,6 +54,17 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 - Adicionados testes unitários para validação e erros públicos em colaboradores/comentários.
 - Server Actions de mural, perfil, favoritos e notificações passaram a validar entradas e ocultar mensagens técnicas do Supabase.
 - Adicionados testes unitários para validação e erros públicos em mural, perfil, favoritos e notificações.
+- Provisionado o bucket de Storage `capas` e migrado o upload de capa de base64 para Supabase Storage (URL pública + remoção do objeto antigo); migration `011_storage_capas.sql` criada e `008` marcada como obsoleta.
+- Editor: auto-save com debounce de 2,5s + aviso `beforeunload` de pendências; corretor ortográfico nativo (PT-BR) ligado no editor (`spellcheck`/`lang`).
+- Relação leitor-escritor (nível capítulo): post-its do autor visíveis na leitura, reações de leitor por capítulo e comentários por capítulo. Tabelas `documento_nota`/`documento_reacao` (migration `012`, RLS), actions `src/lib/documentos/interacoes.ts`, UI em leitura e editor. Validado localmente com lint, testes, build e E2E.
+- Higiene de repositório: `.gitattributes` (`* text=auto eol=lf`) e working tree convertido de CRLF para LF, eliminando o churn de ~101 arquivos no Windows.
+- README expandido com setup completo (requisitos, env vars, migrations, testes/E2E, convenções, estrutura).
+- Redesign de fichas/ambientação: campos flexíveis (templates editáveis) substituindo o texto livre; `EditorFicha` abre na coluna central, modelo em `src/lib/fichas/modelo.ts`, sem migration (reuso de `documento.conteudo` JSON) e compatível com conteúdo legado. Validado localmente com lint, testes, build e E2E.
+- Co-escrita — Fase 1 (presença): presença ao vivo no editor de capítulo via Supabase Realtime (`usePresencaDocumento` + `PresencaBarra`), mostrando quem está no capítulo e quem edita. Sem deps/infra novas. Validado localmente com lint, testes, build e E2E; ainda merece teste manual com dois navegadores para confirmar experiência multiusuário real.
+- Co-escrita — Fase 2 (pendente): edição simultânea com merge exige CRDT (Yjs) + provider de sync sobre Supabase Realtime e substituição do lock por capítulo. Requer novas dependências (não instaláveis no ambiente atual) e teste multi-cliente; deve ser feita e validada localmente.
+- Segurança (code review): corrigido o `select` aberto de `documento_nota`/`documento_reacao` (migration `013`) que expunha bastidores de capítulos em rascunho; leitura agora exige capítulo público publicado ou dono/colaborador.
+- Segurança (advisor Supabase): removida a policy de SELECT ampla do bucket público `capas` (migration `014`) que permitia listar arquivos; URLs públicas continuam funcionando.
+- Consolidação: testes unitários para `fichas/modelo` e `documentos/interacoes` (validação, permissão, toggle de reação, agregação). Validação local em 2026-06-27: `npm run lint`, `npm run test` (100 testes), `npm run build` e `npm run test:e2e` (11 testes) passaram.
 
 ## Achados prioritários
 
@@ -119,7 +130,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Local: `src/app/[locale]/(painel)/projeto/[id]/editar/page.tsx`
     - Problema: imagem é redimensionada e salva como Data URL em `capa_url`.
     - Impacto: linhas grandes no Postgres, pior performance e ausência de lifecycle de arquivo.
-    - Ação: concluir integração com Supabase Storage para bucket `capas`; salvar URL pública no banco.
+    - Status: concluído em 2026-06-27. Bucket `capas` provisionado via `011_storage_capas.sql` (policies escopadas ao dono); upload envia ao Storage e salva URL pública; base64 removido do fluxo e objeto antigo é apagado na troca/remoção.
 
 11. Erros internos são expostos em APIs
     - Locais: importação/exportação e Server Actions.
@@ -145,7 +156,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Local: `src/components/editor/EditorCapitulo.tsx`
     - Problema: save assíncrono no cleanup não é aguardado; navegação pode cancelar a chamada.
     - Impacto: perda silenciosa de texto.
-    - Ação: adicionar `beforeunload` com aviso para pendências, salvar no clique de navegação e reduzir janela de debounce.
+    - Status: parcialmente concluído em 2026-06-27. Debounce reduzido de 30s para 2,5s, `beforeunload` avisa sobre alterações não salvas; ainda falta salvar de forma garantida na navegação client-side (ex.: flush via API/sendBeacon).
 
 15. Logs de debug em produção
     - Local: `src/lib/projetos/actions.ts`
@@ -154,9 +165,10 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Ação: remover logs ou encapsular em logger controlado por ambiente.
 
 16. Strings hardcoded e mojibake em arquivos antigos
-    - Locais: componentes, migrations antigas, mensagens e comentários.
+    - Locais: componentes, migrations antigas, mensagens e comentários (inclui os componentes novos desta sessão: post-its, reações, fichas, presença).
     - Problema: há strings fora do i18n e arquivos antigos com codificação aparente quebrada.
     - Impacto: UX inconsistente e manutenção ruim.
+    - Decisão (2026-06-27): migração adiada de propósito — o app tem locale único (pt-BR) e o resto é hardcoded; migrar só as strings novas seria churn de baixo retorno. Fazer app-wide quando entrar um segundo idioma.
     - Ação: migrar strings para `pt-BR.json` e normalizar arquivos tocados.
 
 17. `any` e casts escondem inconsistências de dados
@@ -167,6 +179,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 
 18. Cobertura de testes não protege fluxos críticos
     - Lacunas: publicação, comentários/notificações, leitura atual, importação/exportação, autorização de colaborador, catálogo por idade.
+    - Status: parcialmente endereçado em 2026-06-27 — testes para `fichas/modelo` e `documentos/interacoes` (notas/reações). Ainda faltam: upload de capa, UI de leitor-escritor, presença e E2E. Suíte precisa rodar localmente (sem binários nativos Linux no ambiente atual).
     - Ação: adicionar testes unitários antes/depois de cada correção P0/P1.
 
 ### P3 - Limpeza, produto e documentação
@@ -194,6 +207,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Problema: aponta para o mapa vivo, mas não documenta env vars, Supabase, migrations, testes e setup completo.
     - Impacto: ambiente novo depende de conhecimento externo.
     - Ação: expandir README ou criar guia de onboarding com setup local/remoto.
+    - Status: concluído em 2026-06-27. README expandido com requisitos, setup, `.env.local`, aplicação de migrations, validação (lint/test/build) e E2E, convenções e estrutura.
 
 ## Plano por fases
 

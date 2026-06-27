@@ -1,0 +1,23 @@
+# Normaliza fim de linha: LF no repositorio e no checkout, em qualquer SO.
+# Evita o churn de CRLF<->LF que torna todo arquivo modificado no Windows.
+* text=auto eol=lf
+
+# Scripts que precisam de CRLF no Windows (nenhum no momento; exemplo).
+# *.bat text eol=crlf
+# *.cmd text eol=crlf
+
+# Arquivos binarios: nunca normalizar.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.svg  text
+*.pdf  binary
+*.epub binary
+*.zip  binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary

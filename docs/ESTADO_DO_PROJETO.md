@@ -2,7 +2,7 @@
 
 Documento vivo do estado técnico e funcional do projeto. Deve ser atualizado em todo PR, branch ou alteração relevante que mude rotas, banco, integrações, fluxos, padrões, dependências, pendências ou decisões de arquitetura.
 
-Última atualização: 2026-06-27
+Última atualização: 2026-06-27 (consolidação: testes das features novas)
 
 ## Regra obrigatória de manutenção
 
@@ -24,7 +24,9 @@ Plano de evolução e correções priorizadas: [PLANO_IMPLEMENTACAO.md](PLANO_IM
 - Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS 4.
 - Internacionalização: `next-intl`, atualmente apenas `pt-BR`, com prefixo obrigatório de locale.
 - Banco e autenticação: Supabase via `@supabase/ssr` `^0.12.0` e `@supabase/supabase-js`.
-- Editor: TipTap com Starter Kit, underline, placeholder e contagem de caracteres.
+- Editor: TipTap com Starter Kit, underline, placeholder, contagem de caracteres, auto-save (debounce 2,5s + aviso de saída) e corretor ortográfico nativo do navegador em PT-BR.
+- Fichas/ambientação: editor estruturado por campos flexíveis (modelos editáveis: adicionar/remover/renomear campos, linha curta ou texto longo), salvo em `documento.conteudo` como JSON `{ v, campos }`, com compatibilidade para conteúdo legado em texto.
+- Colaboração: presença ao vivo no editor de capítulo via Supabase Realtime (avatares de quem está no capítulo + indicador editando/vendo). Edição simultânea com merge (CRDT) ainda não implementada.
 - Importação: EPUB via `jszip`, DOCX via `mammoth`.
 - Exportação: EPUB via `epub-gen-memory`, DOCX via `docx`, PDF via `jspdf`.
 - Testes: Vitest, Testing Library, jsdom e specs E2E Playwright com `playwright.config.ts`.
@@ -96,7 +98,7 @@ flowchart TD
 - `/{locale}`: página inicial com busca e seções de histórias.
 - `/{locale}/historias`: catálogo público com filtros por busca, tags e paginação.
 - `/{locale}/historia/{id}`: detalhe de história publicada, capítulos públicos, coautores, tags, comentários e apoio via PIX.
-- `/{locale}/historia/{id}/ler/{docId}`: leitura de capítulo/documento público.
+- `/{locale}/historia/{id}/ler/{docId}`: leitura de capítulo público, com bastidores do autor (post-its), reações e comentários do capítulo.
 - `/{locale}/perfil/{nomeUsuario}`: perfil público com histórias publicadas, leitura atual, mural e PIX.
 
 ### Autenticação
@@ -116,7 +118,7 @@ flowchart TD
 - `/{locale}/projeto/{id}/editar`: edição de metadados, status, capa e tags.
 - `/{locale}/projeto/{id}/documentos`: listagem, criação e reordenação de documentos.
 - `/{locale}/projeto/{id}/doc/{docId}`: redirecionamento para área de escrita.
-- `/{locale}/projeto/{id}/escrita`: editor TipTap com sumário, baú de informações e lock.
+- `/{locale}/projeto/{id}/escrita`: editor TipTap com sumário, lock, presença ao vivo, e baú de informações onde fichas/ambientação abrem na coluna central como formulário estruturado por campos.
 - `/{locale}/projeto/{id}/colaboradores`: convites, listagem e remoção de colaboradores.
 - `/{locale}/projeto/{id}/importar`: importação de EPUB/DOCX.
 - `/{locale}/projeto/{id}/previa`: prévia/impressão.
@@ -233,6 +235,8 @@ Migrations em `supabase/migrations` definem:
 - `documento_lock`: trava de edição.
 - `tag` e `projeto_tag`: categorização, gênero, tema, aviso, fandom e público-alvo.
 - `comentario` e `comentario_reacao`: comentários, respostas, avaliações e reações.
+- `documento_nota`: notas/curiosidades do autor (post-its) por capítulo, visíveis na leitura.
+- `documento_reacao`: reações (emoji) de leitores por capítulo.
 - `projeto_visualizacao`: analytics de visualizações.
 - `plataforma_config`: chave/valor global.
 - `favorito`: favoritos por usuário.
@@ -249,11 +253,15 @@ Migrations em `supabase/migrations` definem:
 - `003_lock_rpc.sql` adiciona lock atômico com advisory lock.
 - `007_incrementar_visualizacoes_rpc.sql` adiciona RPC para visualizações.
 - `010_colaborador_aceite_obrigatorio.sql` exige `aceito_em` para acesso efetivo de colaborador, adiciona policy de aceite e trigger para limitar o update do convite.
+- `012_notas_reacoes_capitulo.sql` cria `documento_nota` e `documento_reacao`: escrita de nota restrita a dono/colaborador, reação restrita ao próprio usuário.
+- `013_fix_rls_select_notas_reacoes.sql` corrige o `select` de notas/reações: deixa de ser público e passa a exigir capítulo público de projeto publicado, ou dono/colaborador — evitando vazamento de bastidores de rascunhos.
 
 ### Storage
 
-- Existe migration `008_storage_capas (NAO RODAR).sql` para policies de bucket `capas`, com comentário indicando criação manual no dashboard do Supabase.
-- O estado real do bucket não é garantido pelo repositório. Precisa ser confirmado no ambiente Supabase.
+- Bucket público `capas` provisionado no Supabase via `011_storage_capas.sql` (idempotente).
+- Policies de storage escopadas ao dono do projeto: insert/update/delete exigem que o 1º segmento do path (`<projetoId>/...`) pertença a um `projeto` cujo `dono_id = auth.uid()`. O bucket é público (URLs servidas sem policy); a policy de listagem ampla foi removida em `014_capas_remove_listagem_publica.sql` para não expor a lista de arquivos.
+- Upload de capa agora envia a imagem (JPEG redimensionado client-side) para o bucket e salva apenas a URL pública em `projeto.capa_url`; troca/remoção apaga o objeto antigo (best-effort).
+- A migration `008_storage_capas (NAO RODAR).sql` foi marcada como obsoleta, mantida só por histórico (era manual e permissiva).
 
 ## Conexões e configuração
 
@@ -261,7 +269,7 @@ Migrations em `supabase/migrations` definem:
 
 Clientes:
 
-- Browser: `src/lib/supabase/client.ts`, usa `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Browser: `src/lib/supabase/client.ts`, usa `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Também usado para presença ao vivo via Supabase Realtime (canal `presenca:documento:<id>`).
 - Server: `src/lib/supabase/server.ts`, usa cookies de `next/headers`.
 - Middleware: `src/lib/supabase/middleware.ts`, atualiza sessão via cookies antes do roteamento de locale.
 - Middleware importa o entrypoint específico de `createServerClient` para evitar incluir o browser client no bundle Edge.
@@ -306,6 +314,7 @@ Headers configurados em `next.config.ts`:
 - Conteúdo de documentos armazenado como JSON compatível com TipTap.
 - Mensagens de UI centralizadas em `src/messages/pt-BR.json`, mas ainda existem strings hardcoded em componentes/páginas.
 - Testes unitários mockam Supabase, navegação e i18n.
+- Fim de linha normalizado para LF via `.gitattributes` (`* text=auto eol=lf`), evitando churn de CRLF no Windows.
 
 ## Testes existentes
 
@@ -318,6 +327,8 @@ Cobrem:
 - Componentes: seletor de idioma e menu mobile.
 - Hooks: lock de edição.
 - Lib/actions: cliente Supabase, projetos e locks.
+- Fichas: modelo de campos flexíveis (`src/lib/fichas/modelo.ts`) — presets, parse com compatibilidade legada, serialização e resumo.
+- Interações de capítulo: `src/lib/documentos/interacoes.ts` — validação, permissão de notas, toggle de reação e agregação.
 
 Configuração:
 
@@ -351,7 +362,6 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 
 ### Média prioridade
 
-- Confirmar e documentar o estado real do bucket Supabase `capas`; a migration está marcada como manual e "NAO RODAR".
 - Evoluir validação de entrada para schemas por comando. As rotas de importação/exportação/lock e as Server Actions principais já usam helpers comuns para UUID, JSON e erros públicos; o próximo passo é consolidar essas validações em schemas reutilizáveis quando os comandos crescerem.
 - Padronizar autorização de projeto. A verificação de dono/colaborador aparece duplicada em documentos, importação, exportação e colaboradores.
 - Internacionalizar strings hardcoded em páginas e componentes do painel/editor.
@@ -359,6 +369,16 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Substituir os tipos manuais de Supabase por tipos gerados pela Supabase CLI quando houver acesso ao projeto remoto.
 
 ### Concluído recentemente
+
+- Consolidação: adicionados testes unitários para o modelo de fichas e para as actions de interações (notas/reações). Validação local em 2026-06-27: `npm run lint`, `npm run test` (100 testes), `npm run build` e `npm run test:e2e` (11 testes) passaram.
+- Segurança (advisor Supabase): removida a policy de SELECT ampla do bucket `capas` (`014`), que permitia listar todos os arquivos; URLs públicas seguem funcionando.
+- Segurança: corrigido vazamento em que notas/reações de capítulos em rascunho eram legíveis por qualquer um via API (`select` aberto). Migration `013` restringe a leitura a capítulos públicos publicados ou ao dono/colaborador.
+- Colaboração — presença ao vivo: `usePresencaDocumento` (Supabase Realtime) + `PresencaBarra` no `EditorCapitulo`, mostrando quem está no capítulo e quem está editando. Sem dependência ou tabela nova. Requer teste com dois navegadores.
+- Redesign de fichas/ambientação: substituído o campo único de texto livre por editor de campos flexíveis (`EditorFicha`), com modelos por tipo, abertura na coluna central e parsing compatível com fichas antigas. Modelo em `src/lib/fichas/modelo.ts`; `BauInformacoes` virou lista selecionável.
+- Higiene de repositório: `.gitattributes` com normalização de fim de linha (LF) e working tree convertido de CRLF para LF; README expandido com setup completo.
+- Relação leitor-escritor: post-its do autor (bastidores por capítulo), reações de leitor por capítulo e comentários por capítulo (reuso de `comentario.documento_id`, sem nota de avaliação). Migration `012`, actions em `src/lib/documentos/interacoes.ts`, componentes `ReacoesDocumento` e `PainelNotasAutor`.
+- Editor: auto-save mais responsivo (debounce 2,5s) com aviso de alterações não salvas e corretor ortográfico nativo PT-BR (`spellcheck`).
+- Provisionado bucket `capas` (público) e policies de storage escopadas ao dono via `011_storage_capas.sql`; upload de capa migrado de base64 para Supabase Storage, salvando URL pública e removendo objeto antigo.
 
 - Corrigida a notificação de comentários para usar `projeto.dono_id`.
 - Removidos logs de debug de `listarProjetos`.
@@ -411,7 +431,7 @@ npm run test
 npm run build
 ```
 
-Para E2E, resolver antes a configuração Playwright:
+Para E2E:
 
 ```bash
 npm run test:e2e
