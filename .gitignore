@@ -42,3 +42,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# material de autoria das historias (nao e codigo do app)
+/historias-fonte/
+
+# atalhos/arquivos locais do agente
+/.agents/
