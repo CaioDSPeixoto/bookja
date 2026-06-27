@@ -107,16 +107,25 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
     if (file.size > 5 * 1024 * 1024) return
     setUploadingCapa(true)
     try {
-      const dataUrl = await redimensionarImagem(file, 400, 600)
-      await atualizarProjeto(id, { capa_url: dataUrl })
-      setCapaUrl(dataUrl)
+      const blob = await redimensionarImagem(file, 400, 600)
+      const supabase = criarClienteBrowser()
+      const caminho = `${id}/capa-${Date.now()}.jpg`
+      const { error: erroUpload } = await supabase.storage
+        .from('capas')
+        .upload(caminho, blob, { contentType: 'image/jpeg' })
+      if (erroUpload) return
+      const { data: { publicUrl } } = supabase.storage.from('capas').getPublicUrl(caminho)
+      const urlAntiga = capaUrl
+      await atualizarProjeto(id, { capa_url: publicUrl })
+      setCapaUrl(publicUrl)
+      await removerObjetoCapa(urlAntiga)
     } finally {
       setUploadingCapa(false)
     }
   }
 
-  function redimensionarImagem(file: File, maxW: number, maxH: number): Promise<string> {
-    return new Promise((resolve) => {
+  function redimensionarImagem(file: File, maxW: number, maxH: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
       const img = new Image()
       img.onload = () => {
         const canvas = document.createElement('canvas')
@@ -129,15 +138,36 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
         canvas.width = w
         canvas.height = h
         canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-        resolve(canvas.toDataURL('image/jpeg', 0.8))
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error('Falha ao processar a imagem'))),
+          'image/jpeg',
+          0.8,
+        )
       }
+      img.onerror = () => reject(new Error('Imagem invalida'))
       img.src = URL.createObjectURL(file)
     })
   }
 
+  function caminhoDaCapa(url: string | null): string | null {
+    if (!url) return null
+    const marcador = '/storage/v1/object/public/capas/'
+    const i = url.indexOf(marcador)
+    return i === -1 ? null : url.slice(i + marcador.length)
+  }
+
+  async function removerObjetoCapa(url: string | null) {
+    const caminho = caminhoDaCapa(url)
+    if (!caminho) return
+    const supabase = criarClienteBrowser()
+    await supabase.storage.from('capas').remove([caminho])
+  }
+
   async function handleRemoverCapa() {
+    const urlAntiga = capaUrl
     await atualizarProjeto(id, { capa_url: null })
     setCapaUrl(null)
+    await removerObjetoCapa(urlAntiga)
   }
 
   const temCapitulos = (projeto?.documento?.length || 0) > 0

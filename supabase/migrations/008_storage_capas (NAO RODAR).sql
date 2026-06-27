@@ -1,3 +1,6 @@
+-- OBSOLETA: substituida por 011_storage_capas.sql (idempotente, com policies escopadas ao dono).
+-- Mantida apenas por historico. NAO RODAR.
+
 -- Criar bucket para capas (execução manual no dashboard do Supabase)
 -- insert into storage.buckets (id, name, public) values ('capas', 'capas', true);
 
