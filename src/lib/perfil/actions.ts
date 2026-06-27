@@ -1,32 +1,81 @@
 'use server'
 
+import { erroOperacao, erroPublico } from '@/lib/actions/erros'
 import { criarClienteServidor } from '@/lib/supabase/server'
+import { eRegistro } from '@/lib/validacao/comum'
+
+type DadosPerfil = {
+  nome_exibicao?: string | null
+  bio?: string | null
+  chave_pix?: string | null
+}
 
 async function obterUsuarioOuErro() {
   const supabase = await criarClienteServidor()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Não autenticado')
+  if (!user) throw erroPublico('Autenticação necessária')
   return { supabase, user }
 }
 
-export async function atualizarPerfil(dados: { nome_exibicao?: string; bio?: string; chave_pix?: string }) {
+function normalizarTextoOpcional(valor: unknown): string | null {
+  if (valor === undefined || valor === null) return null
+  if (typeof valor !== 'string') return null
+
+  const texto = valor.trim()
+  return texto || null
+}
+
+function normalizarNomeUsuario(nomeUsuario: unknown): string {
+  const nome = typeof nomeUsuario === 'string' ? nomeUsuario.trim() : ''
+  if (!nome) {
+    throw erroPublico('Nome de usuário obrigatório')
+  }
+
+  return nome
+}
+
+function normalizarDadosPerfil(dados: unknown): DadosPerfil {
+  if (!eRegistro(dados)) {
+    throw erroPublico('Perfil inválido')
+  }
+
+  const payload: DadosPerfil = {}
+
+  if ('nome_exibicao' in dados) {
+    payload.nome_exibicao = normalizarTextoOpcional(dados.nome_exibicao)
+  }
+
+  if ('bio' in dados) {
+    payload.bio = normalizarTextoOpcional(dados.bio)
+  }
+
+  if ('chave_pix' in dados) {
+    payload.chave_pix = normalizarTextoOpcional(dados.chave_pix)
+  }
+
+  return payload
+}
+
+export async function atualizarPerfil(dados: DadosPerfil) {
   const { supabase, user } = await obterUsuarioOuErro()
+  const payload = normalizarDadosPerfil(dados)
 
   const { error } = await supabase
     .from('perfil')
-    .update(dados)
+    .update(payload)
     .eq('id', user.id)
 
-  if (error) throw new Error(error.message)
+  if (error) throw erroOperacao('Não foi possível atualizar o perfil')
 }
 
 export async function buscarPerfilPublico(nomeUsuario: string) {
   const supabase = await criarClienteServidor()
+  const nomeUsuarioValidado = normalizarNomeUsuario(nomeUsuario)
 
   const { data: perfil, error } = await supabase
     .from('perfil')
     .select('id, nome_usuario, nome_exibicao, bio, avatar_url, chave_pix')
-    .eq('nome_usuario', nomeUsuario)
+    .eq('nome_usuario', nomeUsuarioValidado)
     .single()
 
   if (error || !perfil) return null
@@ -55,6 +104,6 @@ export async function obterMeuPerfil() {
     .eq('id', user.id)
     .single()
 
-  if (error) throw new Error(error.message)
+  if (error || !data) throw erroOperacao('Não foi possível obter o perfil')
   return data
 }
