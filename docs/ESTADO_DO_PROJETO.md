@@ -2,7 +2,7 @@
 
 Documento vivo do estado técnico e funcional do projeto. Deve ser atualizado em todo PR, branch ou alteração relevante que mude rotas, banco, integrações, fluxos, padrões, dependências, pendências ou decisões de arquitetura.
 
-Última atualização: 2026-06-26
+Última atualização: 2026-06-27
 
 ## Regra obrigatória de manutenção
 
@@ -128,6 +128,8 @@ flowchart TD
 - `GET /api/exportar/{formato}?projetoId=...`: exporta projeto em `epub`, `docx` ou `pdf`.
 - `POST /api/lock/heartbeat`: renova lock de edição.
 - `POST /api/lock/liberar`: libera lock do documento.
+
+As rotas de importação, exportação e lock usam o helper `src/lib/api/respostas.ts` para validação básica de UUID/payload JSON e respostas públicas padronizadas de erro.
 
 ## Fluxos de negócio
 
@@ -297,6 +299,7 @@ Headers configurados em `next.config.ts`:
 - Client Components para formulários, botões interativos, editor, menus e ações de UI.
 - Server Actions em `src/lib/*/actions.ts` para mutações e operações autenticadas.
 - Rotas API em `src/app/api` para fluxos que precisam lidar com upload, download, callback OAuth ou `sendBeacon`.
+- Respostas de APIs internas centralizadas em `src/lib/api/respostas.ts` para evitar duplicação de validação básica e exposição de detalhes internos.
 - Camada de dados acoplada ao Supabase, com RLS como barreira principal de autorização.
 - Conteúdo de documentos armazenado como JSON compatível com TipTap.
 - Mensagens de UI centralizadas em `src/messages/pt-BR.json`, mas ainda existem strings hardcoded em componentes/páginas.
@@ -347,7 +350,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 ### Média prioridade
 
 - Confirmar e documentar o estado real do bucket Supabase `capas`; a migration está marcada como manual e "NAO RODAR".
-- Padronizar validação de entrada em Server Actions e APIs. Hoje há validações pontuais, mas sem schema compartilhado.
+- Expandir validação de entrada com schemas compartilhados. As rotas de importação, exportação e lock já usam helper comum para UUID, JSON e erros públicos, mas Server Actions e comandos de domínio ainda têm validações manuais.
 - Padronizar autorização de projeto. A verificação de dono/colaborador aparece duplicada em documentos, importação, exportação e colaboradores.
 - Internacionalizar strings hardcoded em páginas e componentes do painel/editor.
 - Revisar uso de `any` e casts em queries Supabase enquanto os tipos oficiais não forem gerados.
@@ -373,6 +376,8 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Artefatos locais do Playwright adicionados ao `.gitignore`.
 - Classificação etária corrigida: conteúdo acima de Livre é ocultado quando a idade é desconhecida.
 - Colaboradores pendentes não recebem acesso efetivo antes do aceite; `eh_colaborador` e o helper de acesso exigem `aceito_em`.
+- Criado helper `src/lib/api/respostas.ts` e aplicado em importação, exportação e lock para padronizar validação de UUID/payload JSON e impedir exposição de detalhes internos em erros 500.
+- Adicionados testes unitários para validações e mapeamento de erros de API.
 
 ### Baixa prioridade
 

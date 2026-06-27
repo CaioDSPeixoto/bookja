@@ -2,7 +2,7 @@
 
 Documento de trabalho para corrigir bugs, fechar features incompletas e estabilizar a base antes de novas funcionalidades.
 
-Última atualização: 2026-06-26
+Última atualização: 2026-06-27
 
 ## Resumo executivo
 
@@ -36,6 +36,14 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 - Corrigida regra de classificação etária para bloquear conteúdo restrito quando a idade é desconhecida.
 - Corrigida autorização de colaboradores para exigir `aceito_em is not null`.
 - Adicionada migration `010_colaborador_aceite_obrigatorio.sql` com `eh_colaborador` revisada, policy de aceite e trigger para impedir alteração indevida do convite.
+
+### Concluído em 2026-06-27
+
+- Criado helper `src/lib/api/respostas.ts` para respostas públicas de erro, parsing JSON seguro, validação de UUID e validação de valores JSON.
+- Aplicado o helper nas APIs de importação, confirmação de importação, exportação e lock.
+- Rotas de importação/exportação passaram a retornar erro interno genérico em falhas inesperadas, sem expor `error.message`.
+- Rotas de lock passaram a validar payload JSON e UUID de forma centralizada e também retornam erro interno genérico em falhas inesperadas.
+- Adicionados testes unitários para validação de UUID/JSON e mapeamento de erros de acesso.
 
 ## Achados prioritários
 
@@ -107,13 +115,13 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Locais: importação/exportação e Server Actions.
     - Problema: `error.message` é retornado ao usuário em vários pontos.
     - Impacto: vazamento de detalhe interno e experiência inconsistente.
-    - Ação: padronizar resposta de erro com mensagem pública e log interno.
+    - Status: parcialmente corrigido em 2026-06-27 nas APIs de importação/exportação/lock com `responderErroInterno()`. Ainda falta revisar Server Actions e adicionar logging interno estruturado.
 
 12. Validação de entrada ainda é pontual e duplicada
     - Locais: Server Actions e rotas em `src/app/api`.
     - Problema: cada fluxo valida manualmente UUID, payload, status e permissões; outros fluxos aceitam objetos parciais sem schema.
     - Impacto: regras divergentes, mensagens inconsistentes e maior chance de aceitar dados inválidos.
-    - Ação: definir schemas compartilhados para comandos principais, começando por projeto, documento, comentário, colaborador, importação e exportação.
+    - Status: parcialmente corrigido em 2026-06-27 nas rotas de importação/exportação/lock com helper comum para UUID e JSON. Próximo passo: definir schemas compartilhados para comandos principais, começando por projeto, documento, comentário e colaborador.
 
 ### P2 - Robustez e qualidade
 
@@ -224,6 +232,7 @@ Escopo:
 - Decidir e aplicar regra de classificação etária para visitantes/idade desconhecida.
 - Padronizar mensagens de erro públicas.
 - Padronizar validação de entrada com schemas compartilhados.
+- Aplicar o helper atual de APIs aos endpoints restantes e evoluir para schemas por comando.
 - Remover `any` e casts principais conforme os tipos forem gerados.
 - Revisar exportação pública vs autenticada.
 

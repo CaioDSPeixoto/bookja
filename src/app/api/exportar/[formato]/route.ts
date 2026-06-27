@@ -1,31 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { criarClienteServidor } from '@/lib/supabase/server'
-import { exportarEpub } from '@/lib/exportacao/epub'
+
+import {
+  responderErro,
+  responderErroAcesso,
+  responderErroInterno,
+  validarUuid,
+} from '@/lib/api/respostas'
 import { exportarDocx } from '@/lib/exportacao/docx'
+import { exportarEpub } from '@/lib/exportacao/epub'
 import { exportarPdf } from '@/lib/exportacao/pdf'
 import { obterUsuarioOpcional, verificarAcessoProjeto } from '@/lib/projetos/acesso'
+import { criarClienteServidor } from '@/lib/supabase/server'
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+type FormatoExportacao = 'epub' | 'docx' | 'pdf'
+
+function validarFormato(formato: string): formato is FormatoExportacao {
+  return formato === 'epub' || formato === 'docx' || formato === 'pdf'
+}
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ formato: string }> }
+  { params }: { params: Promise<{ formato: string }> },
 ) {
   try {
     const { formato } = await params
-    if (formato !== 'epub' && formato !== 'docx' && formato !== 'pdf') {
-      return NextResponse.json({ erro: 'Formato inválido. Use: epub, docx, pdf' }, { status: 400 })
+    if (!validarFormato(formato)) {
+      return responderErro('Formato inválido. Use: epub, docx, pdf', 400)
     }
 
     const projetoId = request.nextUrl.searchParams.get('projetoId')
-    if (!projetoId || !UUID_REGEX.test(projetoId)) {
-      return NextResponse.json({ erro: 'projetoId inválido' }, { status: 400 })
+    if (!validarUuid(projetoId)) {
+      return responderErro('projetoId inválido', 400)
     }
 
     const supabase = await criarClienteServidor()
     const user = await obterUsuarioOpcional(supabase)
 
-    // Fetch project
     const { data: projeto } = await supabase
       .from('projeto')
       .select('id, titulo, sinopse, dono_id, status')
@@ -33,24 +43,20 @@ export async function GET(
       .single()
 
     if (!projeto) {
-      return NextResponse.json({ erro: 'Projeto não encontrado' }, { status: 404 })
+      return responderErro('Projeto não encontrado', 404)
     }
 
-    // Check access: published OR owner/collaborator
     const isPublicado = projeto.status === 'publicado'
     if (!isPublicado) {
       try {
         await verificarAcessoProjeto(supabase, projetoId, user?.id ?? null)
       } catch (error) {
-        const mensagem = error instanceof Error ? error.message : 'Sem permissão para exportar este projeto'
-        if (mensagem === 'Não autenticado') {
-          return NextResponse.json({ erro: 'Autenticação necessária' }, { status: 401 })
-        }
-        return NextResponse.json({ erro: 'Sem permissão para exportar este projeto' }, { status: 403 })
+        return responderErroAcesso(error, {
+          mensagemSemPermissao: 'Sem permissão para exportar este projeto',
+        })
       }
     }
 
-    // Fetch author name
     const { data: perfil } = await supabase
       .from('perfil')
       .select('nome_exibicao, nome_usuario')
@@ -59,7 +65,6 @@ export async function GET(
 
     const autor = perfil?.nome_exibicao || perfil?.nome_usuario || 'Autor Desconhecido'
 
-    // Fetch documents (public if published, all if owner/collaborator)
     let query = supabase
       .from('documento')
       .select('titulo, conteudo')
@@ -73,28 +78,28 @@ export async function GET(
 
     const { data: documentos } = await query
     if (!documentos || documentos.length === 0) {
-      return NextResponse.json({ erro: 'Nenhum documento encontrado para exportar' }, { status: 404 })
+      return responderErro('Nenhum documento encontrado para exportar', 404)
     }
 
     let buffer: Buffer
     let contentType: string
-    let extensao: string
 
-    if (formato === 'epub') {
-      buffer = await exportarEpub({ titulo: projeto.titulo, sinopse: projeto.sinopse, autor }, documentos)
-      contentType = 'application/epub+zip'
-      extensao = 'epub'
-    } else if (formato === 'pdf') {
-      buffer = await exportarPdf({ titulo: projeto.titulo, autor }, documentos)
-      contentType = 'application/pdf'
-      extensao = 'pdf'
-    } else {
-      buffer = await exportarDocx({ titulo: projeto.titulo, autor }, documentos)
-      contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      extensao = 'docx'
+    switch (formato) {
+      case 'epub':
+        buffer = await exportarEpub({ titulo: projeto.titulo, sinopse: projeto.sinopse, autor }, documentos)
+        contentType = 'application/epub+zip'
+        break
+      case 'pdf':
+        buffer = await exportarPdf({ titulo: projeto.titulo, autor }, documentos)
+        contentType = 'application/pdf'
+        break
+      case 'docx':
+        buffer = await exportarDocx({ titulo: projeto.titulo, autor }, documentos)
+        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        break
     }
 
-    const nomeArquivo = `${projeto.titulo.replace(/[^a-zA-Z0-9À-ÿ\s-]/g, '').trim()}.${extensao}`
+    const nomeArquivo = `${projeto.titulo.replace(/[^a-zA-Z0-9À-ÿ\s-]/g, '').trim()}.${formato}`
 
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
@@ -102,8 +107,7 @@ export async function GET(
         'Content-Disposition': `attachment; filename="${encodeURIComponent(nomeArquivo)}"`,
       },
     })
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Erro interno na exportação'
-    return NextResponse.json({ erro: msg }, { status: 500 })
+  } catch {
+    return responderErroInterno()
   }
 }

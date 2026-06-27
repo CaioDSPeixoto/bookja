@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { criarClienteServidor } from '@/lib/supabase/server'
-import { verificarAcessoProjeto } from '@/lib/projetos/acesso'
-import type { Json } from '@/types/database'
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+import {
+  eJson,
+  eRegistro,
+  lerJsonSeguro,
+  responderErro,
+  responderErroAcesso,
+  responderErroInterno,
+  validarUuid,
+} from '@/lib/api/respostas'
+import { verificarAcessoProjeto } from '@/lib/projetos/acesso'
+import { criarClienteServidor } from '@/lib/supabase/server'
+import type { Json } from '@/types/database'
 
 interface Capitulo {
   titulo: string
   conteudo: Json | null
+}
+
+function validarCapitulo(valor: unknown): valor is Capitulo {
+  if (!eRegistro(valor)) return false
+  const { titulo, conteudo } = valor
+  return typeof titulo === 'string' && eJson(conteudo)
 }
 
 export async function POST(request: NextRequest) {
@@ -16,37 +30,31 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ erro: 'Não autenticado' }, { status: 401 })
+      return responderErro('Autenticação necessária', 401)
     }
 
-    let body: unknown
-    try {
-      body = await request.json()
-    } catch {
-      return NextResponse.json({ erro: 'Body inválido' }, { status: 400 })
+    const resultadoJson = await lerJsonSeguro(request)
+    if (!resultadoJson.sucesso) return resultadoJson.resposta
+    if (!eRegistro(resultadoJson.dados)) return responderErro('Body inválido', 400)
+
+    const { projetoId, capitulos } = resultadoJson.dados
+
+    if (!validarUuid(projetoId)) {
+      return responderErro('projetoId inválido', 400)
     }
 
-    const { projetoId, capitulos } = body as { projetoId?: string; capitulos?: Capitulo[] }
-
-    if (!projetoId || !UUID_REGEX.test(projetoId)) {
-      return NextResponse.json({ erro: 'projetoId inválido' }, { status: 400 })
-    }
-
-    if (!capitulos || !Array.isArray(capitulos) || capitulos.length === 0) {
-      return NextResponse.json({ erro: 'Nenhum capítulo para importar' }, { status: 400 })
+    if (!Array.isArray(capitulos) || capitulos.length === 0 || !capitulos.every(validarCapitulo)) {
+      return responderErro('Nenhum capítulo válido para importar', 400)
     }
 
     try {
       await verificarAcessoProjeto(supabase, projetoId, user.id)
     } catch (error) {
-      const mensagem = error instanceof Error ? error.message : 'Sem permissão neste projeto'
-      if (mensagem === 'Projeto não encontrado') {
-        return NextResponse.json({ erro: mensagem }, { status: 404 })
-      }
-      return NextResponse.json({ erro: 'Sem permissão neste projeto' }, { status: 403 })
+      return responderErroAcesso(error, {
+        mensagemSemPermissao: 'Sem permissão neste projeto',
+      })
     }
 
-    // Get current max order
     const { data: ultimo } = await supabase
       .from('documento')
       .select('ordem')
@@ -57,13 +65,12 @@ export async function POST(request: NextRequest) {
 
     const ordemInicial = (ultimo?.ordem ?? 0) + 1
 
-    // Insert all chapters
-    const documentos = capitulos.map((cap, i) => ({
+    const documentos = capitulos.map((cap, indice) => ({
       projeto_id: projetoId,
-      titulo: cap.titulo || `Capítulo ${ordemInicial + i}`,
+      titulo: cap.titulo || `Capítulo ${ordemInicial + indice}`,
       tipo: 'capitulo' as const,
       conteudo: cap.conteudo,
-      ordem: ordemInicial + i,
+      ordem: ordemInicial + indice,
     }))
 
     const { data, error } = await supabase
@@ -74,8 +81,7 @@ export async function POST(request: NextRequest) {
     if (error) throw new Error(error.message)
 
     return NextResponse.json({ dados: { documentos: data } })
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Erro ao confirmar importação'
-    return NextResponse.json({ erro: msg }, { status: 500 })
+  } catch {
+    return responderErroInterno()
   }
 }
