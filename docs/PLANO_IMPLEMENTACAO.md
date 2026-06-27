@@ -44,6 +44,11 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 - Rotas de importação/exportação passaram a retornar erro interno genérico em falhas inesperadas, sem expor `error.message`.
 - Rotas de lock passaram a validar payload JSON e UUID de forma centralizada e também retornam erro interno genérico em falhas inesperadas.
 - Adicionados testes unitários para validação de UUID/JSON e mapeamento de erros de acesso.
+- Criado helper `src/lib/validacao/comum.ts` para validações neutras reutilizadas por APIs e Server Actions.
+- Criado helper `src/lib/actions/erros.ts` para padronizar erros públicos em Server Actions.
+- Server Actions de projetos passaram a validar UUID, título e status no servidor e a ocultar mensagens técnicas do Supabase.
+- Server Actions de documentos passaram a validar UUID, tipo, conteúdo JSON, contagem de palavras e ordem antes de mutações.
+- Adicionados testes unitários para validação e erros públicos em projetos/documentos.
 
 ## Achados prioritários
 
@@ -115,13 +120,13 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Locais: importação/exportação e Server Actions.
     - Problema: `error.message` é retornado ao usuário em vários pontos.
     - Impacto: vazamento de detalhe interno e experiência inconsistente.
-    - Status: parcialmente corrigido em 2026-06-27 nas APIs de importação/exportação/lock com `responderErroInterno()`. Ainda falta revisar Server Actions e adicionar logging interno estruturado.
+    - Status: parcialmente corrigido em 2026-06-27 nas APIs de importação/exportação/lock e nas Server Actions de projetos/documentos. Ainda falta revisar colaboradores, comentários, mural, perfil, favoritos e notificações, além de adicionar logging interno estruturado.
 
 12. Validação de entrada ainda é pontual e duplicada
     - Locais: Server Actions e rotas em `src/app/api`.
     - Problema: cada fluxo valida manualmente UUID, payload, status e permissões; outros fluxos aceitam objetos parciais sem schema.
     - Impacto: regras divergentes, mensagens inconsistentes e maior chance de aceitar dados inválidos.
-    - Status: parcialmente corrigido em 2026-06-27 nas rotas de importação/exportação/lock com helper comum para UUID e JSON. Próximo passo: definir schemas compartilhados para comandos principais, começando por projeto, documento, comentário e colaborador.
+    - Status: parcialmente corrigido em 2026-06-27 nas rotas de importação/exportação/lock e nas Server Actions de projetos/documentos com helpers comuns para UUID e JSON. Próximo passo: definir schemas compartilhados para comentários, colaboradores, mural, perfil, favoritos e notificações.
 
 ### P2 - Robustez e qualidade
 

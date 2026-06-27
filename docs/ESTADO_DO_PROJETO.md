@@ -300,6 +300,8 @@ Headers configurados em `next.config.ts`:
 - Server Actions em `src/lib/*/actions.ts` para mutações e operações autenticadas.
 - Rotas API em `src/app/api` para fluxos que precisam lidar com upload, download, callback OAuth ou `sendBeacon`.
 - Respostas de APIs internas centralizadas em `src/lib/api/respostas.ts` para evitar duplicação de validação básica e exposição de detalhes internos.
+- Validações puras compartilhadas em `src/lib/validacao/comum.ts`, usadas por APIs e Server Actions.
+- Server Actions de projetos e documentos usam `src/lib/actions/erros.ts` para respostas públicas e deixam de repassar mensagens técnicas do Supabase.
 - Camada de dados acoplada ao Supabase, com RLS como barreira principal de autorização.
 - Conteúdo de documentos armazenado como JSON compatível com TipTap.
 - Mensagens de UI centralizadas em `src/messages/pt-BR.json`, mas ainda existem strings hardcoded em componentes/páginas.
@@ -350,7 +352,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 ### Média prioridade
 
 - Confirmar e documentar o estado real do bucket Supabase `capas`; a migration está marcada como manual e "NAO RODAR".
-- Expandir validação de entrada com schemas compartilhados. As rotas de importação, exportação e lock já usam helper comum para UUID, JSON e erros públicos, mas Server Actions e comandos de domínio ainda têm validações manuais.
+- Expandir validação de entrada com schemas compartilhados. As rotas de importação/exportação/lock e as Server Actions de projetos/documentos já usam helpers comuns para UUID, JSON e erros públicos, mas colaboradores, comentários, mural, perfil, favoritos e notificações ainda têm validações manuais.
 - Padronizar autorização de projeto. A verificação de dono/colaborador aparece duplicada em documentos, importação, exportação e colaboradores.
 - Internacionalizar strings hardcoded em páginas e componentes do painel/editor.
 - Revisar uso de `any` e casts em queries Supabase enquanto os tipos oficiais não forem gerados.
@@ -378,6 +380,11 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Colaboradores pendentes não recebem acesso efetivo antes do aceite; `eh_colaborador` e o helper de acesso exigem `aceito_em`.
 - Criado helper `src/lib/api/respostas.ts` e aplicado em importação, exportação e lock para padronizar validação de UUID/payload JSON e impedir exposição de detalhes internos em erros 500.
 - Adicionados testes unitários para validações e mapeamento de erros de API.
+- Criado helper `src/lib/validacao/comum.ts` para validações neutras e reutilização entre APIs e Server Actions.
+- Criado helper `src/lib/actions/erros.ts` para erros públicos em Server Actions.
+- Server Actions de projetos passaram a validar UUID, título e status no servidor e a retornar mensagens públicas para falhas de banco.
+- Server Actions de documentos passaram a validar UUID, tipo, conteúdo JSON, contagem de palavras e ordem antes de mutações.
+- Adicionados testes unitários para validação e erros públicos em projetos/documentos.
 
 ### Baixa prioridade
 

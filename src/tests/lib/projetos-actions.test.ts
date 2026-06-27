@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockFrom = vi.fn()
 
 const mockUser = { id: 'user-123', email: 'test@test.com' }
+const PROJETO_ID = '123e4567-e89b-12d3-a456-426614174000'
 
 vi.mock('@/lib/supabase/server', () => ({
   criarClienteServidor: vi.fn(() => ({
@@ -51,10 +52,10 @@ describe('Server Actions - Projetos (lógica de validação)', () => {
     const chain = setupChain({ id: 'proj-1', dono_id: 'user-123' })
     const { obterProjeto } = await import('@/lib/projetos/actions')
 
-    await obterProjeto('proj-1')
+    await obterProjeto(PROJETO_ID)
 
     expect(mockFrom).toHaveBeenCalledWith('projeto')
-    expect(chain.eq).toHaveBeenCalledWith('id', 'proj-1')
+    expect(chain.eq).toHaveBeenCalledWith('id', PROJETO_ID)
   })
 
   it('publicarProjeto marca status e data de publicação', async () => {
@@ -63,7 +64,7 @@ describe('Server Actions - Projetos (lógica de validação)', () => {
     mockFrom.mockReturnValueOnce(documentosChain).mockReturnValueOnce(projetoChain)
     const { publicarProjeto } = await import('@/lib/projetos/actions')
 
-    await publicarProjeto('proj-1', { titulo: 'Livro', sinopse: 'Resumo' })
+    await publicarProjeto(PROJETO_ID, { titulo: 'Livro', sinopse: 'Resumo' })
 
     expect(mockFrom).toHaveBeenNthCalledWith(1, 'documento')
     expect(mockFrom).toHaveBeenNthCalledWith(2, 'projeto')
@@ -81,7 +82,7 @@ describe('Server Actions - Projetos (lógica de validação)', () => {
     const chain = setupChain(null)
     const { despublicarProjeto } = await import('@/lib/projetos/actions')
 
-    await despublicarProjeto('proj-1', { titulo: 'Livro' })
+    await despublicarProjeto(PROJETO_ID, { titulo: 'Livro' })
 
     expect(mockFrom).toHaveBeenCalledWith('projeto')
     expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({
@@ -91,6 +92,33 @@ describe('Server Actions - Projetos (lógica de validação)', () => {
       atualizado_em: expect.any(String),
     }))
     expect(chain.eq).toHaveBeenCalledWith('dono_id', 'user-123')
+  })
+
+  it('criarProjeto rejeita título vazio antes de inserir', async () => {
+    const { criarProjeto } = await import('@/lib/projetos/actions')
+    const formData = new FormData()
+    formData.set('titulo', '   ')
+
+    await expect(criarProjeto(formData)).rejects.toThrow('Título obrigatório')
+    expect(mockFrom).not.toHaveBeenCalled()
+  })
+
+  it('criarProjeto não expõe mensagem técnica do banco', async () => {
+    setupChain(null, { message: 'duplicate key value violates unique constraint' })
+    const { criarProjeto } = await import('@/lib/projetos/actions')
+    const formData = new FormData()
+    formData.set('titulo', 'Livro')
+
+    await expect(criarProjeto(formData)).rejects.toThrow('Não foi possível criar o projeto')
+  })
+
+  it('atualizarProjeto rejeita status inválido antes de atualizar', async () => {
+    const { atualizarProjeto } = await import('@/lib/projetos/actions')
+
+    await expect(
+      atualizarProjeto(PROJETO_ID, { status: 'arquivado' as never }),
+    ).rejects.toThrow('Status de projeto inválido')
+    expect(mockFrom).not.toHaveBeenCalled()
   })
 })
 
