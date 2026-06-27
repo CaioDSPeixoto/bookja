@@ -22,9 +22,10 @@ interface ListaComentariosProps {
   projetoId: string
   documentoId?: string | null
   usuarioId?: string | null
+  permitirAvaliacao?: boolean
 }
 
-export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaComentariosProps) {
+export function ListaComentarios({ projetoId, documentoId, usuarioId, permitirAvaliacao = true }: ListaComentariosProps) {
   const t = useTranslations('comentarios')
   const locale = useLocale()
   const [comentarios, setComentarios] = useState<Comentario[]>([])
@@ -45,7 +46,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
     e.preventDefault()
     if (!conteudo.trim()) return
     setEnviando(true)
-    await criarComentario(projetoId, documentoId || null, conteudo, nota || undefined)
+    await criarComentario(projetoId, documentoId || null, conteudo, permitirAvaliacao ? (nota || undefined) : undefined)
     setConteudo('')
     setNota(0)
     await carregar()
@@ -146,10 +147,12 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
             className="w-full rounded-lg border px-4 py-2 text-sm resize-none focus:border-indigo-500 focus:outline-none"
           />
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">{t('avaliacao')}:</span>
-              <Estrelas valor={nota} onChange={setNota} tamanho={20} />
-            </div>
+            {permitirAvaliacao ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">{t('avaliacao')}:</span>
+                <Estrelas valor={nota} onChange={setNota} tamanho={20} />
+              </div>
+            ) : <span />}
             <button
               type="submit"
               disabled={enviando || !conteudo.trim()}

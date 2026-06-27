@@ -355,6 +355,56 @@ export interface Database {
           criado_em?: string
         }
       >
+      documento_nota: TabelaRelacionada<
+        {
+          id: Id
+          documento_id: Id
+          autor_id: Id
+          conteudo: string
+          criado_em: string
+          atualizado_em: string | null
+        },
+        {
+          id?: Id
+          documento_id: Id
+          autor_id: Id
+          conteudo: string
+          criado_em?: string
+          atualizado_em?: string | null
+        },
+        Partial<{
+          conteudo: string
+          atualizado_em: string | null
+        }>,
+        [
+          {
+            foreignKeyName: 'documento_nota_autor_id_fkey'
+            columns: ['autor_id']
+            referencedRelation: 'perfil'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'documento_nota_documento_id_fkey'
+            columns: ['documento_id']
+            referencedRelation: 'documento'
+            referencedColumns: ['id']
+          }
+        ]
+      >
+      documento_reacao: Tabela<
+        {
+          documento_id: Id
+          usuario_id: Id
+          emoji: string
+          criado_em: string
+        },
+        {
+          documento_id: Id
+          usuario_id: Id
+          emoji: string
+          criado_em?: string
+        }
+      >
       projeto_visualizacao: Tabela<
         {
           id: Id

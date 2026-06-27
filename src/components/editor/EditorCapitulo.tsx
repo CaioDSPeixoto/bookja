@@ -11,6 +11,9 @@ import { Check, Loader2, Lock } from 'lucide-react'
 import { atualizarDocumento } from '@/lib/documentos/actions'
 import { useLockEdicao } from '@/hooks/useLockEdicao'
 import BarraFerramentas from './BarraFerramentas'
+import PainelNotasAutor from './PainelNotasAutor'
+import PresencaBarra from './PresencaBarra'
+import { usePresencaDocumento } from '@/hooks/usePresencaDocumento'
 
 type Documento = {
   id: string
@@ -20,6 +23,7 @@ type Documento = {
 
 interface Props {
   documento: Documento
+  projetoId: string
   onAtualizado: () => void
 }
 
@@ -32,10 +36,11 @@ function parseConteudo(conteudo: unknown) {
   return undefined
 }
 
-export default function EditorCapitulo({ documento, onAtualizado }: Props) {
+export default function EditorCapitulo({ documento, projetoId, onAtualizado }: Props) {
   const t = useTranslations('editor')
   const tGeral = useTranslations('geral')
   const { somenteLeitura, travadoPor, carregando } = useLockEdicao(documento.id)
+  const presentes = usePresencaDocumento(documento.id, !somenteLeitura)
 
   const [titulo, setTitulo] = useState(documento.titulo || '')
   const [status, setStatus] = useState<'salvo' | 'salvando' | 'pendente'>('salvo')
@@ -49,6 +54,12 @@ export default function EditorCapitulo({ documento, onAtualizado }: Props) {
       Placeholder.configure({ placeholder: t('escrevaSuaHistoria') }),
       CharacterCount,
     ],
+    editorProps: {
+      attributes: {
+        spellcheck: 'true',
+        lang: 'pt-BR',
+      },
+    },
     editable: !somenteLeitura,
     content: parseConteudo(documento.conteudo) || (typeof documento.conteudo === 'string' ? `<p>${documento.conteudo}</p>` : ''),
     onUpdate: () => {
@@ -80,11 +91,11 @@ export default function EditorCapitulo({ documento, onAtualizado }: Props) {
     }
   }, [documento.id, titulo, somenteLeitura, editor, onAtualizado])
 
-  // Auto-save 30s debounce
+  // Auto-save com debounce curto (reduz janela de perda)
   useEffect(() => {
     if (somenteLeitura || !pendente.current) return
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(salvar, 30000)
+    timerRef.current = setTimeout(salvar, 2500)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [status, somenteLeitura, salvar])
 
@@ -103,6 +114,18 @@ export default function EditorCapitulo({ documento, onAtualizado }: Props) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Aviso ao sair com alteracoes nao salvas (fechar aba / recarregar)
+  useEffect(() => {
+    function aoSair(e: BeforeUnloadEvent) {
+      if (pendente.current && !somenteLeitura) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', aoSair)
+    return () => window.removeEventListener('beforeunload', aoSair)
+  }, [somenteLeitura])
 
   function marcarPendente() {
     setStatus('pendente')
@@ -128,6 +151,11 @@ export default function EditorCapitulo({ documento, onAtualizado }: Props) {
 
       {/* Title */}
       <div className="border-b border-gray-100 px-8 pt-6 pb-4">
+        {presentes.length > 0 && (
+          <div className="mb-2">
+            <PresencaBarra usuarios={presentes} />
+          </div>
+        )}
         <input
           type="text"
           value={titulo}
@@ -146,6 +174,9 @@ export default function EditorCapitulo({ documento, onAtualizado }: Props) {
       <div className="flex-1 overflow-y-auto bg-white rounded-b-lg shadow-inner">
         <EditorContent editor={editor} />
       </div>
+
+      {/* Bastidores: notas do autor visiveis na leitura */}
+      <PainelNotasAutor projetoId={projetoId} documentoId={documento.id} />
 
       {/* Status bar */}
       <div className="flex items-center justify-between border-t border-gray-100 bg-white px-6 py-2.5">
