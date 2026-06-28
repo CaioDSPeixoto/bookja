@@ -1,383 +1,278 @@
 # Plano de implementação do Bookja
 
-Documento de trabalho para corrigir bugs, fechar features incompletas e estabilizar a base antes de novas funcionalidades.
+Documento vivo para guiar a primeira entrega do Bookja. Deve ser atualizado sempre que uma correção, feature, migration, decisão de UX, regra de segurança ou pendência mudar de estado.
 
-Última atualização: 2026-06-27
+Última atualização: 2026-06-28
 
-## Resumo executivo
+## Objetivo da primeira entrega
 
-O projeto já tem uma base funcional relevante: autenticação, painel, criação e edição de projetos, documentos TipTap, catálogo público, leitura, comentários, mural, favoritos, notificações, colaboração, importação/exportação e modelo Supabase com RLS.
+Entregar uma versão utilizável principalmente no celular, com fluxo completo de:
 
-O principal risco atual não é falta de tela, mas inconsistência entre modelo, código e fluxos. Há campos consultados que não existem, tipos do Supabase ainda não gerados, regras de autorização duplicadas, publicação incompleta, E2E desativado, alguns fluxos de produto sem persistência real e validações insuficientes.
+- cadastro/login;
+- criação de projeto;
+- escrita e gestão de capítulos;
+- revisão/publicação;
+- leitura pública;
+- comentários, favoritos e notificações essenciais;
+- importação/exportação básica;
+- segurança mínima coerente com dados privados de autores e leitores.
 
-## Progresso
+A primeira entrega não precisa conter todas as features previstas no modelo, mas não pode ter fluxo principal quebrado, UI confusa no mobile ou regra de acesso insegura.
 
-### Concluído em 2026-06-26
+## Estado consolidado
 
-- Corrigido `criarComentario` para notificar `projeto.dono_id`.
-- Corrigida a home para buscar `leitura_atual` com `projeto_id` e `ultimo_documento_id`.
-- Adicionada persistência de `leitura_atual` ao abrir uma página de leitura.
-- Criadas `publicarProjeto` e `despublicarProjeto`, com manutenção de `publicado_em`.
-- Removidos logs de debug de `listarProjetos`.
-- Restaurado `playwright.config.ts`.
-- Atualizados specs E2E de autenticação/navegação para a UI atual.
-- Adicionados testes unitários para publicação/despublicação e notificação de comentário.
-- Criado helper compartilhado de acesso a projeto em `src/lib/projetos/acesso.ts`.
-- Documentos, colaboradores, importação e exportação passaram a usar a autorização compartilhada.
-- Exportação de histórias publicadas passou a permitir visitante, exportando apenas capítulos públicos.
-- Substituído o placeholder de `src/types/database.ts` por tipos manuais alinhados às migrations.
-- Tipados os clientes Supabase (`browser`, `server` e `middleware`) com `Database`.
-- Atualizado `@supabase/ssr` para `^0.12.0`, compatível com `@supabase/supabase-js` `2.108.x`.
-- Declarados relacionamentos Supabase usados por embeds: projetos/documentos, colaboradores/perfis, tags, comentários, mural, favoritos, leitura atual e locks.
-- Ajustados contratos TypeScript para `null`, ids numéricos de tags, conteúdo `Json` e status restrito de projeto.
-- Validado `npm run test:e2e` localmente com `.env.local` ignorado pelo Git.
-- Removidos warnings de lint em hooks, imagens, imports e testes.
-- Adicionados `playwright-report/` e `test-results/` ao `.gitignore`.
-- Corrigida regra de classificação etária para bloquear conteúdo restrito quando a idade é desconhecida.
-- Corrigida autorização de colaboradores para exigir `aceito_em is not null`.
-- Adicionada migration `010_colaborador_aceite_obrigatorio.sql` com `eh_colaborador` revisada, policy de aceite e trigger para impedir alteração indevida do convite.
+### Já concluído
 
-### Concluído em 2026-06-27
+- Runtime e base técnica: Next.js App Router, React, TypeScript, Tailwind, Supabase Auth/Database/Storage, Server Actions, APIs internas e TipTap.
+- Autenticação: cadastro, login, logout e callback Supabase.
+- Biblioteca/projetos: criação, edição de metadados, status do projeto, tags, capa via Supabase Storage e publicação/despublicação com `publicado_em`.
+- Documentos/capítulos: criação, edição TipTap, exclusão, reordenação básica, status editorial por capítulo e contagem de palavras.
+- Escrita: auto-save com debounce de 2,5s, salvamento manual, aviso de saída com pendência, flush antes de trocar capítulo/criar capítulo/voltar/abrir prévia e erro recuperável com retry.
+- Leitura: página de leitura redesenhada, navegação entre capítulos publicados, progresso de leitura e registro de visualização.
+- Relação leitor-escritor: comentários por capítulo, reações por capítulo e post-its/notas do autor.
+- Colaboração: convites, aceite obrigatório para acesso efetivo, presença ao vivo no editor e revisão supervisionada com aprovações.
+- Importação/exportação: EPUB/DOCX importados como capítulos; exportação EPUB/DOCX/PDF com regras de acesso.
+- Segurança: RLS nas tabelas principais, helpers de autorização, validações de entrada, erros públicos, logger com redaction, headers HTTP de segurança e remoção de listagem pública do bucket `capas`.
+- Testes: lint, unitários, build e E2E básico já validados em ciclos anteriores.
+- Documentação: README expandido e mapa técnico vivo em `docs/ESTADO_DO_PROJETO.md`.
 
-- Criado helper `src/lib/api/respostas.ts` para respostas públicas de erro, parsing JSON seguro, validação de UUID e validação de valores JSON.
-- Aplicado o helper nas APIs de importação, confirmação de importação, exportação e lock.
-- Rotas de importação/exportação passaram a retornar erro interno genérico em falhas inesperadas, sem expor `error.message`.
-- Rotas de lock passaram a validar payload JSON e UUID de forma centralizada e também retornam erro interno genérico em falhas inesperadas.
-- Adicionados testes unitários para validação de UUID/JSON e mapeamento de erros de acesso.
-- Criado helper `src/lib/validacao/comum.ts` para validações neutras reutilizadas por APIs e Server Actions.
-- Criado helper `src/lib/actions/erros.ts` para padronizar erros públicos em Server Actions.
-- Server Actions de projetos passaram a validar UUID, título e status no servidor e a ocultar mensagens técnicas do Supabase.
-- Server Actions de documentos passaram a validar UUID, tipo, conteúdo JSON, contagem de palavras e ordem antes de mutações.
-- Adicionados testes unitários para validação e erros públicos em projetos/documentos.
-- Server Actions de colaboradores passaram a validar UUID, nome de usuário e papel antes de convidar/remover/listar/aceitar convite.
-- Server Actions de comentários passaram a validar UUID, conteúdo, nota e emoji antes de comentar/responder/reagir/listar.
-- Adicionados testes unitários para validação e erros públicos em colaboradores/comentários.
-- Server Actions de mural, perfil, favoritos e notificações passaram a validar entradas e ocultar mensagens técnicas do Supabase.
-- Adicionados testes unitários para validação e erros públicos em mural, perfil, favoritos e notificações.
-- Provisionado o bucket de Storage `capas` e migrado o upload de capa de base64 para Supabase Storage (URL pública + remoção do objeto antigo); migration `011_storage_capas.sql` criada e `008` marcada como obsoleta.
-- Editor: auto-save com debounce de 2,5s + aviso `beforeunload` de pendências; corretor ortográfico nativo (PT-BR) ligado no editor (`spellcheck`/`lang`).
-- Relação leitor-escritor (nível capítulo): post-its do autor visíveis na leitura, reações de leitor por capítulo e comentários por capítulo. Tabelas `documento_nota`/`documento_reacao` (migration `012`, RLS), actions `src/lib/documentos/interacoes.ts`, UI em leitura e editor. Validado localmente com lint, testes, build e E2E.
-- Higiene de repositório: `.gitattributes` (`* text=auto eol=lf`) e working tree convertido de CRLF para LF, eliminando o churn de ~101 arquivos no Windows.
-- README expandido com setup completo (requisitos, env vars, migrations, testes/E2E, convenções, estrutura).
-- Redesign de fichas/ambientação: campos flexíveis (templates editáveis) substituindo o texto livre; modelo em `src/lib/fichas/modelo.ts`, sem migration (reuso de `documento.conteudo` JSON) e compatível com conteúdo legado. `EditorFicha`/`BauInformacoes` permanecem no código, mas a visualização foi removida temporariamente da tela de escrita para redesenho em outro lugar. Validado localmente com lint, testes, build e E2E.
-- Co-escrita — Fase 1 (presença): presença ao vivo no editor de capítulo via Supabase Realtime (`usePresencaDocumento` + `PresencaBarra`), mostrando quem está no capítulo e quem edita. Sem deps/infra novas. Validado localmente com lint, testes, build e E2E; ainda merece teste manual com dois navegadores para confirmar experiência multiusuário real.
-- Co-escrita — Fase 2 (pendente): edição simultânea com merge exige CRDT (Yjs) + provider de sync sobre Supabase Realtime e substituição do lock por capítulo. Requer novas dependências (não instaláveis no ambiente atual) e teste multi-cliente; deve ser feita e validada localmente.
-- Segurança (code review): corrigido o `select` aberto de `documento_nota`/`documento_reacao` (migration `013`) que expunha bastidores de capítulos em rascunho; leitura agora exige capítulo público publicado ou dono/colaborador.
-- Segurança (advisor Supabase): removida a policy de SELECT ampla do bucket público `capas` (migration `014`) que permitia listar arquivos; URLs públicas continuam funcionando.
-- Consolidação: testes unitários para `fichas/modelo` e `documentos/interacoes` (validação, permissão, toggle de reação, agregação). Validação local em 2026-06-27: `npm run lint`, `npm run test` (100 testes), `npm run build` e `npm run test:e2e` (11 testes) passaram.
-- Correções editor/leitura/notificações: migration `015` adiciona `documento.status`, RPCs seguras para notificações e notificação de favoritos quando capítulo é publicado; capítulos novos nascem em rascunho; leitura filtra apenas capítulos publicados; textos quebrados na leitura/reação foram normalizados.
-- Melhorias editoriais: capítulos agora só publicam após revisão; revisão supervisionada usa `documento_aprovacao` (migration `016`) e bloqueia publicação enquanto houver aprovação pendente; editor diferencia salvamento automático/manual; tela de leitura foi redesenhada.
+### Mudanças recentes já incorporadas ao plano
 
-## Achados prioritários
+- A visualização do "Baú de informações" saiu da tela de escrita, mas o motor de fichas continua no código para redesenho futuro.
+- Botões de novo capítulo/importar foram suavizados e mantidos dentro do bloco de capítulos.
+- Fluxo editorial por capítulo foi reforçado: capítulo nasce como rascunho e precisa passar por revisão antes de publicação.
+- Tela de leitura foi redesenhada, mas ainda precisa de revisão visual/mobile de ponta a ponta.
+- A migration `015` existe no repositório, mas o Supabase remoto verificado em 2026-06-28 ainda não a recebeu.
 
-### P0 - Corrigir antes de evoluir features
+## Bloqueadores atuais
 
-1. Comentários consultam campo inexistente em `projeto`
-   - Local: `src/lib/comentarios/actions.ts`
-   - Problema: a criação de comentário busca `autor_id`, mas a tabela `projeto` possui `dono_id`.
-   - Impacto: notificação de novo comentário pode falhar ou nunca chegar ao dono.
-   - Status: concluído em 2026-06-26.
+### B1. Migration 015 não aplicada no remoto
 
-2. Home consulta colunas inexistentes em `leitura_atual`
-   - Local: `src/app/[locale]/(publico)/page.tsx`
-   - Problema: a query seleciona `id`, `titulo`, `ultimo_capitulo_titulo`, `capitulo_id` e `historia_id`; a migration define `usuario_id`, `projeto_id`, `ultimo_documento_id`, `criado_em`, `atualizado_em`.
-   - Impacto: a seção "Continuar lendo" quebra ou fica sempre vazia.
-   - Status: concluído em 2026-06-26.
+Status: bloqueado por falta de acesso administrativo local.
 
-3. Tipos do Supabase são placeholder
-   - Local: `src/types/database.ts`
-   - Problema: `Tables: Record<string, never>` impede tipagem real.
-   - Impacto: campos inexistentes passam despercebidos, como os dois problemas acima.
-   - Status: concluído provisoriamente em 2026-06-26 com tipos manuais alinhados às migrations. Próximo passo futuro: substituir por tipos gerados via Supabase CLI quando houver acesso ao projeto remoto.
+Evidência verificada em 2026-06-28 via REST/RPC com chave anon:
 
-4. Publicação não preenche `publicado_em`
-   - Local: `src/app/[locale]/(painel)/projeto/[id]/editar/page.tsx` e `src/lib/projetos/actions.ts`
-   - Problema: publicar muda apenas `status`.
-   - Impacto: `buscarNovidades()` filtra `publicado_em is not null`, então histórias recém-publicadas podem não aparecer em novidades.
-   - Status: concluído em 2026-06-26.
+- `documento.status` retorna `42703 column documento.status does not exist`;
+- `criar_notificacao_sistema` retorna `PGRST202`;
+- `notificar_favoritos_capitulo_publicado` retorna `PGRST202`.
 
-5. Testes E2E estão configurados como arquivo `.bak`
-   - Local: `playwright.config.ts.bak`
-   - Problema: `npm run test:e2e` existe, mas a configuração ativa não está no nome esperado.
-   - Impacto: fluxo E2E pode não rodar como esperado.
-   - Status: concluído em 2026-06-26. Configuração restaurada e `npm run test:e2e` validado localmente.
+Impacto:
 
-### P1 - Segurança, consistência e dados
+- convite de colaborador pode continuar falhando com erro genérico;
+- notificações de novo capítulo não funcionam;
+- fluxo editorial por capítulo depende de coluna inexistente no remoto.
 
-6. Exportação exige login mesmo para projeto publicado
-   - Local: `src/app/api/exportar/[formato]/route.ts`
-   - Problema: a rota retorna 401 antes de avaliar se o projeto é público.
-   - Impacto: histórias publicadas não podem ser exportadas por visitantes, apesar do código indicar suporte a `isPublicado`.
-   - Status: corrigido em 2026-06-26. Visitantes exportam apenas capítulos públicos de histórias publicadas.
+Próximo passo:
 
-7. Autorização de projeto está duplicada
-   - Locais: documentos, importação, exportação, colaboradores e projetos.
-   - Problema: cada fluxo reimplementa dono/colaborador.
-   - Impacto: risco de divergência, bugs e brechas.
-   - Status: parcialmente concluído em 2026-06-26. Helper criado e aplicado em documentos, colaboradores, importação e exportação; ainda falta expandir para todos os fluxos restantes.
+- aplicar `supabase/migrations/015_status_documento_notificacoes.sql` com credencial administrativa;
+- depois aplicar/validar `016_aprovacao_revisao_documento.sql`, se ainda não estiver no remoto;
+- revalidar convite, publicação de capítulo e notificação de favoritos.
 
-8. Convites de colaborador dão acesso antes do aceite
-   - Local: policies e ações que checam `projeto_colaborador.usuario_id`.
-   - Problema: a existência da linha já autoriza acesso; `aceito_em` é usado na UI, mas não na autorização.
-   - Impacto: usuário convidado pode acessar antes de aceitar.
-   - Status: corrigido em 2026-06-26. Acesso de colaborador exige `aceito_em is not null`; convites pendentes continuam visíveis para o dono.
+### B2. Experiência mobile ainda não foi auditada como critério de entrega
 
-9. Classificação etária não bloqueia usuário sem data de nascimento
-   - Local: `src/lib/historias/queries.ts`
-   - Problema: `idadeUsuario === null` retorna todos os projetos.
-   - Impacto: conteúdo +18 pode aparecer para visitante ou usuário sem idade.
-   - Status: corrigido em 2026-06-26. Conteúdo com classificação acima de Livre é ocultado quando a idade é desconhecida.
+Status: pendente.
 
-10. Upload de capa persiste base64 no banco
-    - Local: `src/app/[locale]/(painel)/projeto/[id]/editar/page.tsx`
-    - Problema: imagem é redimensionada e salva como Data URL em `capa_url`.
-    - Impacto: linhas grandes no Postgres, pior performance e ausência de lifecycle de arquivo.
-    - Status: concluído em 2026-06-27. Bucket `capas` provisionado via `011_storage_capas.sql` (policies escopadas ao dono); upload envia ao Storage e salva URL pública; base64 removido do fluxo e objeto antigo é apagado na troca/remoção.
+Impacto:
 
-11. Erros internos são expostos em APIs
-    - Locais: importação/exportação e Server Actions.
-    - Problema: `error.message` é retornado ao usuário em vários pontos.
-    - Impacto: vazamento de detalhe interno e experiência inconsistente.
-    - Status: concluído em 2026-06-27 para APIs de importação/exportação/lock e Server Actions principais: respostas públicas não expõem detalhes internos e as APIs registram falhas via logger estruturado (`src/lib/observabilidade/logger.ts`) com redaction de campos sensíveis.
+- o principal uso será no celular;
+- algumas telas ainda usam padrões desktop, como editor com sumário lateral fixo (`w-64`), cabeçalhos com muitos botões e listas densas;
+- telas críticas podem funcionar tecnicamente, mas parecer confusas ou apertadas no mobile.
 
-12. Validação de entrada ainda é pontual e duplicada
-    - Locais: Server Actions e rotas em `src/app/api`.
-    - Problema: cada fluxo valida manualmente UUID, payload, status e permissões; outros fluxos aceitam objetos parciais sem schema.
-    - Impacto: regras divergentes, mensagens inconsistentes e maior chance de aceitar dados inválidos.
-    - Status: parcialmente corrigido em 2026-06-27 nas rotas de importação/exportação/lock e nas Server Actions principais com helpers comuns para UUID, JSON e payloads simples. Próximo passo: evoluir para schemas compartilhados por comando conforme os fluxos crescerem.
+Próximo passo:
 
-### P2 - Robustez e qualidade
+- executar revisão visual e funcional em viewport mobile realista: 360x740, 390x844 e 430x932;
+- priorizar biblioteca, editar projeto, escrita, importar, leitura, notificações e colaboradores.
 
-13. Reordenação de documentos não é transacional
-    - Local: `src/lib/documentos/actions.ts`
-    - Problema: loop faz múltiplos updates; falha no meio deixa ordem parcial.
-    - Impacto: sumário inconsistente.
-    - Ação: criar RPC transacional ou update em lote controlado.
+## Critérios de pronto da primeira entrega
 
-14. Auto-save pode perder alteração no unmount
-    - Local: `src/components/editor/EditorCapitulo.tsx`
-    - Problema: save assíncrono no cleanup não é aguardado; navegação pode cancelar a chamada.
-    - Impacto: perda silenciosa de texto.
-    - Status: parcialmente concluído em 2026-06-27. Debounce reduzido de 30s para 2,5s, `beforeunload` avisa sobre alterações não salvas; ainda falta salvar de forma garantida na navegação client-side (ex.: flush via API/sendBeacon).
+### Produto
 
-14.1. Aprovação supervisionada ainda precisa de painel dedicado
-    - Local: editor/documentos e colaboradores.
-    - Problema: `revisao_supervisionada` já cria aprovações e bloqueia publicação enquanto houver pendência, mas a aprovação hoje fica no editor do capítulo.
-    - Impacto: funciona como regra mínima, mas colaboradores ainda não têm um painel centralizado de revisões pendentes.
-    - Ação: criar página ou seção de revisões pendentes por projeto/colaborador, com histórico de quem aprovou e quando.
+- Usuário consegue criar conta, entrar, criar projeto, criar capítulo, escrever, revisar, publicar e ler em outra sessão.
+- Capítulos publicados aparecem para leitores; rascunhos e revisões não aparecem publicamente.
+- Favoritar uma história e publicar novo capítulo gera notificação.
+- Convidar colaborador gera convite/notificação e o colaborador só acessa após aceitar.
+- Importação cria capítulos em rascunho.
+- Exportação respeita acesso público/privado.
 
-15. Logs de debug em produção
-    - Local: `src/lib/projetos/actions.ts`
-    - Problema: `console.log` e `console.error` em Server Action/API.
-    - Impacto: ruído, possível vazamento de metadados.
-    - Status: concluído em 2026-06-27. Logs diretos foram removidos das actions e APIs críticas passaram a usar logger estruturado controlado por ambiente, sem registrar headers/cookies e com redaction de chaves sensíveis.
+### Mobile e usabilidade
 
-16. Strings hardcoded e mojibake em arquivos antigos
-    - Locais: componentes, migrations antigas, mensagens e comentários (inclui os componentes novos desta sessão: post-its, reações, fichas, presença).
-    - Problema: há strings fora do i18n e arquivos antigos com codificação aparente quebrada.
-    - Impacto: UX inconsistente e manutenção ruim.
-    - Decisão (2026-06-27): migração adiada de propósito — o app tem locale único (pt-BR) e o resto é hardcoded; migrar só as strings novas seria churn de baixo retorno. Fazer app-wide quando entrar um segundo idioma.
-    - Ação: migrar strings para `pt-BR.json` e normalizar arquivos tocados.
+- Todas as telas principais funcionam confortavelmente em celular, sem elementos cortados ou ações escondidas.
+- Botões de ação primária têm área de toque suficiente e texto compreensível.
+- O editor no celular deve ter navegação de capítulos acessível sem ocupar permanentemente a largura útil de escrita.
+- Menus, popups e modais devem caber na tela e permitir fechar sem precisão excessiva.
+- Leitura deve ser confortável: largura, espaçamento, contraste e navegação anterior/próximo adequados.
+- Estados vazios, erro, carregamento e sucesso devem orientar o usuário sem mensagens técnicas.
+- Fluxos destrutivos, como excluir capítulo/projeto, devem exigir confirmação clara.
 
-17. `any` e casts escondem inconsistências de dados
-    - Locais: queries Supabase, catálogo, favoritos, mural e páginas com dados relacionais.
-    - Problema: casts manuais substituem tipos reais e mascaram divergências de schema.
-    - Impacto: bugs de runtime continuam escapando da revisão.
-    - Ação: depois dos tipos Supabase, substituir casts por tipos derivados e helpers de normalização.
+### Visual
 
-18. Cobertura de testes não protege fluxos críticos
-    - Lacunas: publicação, comentários/notificações, leitura atual, importação/exportação, autorização de colaborador, catálogo por idade.
-    - Status: parcialmente endereçado em 2026-06-27 — testes para `fichas/modelo` e `documentos/interacoes` (notas/reações). Ainda faltam: upload de capa, UI de leitor-escritor, presença e E2E. Suíte precisa rodar localmente (sem binários nativos Linux no ambiente atual).
-    - Ação: adicionar testes unitários antes/depois de cada correção P0/P1.
+- A interface deve parecer consistente entre público e painel: botões, badges, cards, listas e estados.
+- Evitar excesso de botões preenchidos competindo entre si; manter ação principal clara e ações secundárias discretas.
+- Evitar telas com densidade de desktop no celular.
+- Revisar hierarquia visual de: biblioteca, edição de projeto, escrita, importação, leitura, notificações e colaboradores.
+- Remover ou corrigir mojibake visível antes da entrega.
 
-### P3 - Limpeza, produto e documentação
+### Segurança
 
-19. Assets padrão podem estar sobrando
-    - Local: `public/`.
-    - Problema: arquivos padrão do scaffold ainda existem e podem não fazer parte da identidade do produto.
-    - Impacto: ruído no repositório e risco de uso acidental.
-    - Ação: auditar uso dos assets e remover os não utilizados.
+- RLS e helpers de autorização devem impedir acesso a rascunhos, capítulos privados, notas internas e projetos não autorizados.
+- Colaborador pendente não pode editar/ler projeto privado antes de aceitar.
+- APIs e Server Actions não podem expor `error.message` técnico ao usuário final.
+- Upload de capa não pode permitir escrita em path de outro projeto.
+- RPCs `security definer` devem validar `auth.uid()` e escopo de permissão antes de inserir notificações.
+- Conteúdo com classificação etária restrita não deve aparecer para idade desconhecida.
+- Nenhuma chave sensível deve ser versionada; `.env.local` continua local e ignorado.
 
-20. `plataforma_config` ainda não tem fluxo de uso
-    - Local: tabela `plataforma_config`.
-    - Problema: o modelo existe, mas não há fluxo claro de leitura/administração.
-    - Impacto: tabela sem dono funcional e sem contrato.
-    - Ação: decidir se será mantida para feature flags/configurações globais ou removida em migration futura.
+## Plano até a primeira entrega
 
-21. `bloqueio` existe no banco, mas o produto não aplica a regra
-    - Local: tabela `bloqueio`, perfil, comentários e mural.
-    - Problema: a estrutura existe, mas não há UI nem enforcement consistente.
-    - Impacto: usuários bloqueados podem continuar interagindo se nenhum fluxo consultar a tabela.
-    - Ação: especificar regra de bloqueio e aplicar em perfil, mural, comentários, reações e listagens.
+### Fase A. Alinhar banco remoto
 
-22. README/onboarding ainda é mínimo
-    - Local: `README.md`.
-    - Problema: aponta para o mapa vivo, mas não documenta env vars, Supabase, migrations, testes e setup completo.
-    - Impacto: ambiente novo depende de conhecimento externo.
-    - Ação: expandir README ou criar guia de onboarding com setup local/remoto.
-    - Status: concluído em 2026-06-27. README expandido com requisitos, setup, `.env.local`, aplicação de migrations, validação (lint/test/build) e E2E, convenções e estrutura.
+Prioridade: P0.
 
-## Plano por fases
+Objetivo: deixar o ambiente Supabase compatível com o código atual.
 
-### Fase 1 - Estabilização de runtime
+Tarefas:
 
-Objetivo: remover bugs que quebram fluxo ou escondem dados.
-
-Escopo:
-
-- Corrigir `comentarios/actions.ts` para usar `dono_id`.
-- Corrigir query de `leitura_atual` na home.
-- Implementar persistência de progresso de leitura na página de leitura.
-- Criar `publicarProjeto` e `despublicarProjeto`.
-- Preencher `publicado_em` ao publicar e limpar ou manter ao despublicar conforme regra definida.
-- Remover logs de debug.
-- Restaurar `playwright.config.ts`.
-- Atualizar `docs/ESTADO_DO_PROJETO.md`.
-
-Testes mínimos:
-
-- Unitário para notificação de comentário.
-- Unitário para publicação preencher `publicado_em`.
-- Unitário ou integração mockada para leitura atual.
-- `npm run lint`
-- `npm run test`
-- `npm run build`
+- Aplicar migration `015_status_documento_notificacoes.sql`.
+- Verificar se `016_aprovacao_revisao_documento.sql` também precisa ser aplicada.
+- Confirmar via REST/RPC que `documento.status` e as RPCs existem.
+- Rodar teste manual de convite de colaborador.
+- Rodar teste manual de favorito + publicação de capítulo + notificação.
 
 Critério de pronto:
 
-- Criar, publicar e listar história em novidades funciona.
-- Comentar em história publicada não quebra e gera notificação para o dono.
-- Continuar lendo mostra projeto/documento correto.
-- E2E básico está executável.
+- As sondas remotas deixam de retornar `42703`/`PGRST202`.
+- Convite e notificações funcionam no ambiente real.
 
-### Fase 2 - Tipagem, acesso e segurança
+### Fase B. Auditoria mobile-first
 
-Objetivo: reduzir bugs estruturais e centralizar autorização.
+Prioridade: P0.
 
-Escopo:
+Objetivo: tornar os fluxos principais fáceis no celular.
 
-- Gerar ou escrever tipos Supabase alinhados às migrations.
-- Tipar `criarClienteBrowser` e `criarClienteServidor` com `Database`.
-- Criar helper de acesso a projeto.
-- Substituir checagens duplicadas em documentos, importação, exportação e colaboradores.
-- Decidir e aplicar regra de `aceito_em`.
-- Decidir e aplicar regra de classificação etária para visitantes/idade desconhecida.
-- Padronizar mensagens de erro públicas.
-- Padronizar validação de entrada com schemas compartilhados.
-- Aplicar o helper atual de APIs aos endpoints restantes e evoluir para schemas por comando.
-- Remover `any` e casts principais conforme os tipos forem gerados.
-- Revisar exportação pública vs autenticada.
+Telas a revisar:
 
-Testes mínimos:
+- `/{locale}/biblioteca`
+- `/{locale}/projeto/{id}/editar`
+- `/{locale}/projeto/{id}/escrita`
+- `/{locale}/projeto/{id}/importar`
+- `/{locale}/projeto/{id}/colaboradores`
+- `/{locale}/notificacoes`
+- `/{locale}/historia/{id}`
+- `/{locale}/historia/{id}/ler/{docId}`
+- `/{locale}/perfil/{nomeUsuario}`
 
-- Dono acessa projeto.
-- Colaborador pendente não acessa, se essa regra for adotada.
-- Colaborador aceito acessa.
-- Visitante não vê conteúdo restrito por idade, se essa regra for adotada.
-- Exportação respeita documentos públicos.
+Ajustes esperados:
 
-Critério de pronto:
-
-- Novo campo inválido em query passa a falhar no TypeScript.
-- Regras de acesso estão em um único módulo.
-- Fluxos públicos e autenticados têm comportamento documentado.
-
-### Fase 3 - Storage e mídia
-
-Objetivo: tirar capas do banco e fechar infraestrutura de mídia.
-
-Escopo:
-
-- Criar migration segura para bucket `capas` ou documentar provisionamento idempotente.
-- Confirmar o estado real atual do bucket `capas` no ambiente Supabase antes de migrar o fluxo.
-- Implementar upload para Supabase Storage.
-- Salvar URL pública ou path no `capa_url`.
-- Remover Data URL base64 do fluxo novo.
-- Definir regra de exclusão/substituição de capa antiga.
-
-Testes mínimos:
-
-- Mock do upload.
-- Atualização de capa salva URL.
-- Remoção limpa `capa_url`.
+- Transformar sumário lateral do editor em drawer/bottom sheet ou navegação recolhível no mobile.
+- Revisar toolbar do editor para caber em toque e não roubar espaço de escrita.
+- Garantir que ações de publicar/salvar/preview/excluir no editor de projeto não virem uma linha apertada.
+- Ajustar telas com listas para evitar cards grandes demais ou botões pequenos demais.
+- Melhorar modais de confirmação para mobile.
+- Validar leitura com tipografia confortável e navegação clara no final do capítulo.
 
 Critério de pronto:
 
-- Capas novas não aumentam payload do registro `projeto`.
-- Ambientes novos conseguem provisionar bucket sem passo ambíguo.
+- Fluxo criar projeto → escrever capítulo → publicar → ler é executável em 390x844 sem zoom, corte ou confusão.
 
-### Fase 4 - Editor e documentos
+### Fase C. Fluxo editorial e colaboração
 
-Objetivo: melhorar confiabilidade de escrita.
+Prioridade: P1.
 
-Escopo:
+Objetivo: fechar o ciclo de capítulo do ponto de vista de autor/colaborador.
 
-- Criar RPC transacional para reordenar documentos.
-- Melhorar auto-save e aviso de alterações pendentes.
-- Revisar lock para garantir que colaborador pendente não edite, conforme regra escolhida.
-- Avaliar salvamento mais frequente ou explícito ao trocar documento.
-- Adicionar feedback de erro recuperável no editor.
+Tarefas:
 
-Testes mínimos:
-
-- Reordenação parcial não ocorre em caso de erro.
-- Editor preserva alteração pendente em navegação controlada.
-- Lock perdido deixa editor somente leitura.
+- Validar regra: rascunho → revisão ou revisão supervisionada → publicado.
+- Melhorar feedback quando publicação é bloqueada por falta de revisão/aprovação.
+- Criar visão simples de pendências de revisão supervisionada para colaboradores ou destacar melhor no fluxo existente.
+- Confirmar que excluir capítulo atualiza sumário e estado ativo sem quebrar a escrita.
+- Confirmar que capítulos importados entram como rascunho.
 
 Critério de pronto:
 
-- Escrita não perde alteração silenciosamente em caminhos comuns.
-- Ordem de documentos é consistente.
+- Autor entende claramente o que falta para publicar.
+- Colaborador entende onde aprovar.
+- O leitor nunca vê capítulo não publicado.
 
-### Fase 5 - Produto e UX pendentes
+### Fase D. Notificações e ações de leitura
 
-Objetivo: fechar features que já aparecem no modelo/UI.
+Prioridade: P1.
 
-Escopo:
+Objetivo: fazer notificações parecerem úteis, não só registros em tabela.
 
-- Bloqueio entre usuários: definir UI e impacto em perfil, comentários e mural.
-- `plataforma_config`: decidir se vira configuração global/feature flags ou se será removida.
-- Notificações: adicionar ações para comentário/resposta, links corretos e atualização em tempo real ou polling.
-- Favoritos: melhorar feedback e lista com capa/autores.
-- Perfil/configurações: incluir `nome_usuario`, `avatar_url`, `data_nascimento` e validações.
-- Importação/exportação: adicionar limites de quantidade de capítulos e mensagens de erro mais claras.
-- Catálogo: adicionar testes para busca, filtro por tag, paginação e classificação etária.
-- Assets públicos: auditar e remover arquivos padrão não usados.
-- README/onboarding: documentar env vars, Supabase local/remoto e comandos.
+Tarefas:
 
-Testes mínimos:
-
-- Testes de componentes para estados vazios, erro e sucesso.
-- E2E de cadastro/login, criação/publicação, leitura e comentário.
+- Validar notificação de convite.
+- Validar notificação de novo capítulo para favoritos.
+- Revisar links das notificações para levar ao lugar correto.
+- Marcar como lida individualmente e em lote.
+- Avaliar polling simples ou atualização ao abrir popup/página.
 
 Critério de pronto:
 
-- Fluxos principais podem ser demonstrados de ponta a ponta sem setup manual não documentado.
+- Notificação leva o usuário para uma ação clara.
+- Não há notificação falsa positiva nem duplicada para o mesmo capítulo.
+
+### Fase E. Segurança e consistência final
+
+Prioridade: P1.
+
+Objetivo: reduzir risco antes da primeira entrega.
+
+Tarefas:
+
+- Revisar policies/RPCs tocadas nas migrations 015 e 016.
+- Testar acesso público vs privado para projeto, capítulo, notas e reações.
+- Revisar endpoints de importação/exportação com arquivos inválidos, formatos inválidos e projeto sem permissão.
+- Revisar bloqueio de colaborador pendente no editor, importação, exportação e documentos.
+- Remover ou corrigir strings com mojibake visível.
+- Rodar `npm.cmd run lint`, `npm.cmd run test`, `npm.cmd run build` e E2E básico.
+
+Critério de pronto:
+
+- Falhas retornam mensagens públicas.
+- Dados privados não aparecem em fluxo público.
+- Build e suíte local passam.
+
+## Backlog pós-primeira entrega
+
+Itens importantes, mas não bloqueadores da primeira entrega se os critérios acima forem atendidos:
+
+- Edição simultânea real com CRDT/Yjs e merge colaborativo.
+- Reordenação transacional por RPC para documentos.
+- Fallback de auto-save para fechamento abrupto com rota API/`sendBeacon`.
+- Baú de informações redesenhado em local próprio.
+- Sistema de bloqueio entre usuários aplicado em perfil, mural, comentários e reações.
+- `plataforma_config`: decidir se vira feature flags/config global ou se será removida.
+- Substituir tipos manuais por tipos gerados pela Supabase CLI.
+- Internacionalização app-wide quando houver segundo idioma.
+- Remover `any` e casts restantes em queries Supabase.
+- Testes adicionais para catálogo, importação/exportação, presença, upload de capa e componentes mobile.
+- Auditoria de assets públicos não usados.
 
 ## Ordem recomendada de execução
 
-1. Fase 1 completa.
-2. Gerar tipos Supabase no início da Fase 2.
-3. Centralizar autorização antes de mexer em colaboração/importação/exportação.
-4. Resolver Storage antes de investir em melhorias visuais de capas.
-5. Melhorar editor depois que acesso, locks e publicação estiverem estáveis.
+1. Aplicar e validar migrations remotas 015/016.
+2. Fazer auditoria mobile-first das telas principais.
+3. Corrigir layout mobile do editor de escrita.
+4. Validar fluxo editorial completo com colaborador.
+5. Validar notificações reais.
+6. Fazer revisão de segurança/RLS/API.
+7. Rodar validação completa: lint, testes, build e E2E.
 
-## Backlog inicial sugerido
+## Checklist de validação manual
 
-1. `bug/comentario-notificacao-dono-id`
-2. `bug/home-leitura-atual-schema`
-3. `chore/supabase-types`
-4. `feature/publicacao-com-publicado-em`
-5. `test/restaurar-playwright`
-6. `refactor/projeto-acesso-helper`
-7. `security/regra-colaborador-aceito`
-8. `security/classificacao-etaria-visitante`
-9. `feature/storage-capas`
-10. `reliability/editor-autosave`
-11. `validation/schemas-server-actions-api`
-12. `typing/remover-any-casts-supabase`
-13. `product/bloqueio-usuarios`
-14. `product/plataforma-config-decisao`
-15. `test/catalogo-importacao-exportacao`
-16. `docs/onboarding-setup`
-17. `chore/remover-assets-publicos-nao-usados`
+- Criar conta nova no celular.
+- Criar projeto no celular.
+- Adicionar capa no celular.
+- Criar capítulo pelo editor.
+- Trocar de capítulo com alteração pendente e confirmar que salva.
+- Importar documento e confirmar que capítulos entram como rascunho.
+- Mudar capítulo para revisão e publicar.
+- Favoritar história com outro usuário.
+- Publicar novo capítulo e receber notificação.
+- Convidar colaborador, aceitar convite e aprovar revisão supervisionada.
+- Ler história publicada no celular.
+- Tentar acessar capítulo rascunho como visitante e confirmar bloqueio.
+- Exportar história publicada como visitante.
+- Exportar projeto privado como usuário sem permissão e confirmar bloqueio.

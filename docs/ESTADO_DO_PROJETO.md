@@ -2,7 +2,7 @@
 
 Documento vivo do estado técnico e funcional do projeto. Deve ser atualizado em todo PR, branch ou alteração relevante que mude rotas, banco, integrações, fluxos, padrões, dependências, pendências ou decisões de arquitetura.
 
-Última atualização: 2026-06-27 (consolidação: testes das features novas)
+Última atualização: 2026-06-28 (plano de primeira entrega mobile-first)
 
 ## Regra obrigatória de manutenção
 
@@ -24,7 +24,7 @@ Plano de evolução e correções priorizadas: [PLANO_IMPLEMENTACAO.md](PLANO_IM
 - Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS 4.
 - Internacionalização: `next-intl`, atualmente apenas `pt-BR`, com prefixo obrigatório de locale.
 - Banco e autenticação: Supabase via `@supabase/ssr` `^0.12.0` e `@supabase/supabase-js`.
-- Editor: TipTap com Starter Kit, underline, placeholder, contagem de caracteres, auto-save (debounce 2,5s + aviso de saída), salvamento manual explícito, corretor ortográfico nativo do navegador em PT-BR e status editorial por capítulo (`rascunho`, `revisao`, `revisao_supervisionada`, `publicado`).
+- Editor: TipTap com Starter Kit, underline, placeholder, contagem de caracteres, auto-save (debounce 2,5s + aviso de saída + flush antes de navegações internas principais), salvamento manual explícito, corretor ortográfico nativo do navegador em PT-BR e status editorial por capítulo (`rascunho`, `revisao`, `revisao_supervisionada`, `publicado`).
 - Fichas/ambientação: editor estruturado por campos flexíveis (modelos editáveis: adicionar/remover/renomear campos, linha curta ou texto longo), salvo em `documento.conteudo` como JSON `{ v, campos }`, com compatibilidade para conteúdo legado em texto.
 - Colaboração: presença ao vivo no editor de capítulo via Supabase Realtime (avatares de quem está no capítulo + indicador editando/vendo). Edição simultânea com merge (CRDT) ainda não implementada.
 - Importação: EPUB via `jszip`, DOCX via `mammoth`.
@@ -362,6 +362,8 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 
 ### Alta prioridade
 
+- Aplicar a migration `015_status_documento_notificacoes.sql` no Supabase remoto. Verificação em 2026-06-28 via REST/RPC com chave anon: `documento.status` retorna `42703 column documento.status does not exist` e os RPCs `criar_notificacao_sistema`/`notificar_favoritos_capitulo_publicado` retornam `PGRST202`. O repositório possui a migration, mas o ambiente remoto ainda não; fluxos de status editorial e notificações dependem disso.
+- Auditar e ajustar os fluxos principais para mobile-first antes da primeira entrega. O uso principal esperado é pelo celular; telas como escrita, edição de projeto, importação, leitura, colaboradores e notificações precisam ser verificadas em viewports pequenas, com ações tocáveis, sem cortes, sem densidade de desktop e com hierarquia visual clara.
 - Corrigir codificação/mojibake em arquivos com texto em português, incluindo migrations, mensagens e strings de erro.
 
 ### Média prioridade
@@ -383,8 +385,9 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Relação leitor-escritor: post-its do autor (bastidores por capítulo), reações de leitor por capítulo e comentários por capítulo (reuso de `comentario.documento_id`, sem nota de avaliação). Migration `012`, actions em `src/lib/documentos/interacoes.ts`, componentes `ReacoesDocumento` e `PainelNotasAutor`.
 - Editor: auto-save mais responsivo (debounce 2,5s) com aviso de alterações não salvas e corretor ortográfico nativo PT-BR (`spellcheck`).
 - Observabilidade: adicionado logger interno estruturado para APIs críticas, com testes unitários de redaction e sem saída em `NODE_ENV=test`.
+- Confiabilidade do editor: `EditorCapitulo` registra um salvamento pendente para a página de escrita; trocar capítulo, criar capítulo, voltar ao editor ou abrir prévia tenta salvar antes de desmontar. Falhas de salvamento agora aparecem na UI com ação de retry.
 - Publicação por capítulo: documentos novos agora nascem como `rascunho`/`publico=false`; editor permite mudar para revisão, revisão supervisionada ou publicado; leitura pública filtra somente capítulos publicados; publicação de capítulo notifica favoritos.
-- UX editorial: tela de edição ganhou criação direta de capítulo e CTA de importação mais claro; sumário do editor mostra exclusão de capítulo sempre visível; tela de leitura foi redesenhada com cabeçalho editorial, tipografia revisada e navegação anterior/próximo mais clara.
+- UX editorial: tela de edição ganhou criação direta de capítulo e acesso à importação dentro do bloco de capítulos, agora em ações discretas sem duplicar botão na barra superior; sumário do editor mostra exclusão de capítulo sempre visível; tela de leitura foi redesenhada com cabeçalho editorial, tipografia revisada e navegação anterior/próximo mais clara.
 - Provisionado bucket `capas` (público) e policies de storage escopadas ao dono via `011_storage_capas.sql`; upload de capa migrado de base64 para Supabase Storage, salvando URL pública e removendo objeto antigo.
 
 - Corrigida a notificação de comentários para usar `projeto.dono_id`.

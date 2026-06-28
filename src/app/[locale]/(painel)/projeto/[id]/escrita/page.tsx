@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Eye } from 'lucide-react'
 import { listarDocumentos, criarDocumento } from '@/lib/documentos/actions'
 import SumarioCapitulos from '@/components/editor/SumarioCapitulos'
@@ -24,16 +23,26 @@ type Documento = {
 export default function EscritaPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('editor')
   const locale = useLocale()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [projetoId, setProjetoId] = useState('')
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [capituloAtivoId, setCapituloAtivoId] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
+  const salvarPendenteRef = useRef<(() => Promise<boolean>) | null>(null)
 
   const capitulos = documentos.filter(d => d.tipo === 'capitulo')
   const capituloAtivo = capitulos.find(c => c.id === capituloAtivoId) || null
 
-  function selecionarCapitulo(id: string) {
+  async function garantirSalvamentoPendente() {
+    if (!salvarPendenteRef.current) return true
+    return salvarPendenteRef.current()
+  }
+
+  async function selecionarCapitulo(id: string) {
+    if (id === capituloAtivoId) return
+    const salvou = await garantirSalvamentoPendente()
+    if (!salvou) return
     setCapituloAtivoId(id)
   }
 
@@ -58,6 +67,8 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
   }, [params, recarregar, capituloAtivoId, searchParams])
 
   const handleNovoCapitulo = async () => {
+    const salvou = await garantirSalvamentoPendente()
+    if (!salvou) return
     const novoDoc = await criarDocumento(projetoId, '', 'capitulo')
     await recarregar(projetoId)
     setCapituloAtivoId(novoDoc.id)
@@ -66,6 +77,12 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
   const handleDocumentoAtualizado = useCallback(() => {
     recarregar(projetoId)
   }, [projetoId, recarregar])
+
+  async function navegarAposSalvar(href: string) {
+    const salvou = await garantirSalvamentoPendente()
+    if (!salvou) return
+    router.push(href)
+  }
 
   if (carregando) {
     return (
@@ -80,21 +97,23 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
       {/* Header */}
       <header className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <Link
-            href={`/${locale}/projeto/${projetoId}/editar`}
+          <button
+            type="button"
+            onClick={() => navegarAposSalvar(`/${locale}/projeto/${projetoId}/editar`)}
             className="flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-indigo-600"
           >
             <ArrowLeft size={16} />
             {t('voltarEditor')}
-          </Link>
+          </button>
         </div>
-        <Link
-          href={`/${locale}/projeto/${projetoId}/previa`}
+        <button
+          type="button"
+          onClick={() => navegarAposSalvar(`/${locale}/projeto/${projetoId}/previa`)}
           className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-indigo-700 hover:shadow-md"
         >
           <Eye size={16} />
           {t('previa')}
-        </Link>
+        </button>
       </header>
 
       {/* Layout de escrita */}
@@ -117,6 +136,9 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
               documento={capituloAtivo}
               projetoId={projetoId}
               onAtualizado={handleDocumentoAtualizado}
+              onRegistrarSalvamentoPendente={(salvarPendente) => {
+                salvarPendenteRef.current = salvarPendente
+              }}
             />
           ) : (
             <div className="flex h-full flex-col items-center justify-center text-gray-400">

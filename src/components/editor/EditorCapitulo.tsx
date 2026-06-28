@@ -30,6 +30,7 @@ interface Props {
   documento: Documento
   projetoId: string
   onAtualizado: () => void
+  onRegistrarSalvamentoPendente?: (salvarPendente: (() => Promise<boolean>) | null) => void
 }
 
 const OPCOES_STATUS: Array<{ valor: StatusDocumento; rotulo: string }> = [
@@ -60,7 +61,12 @@ function horarioAtual() {
   })
 }
 
-export default function EditorCapitulo({ documento, projetoId, onAtualizado }: Props) {
+export default function EditorCapitulo({
+  documento,
+  projetoId,
+  onAtualizado,
+  onRegistrarSalvamentoPendente,
+}: Props) {
   const { somenteLeitura, travadoPor, carregando } = useLockEdicao(documento.id)
   const presentes = usePresencaDocumento(documento.id, !somenteLeitura)
 
@@ -70,6 +76,7 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
   const [alterandoStatus, setAlterandoStatus] = useState(false)
   const [aprovando, setAprovando] = useState(false)
   const [manualFeedback, setManualFeedback] = useState(false)
+  const [erroSalvamento, setErroSalvamento] = useState<string | null>(null)
   const [ultimoSalvamento, setUltimoSalvamento] = useState<{
     tipo: 'automatico' | 'manual'
     horario: string
@@ -103,8 +110,9 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
   }, [somenteLeitura, editor])
 
   const salvar = useCallback(async (tipo: 'automatico' | 'manual' = 'automatico') => {
-    if (somenteLeitura || !editor) return
+    if (somenteLeitura || !editor) return true
     setStatusSalvamento('salvando')
+    setErroSalvamento(null)
     const json = editor.getJSON()
     const palavras = editor.storage.characterCount.words()
 
@@ -122,10 +130,23 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
       }
       pendente.current = false
       onAtualizado()
+      return true
     } catch {
       setStatusSalvamento('pendente')
+      setErroSalvamento('Não foi possível salvar. Revise sua conexão e tente novamente.')
+      return false
     }
   }, [documento.id, titulo, somenteLeitura, editor, onAtualizado])
+
+  const salvarPendente = useCallback(async () => {
+    if (!pendente.current) return true
+    return salvar('automatico')
+  }, [salvar])
+
+  useEffect(() => {
+    onRegistrarSalvamentoPendente?.(salvarPendente)
+    return () => onRegistrarSalvamentoPendente?.(null)
+  }, [onRegistrarSalvamentoPendente, salvarPendente])
 
   useEffect(() => {
     if (somenteLeitura || !pendente.current) return
@@ -168,7 +189,8 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
   async function mudarStatus(novoStatus: StatusDocumento) {
     if (somenteLeitura || novoStatus === statusEditorial) return
     if (pendente.current) {
-      await salvar('automatico')
+      const salvou = await salvar('automatico')
+      if (!salvou) return
     }
 
     const statusAnterior = statusEditorial
@@ -180,6 +202,7 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
       onAtualizado()
     } catch {
       setStatusEditorial(statusAnterior)
+      setErroSalvamento('Não foi possível alterar o status agora.')
     } finally {
       setAlterandoStatus(false)
     }
@@ -260,6 +283,21 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
           )}
         </div>
       </div>
+
+      {erroSalvamento && (
+        <div className="flex items-center justify-between gap-3 border-b border-red-100 bg-red-50 px-8 py-2 text-sm text-red-700">
+          <span>{erroSalvamento}</span>
+          {!somenteLeitura && (
+            <button
+              type="button"
+              onClick={() => salvar('manual')}
+              className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium hover:bg-red-100"
+            >
+              Tentar novamente
+            </button>
+          )}
+        </div>
+      )}
 
       {!somenteLeitura && <BarraFerramentas editor={editor} />}
 

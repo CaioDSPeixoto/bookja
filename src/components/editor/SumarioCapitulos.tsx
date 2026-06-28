@@ -14,8 +14,8 @@ type Capitulo = {
 interface Props {
   capitulos: Capitulo[]
   capituloAtivoId: string | null
-  onSelecionar: (id: string) => void
-  onNovo: () => void
+  onSelecionar: (id: string) => void | Promise<void>
+  onNovo: () => void | Promise<void>
   projetoId: string
   onReordenar: () => void
 }
