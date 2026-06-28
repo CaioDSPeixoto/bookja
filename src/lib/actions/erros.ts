@@ -17,6 +17,8 @@ const MENSAGENS_PUBLICAS = new Set([
   'Projeto não publicado',
   'Projeto precisa ter pelo menos um capítulo',
   'Projeto precisa ter pelo menos um capítulo publicado',
+  'Capítulo precisa passar por revisão antes de ser publicado',
+  'Aprovação dos colaboradores pendente',
   'Sem permissão',
   'Usuário inválido',
   'Título obrigatório',

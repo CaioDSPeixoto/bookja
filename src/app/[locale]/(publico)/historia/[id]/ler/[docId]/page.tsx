@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { ChevronLeft, ChevronRight, StickyNote } from 'lucide-react'
+import { BookOpen, ChevronLeft, ChevronRight, StickyNote } from 'lucide-react'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { renderizarConteudoHTML } from '@/lib/historias/renderizar'
 import BarraProgresso from '@/components/leitura/BarraProgresso'
@@ -64,7 +64,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
   const notas = (await listarNotasDocumento(docId).catch(() => [])) as NotaDocumento[]
 
   return (
-    <>
+    <main className="min-h-screen bg-[#f7f7f5] text-gray-950">
       <BarraProgresso />
       <HeaderLeitura
         voltarHref={`/${locale}/historia/${id}`}
@@ -74,23 +74,48 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
         voltarLabel={t('voltarHistoria')}
       />
 
-      <div className="mx-auto max-w-prose px-4 pt-16 pb-12">
+      <section className="border-b border-gray-200 bg-white pt-20">
+        <div className="mx-auto max-w-3xl px-5 pb-10">
+          <Link
+            href={`/${locale}/historia/${id}`}
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          >
+            <ChevronLeft size={16} />
+            {projeto.titulo}
+          </Link>
+          <div className="flex items-start gap-4">
+            <div className="mt-1 hidden h-12 w-12 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600 sm:flex">
+              <BookOpen size={22} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Capítulo {idxAtual + 1} de {lista.length}
+              </p>
+              <h1 className="mt-2 text-3xl font-bold leading-tight tracking-normal text-gray-950 sm:text-4xl">
+                {documento.titulo}
+              </h1>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-3xl px-5 py-10">
         <article
           className="prose-reader"
           dangerouslySetInnerHTML={{ __html: htmlConteudo }}
         />
 
         {notas.length > 0 && (
-          <section className="mt-10 rounded-lg border border-amber-200 bg-amber-50/60 p-4">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-amber-700">
+          <section className="mt-12 border-t border-amber-200 pt-6">
+            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-amber-700">
               <StickyNote size={16} /> Bastidores do capítulo
             </h2>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {notas.map((nota) => (
-                <div key={nota.id} className="w-full max-w-xs rounded-md border border-amber-200 bg-amber-100/70 p-3 text-sm text-amber-900 shadow-sm sm:w-64">
+                <div key={nota.id} className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
                   <p className="whitespace-pre-line break-words">{nota.conteudo}</p>
-                  <p className="mt-2 text-[11px] text-amber-600">
-                    - {nota.perfil?.nome_exibicao || nota.perfil?.nome_usuario || 'Autor'}
+                  <p className="mt-3 text-[11px] text-amber-700">
+                    {nota.perfil?.nome_exibicao || nota.perfil?.nome_usuario || 'Autor'}
                   </p>
                 </div>
               ))}
@@ -98,41 +123,45 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
           </section>
         )}
 
-        <ReacoesDocumento documentoId={docId} podeReagir={!!user} />
+        <section className="mt-12 border-t border-gray-200 pt-6">
+          <ReacoesDocumento documentoId={docId} podeReagir={!!user} />
+        </section>
 
         {perfilAutor?.chave_pix && (
-          <div className="mt-12 rounded-lg border border-indigo-200 bg-indigo-50 p-5 text-center">
-            <p className="font-medium text-indigo-800">{t('apoiarAutor')}</p>
-            <p className="mt-2 text-sm text-indigo-700">
-              {t('chavePix')}: <code className="rounded bg-indigo-100 px-2 py-0.5">{perfilAutor.chave_pix}</code>
+          <section className="mt-10 border-t border-indigo-100 pt-6 text-center">
+            <p className="font-medium text-indigo-900">{t('apoiarAutor')}</p>
+            <p className="mt-2 text-sm text-indigo-800">
+              {t('chavePix')}: <code className="rounded bg-indigo-50 px-2 py-0.5">{perfilAutor.chave_pix}</code>
             </p>
             <div className="mt-3 flex justify-center">
               <BotaoCopiarPix chavePix={perfilAutor.chave_pix} label={t('copiarPix')} labelCopiado={t('pixCopiado')} />
             </div>
-          </div>
+          </section>
         )}
 
-        <nav className="mt-12 grid grid-cols-2 gap-4 border-t border-gray-200 pt-6">
+        <nav className="mt-12 grid grid-cols-1 gap-3 border-t border-gray-200 pt-6 sm:grid-cols-2">
           {anterior ? (
-            <Link href={`/${locale}/historia/${id}/ler/${anterior.id}`} className="group flex flex-col items-start gap-1 rounded-lg p-3 hover:bg-gray-50">
-              <span className="inline-flex items-center gap-1 text-xs text-gray-400 group-hover:text-indigo-600">
+            <Link href={`/${locale}/historia/${id}/ler/${anterior.id}`} className="group rounded-md border border-gray-200 bg-white p-4 transition hover:border-indigo-200 hover:bg-indigo-50/50">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 group-hover:text-indigo-600">
                 <ChevronLeft size={14} /> {t('capituloAnterior')}
               </span>
-              <span className="text-sm font-medium text-gray-700 line-clamp-1">{anterior.titulo}</span>
+              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{anterior.titulo}</span>
             </Link>
           ) : <div />}
           {proximo ? (
-            <Link href={`/${locale}/historia/${id}/ler/${proximo.id}`} className="group flex flex-col items-end gap-1 rounded-lg p-3 hover:bg-gray-50">
-              <span className="inline-flex items-center gap-1 text-xs text-gray-400 group-hover:text-indigo-600">
+            <Link href={`/${locale}/historia/${id}/ler/${proximo.id}`} className="group rounded-md border border-gray-200 bg-white p-4 text-right transition hover:border-indigo-200 hover:bg-indigo-50/50">
+              <span className="inline-flex items-center justify-end gap-1 text-xs font-medium text-gray-400 group-hover:text-indigo-600">
                 {t('proximoCapitulo')} <ChevronRight size={14} />
               </span>
-              <span className="text-sm font-medium text-gray-700 line-clamp-1">{proximo.titulo}</span>
+              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{proximo.titulo}</span>
             </Link>
           ) : <div />}
         </nav>
 
-        <ListaComentarios projetoId={id} documentoId={docId} usuarioId={user?.id ?? null} permitirAvaliacao={false} />
+        <section className="mt-12 border-t border-gray-200 pt-8">
+          <ListaComentarios projetoId={id} documentoId={docId} usuarioId={user?.id ?? null} permitirAvaliacao={false} />
+        </section>
       </div>
-    </>
+    </main>
   )
 }

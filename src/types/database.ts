@@ -358,6 +358,23 @@ export interface Database {
           criado_em?: string
         }
       >
+      documento_aprovacao: Tabela<
+        {
+          documento_id: Id
+          usuario_id: Id
+          aprovado_em: string | null
+          criado_em: string
+        },
+        {
+          documento_id: Id
+          usuario_id: Id
+          aprovado_em?: string | null
+          criado_em?: string
+        },
+        {
+          aprovado_em?: string | null
+        }
+      >
       documento_nota: TabelaRelacionada<
         {
           id: Id

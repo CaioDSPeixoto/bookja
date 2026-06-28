@@ -30,6 +30,7 @@ function setupChain(dados: unknown = null, erro: unknown = null) {
     update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     single: vi.fn(() => ({ data: dados, error: erro })),
@@ -117,6 +118,37 @@ describe('Server Actions - Documentos', () => {
       PROJETO_ID,
       DOCUMENTO_ID,
       'Novo capítulo publicado: Capítulo 1',
+    )
+  })
+
+  it('alterarStatusDocumento bloqueia publicação direta a partir de rascunho', async () => {
+    const buscarChain = setupChain({
+      id: DOCUMENTO_ID,
+      projeto_id: PROJETO_ID,
+      titulo: 'Capítulo 1',
+      status: 'rascunho',
+    })
+    mockFrom.mockReturnValueOnce(buscarChain)
+    const { alterarStatusDocumento } = await import('@/lib/documentos/actions')
+
+    await expect(alterarStatusDocumento(DOCUMENTO_ID, 'publicado')).rejects.toThrow(
+      'Capítulo precisa passar por revisão antes de ser publicado',
+    )
+  })
+
+  it('alterarStatusDocumento bloqueia revisão supervisionada com aprovação pendente', async () => {
+    const buscarChain = setupChain({
+      id: DOCUMENTO_ID,
+      projeto_id: PROJETO_ID,
+      titulo: 'Capítulo 1',
+      status: 'revisao_supervisionada',
+    })
+    const pendentesChain = setupChain([{ usuario_id: 'revisor-1' }])
+    mockFrom.mockReturnValueOnce(buscarChain).mockReturnValueOnce(pendentesChain)
+    const { alterarStatusDocumento } = await import('@/lib/documentos/actions')
+
+    await expect(alterarStatusDocumento(DOCUMENTO_ID, 'publicado')).rejects.toThrow(
+      'Aprovação dos colaboradores pendente',
     )
   })
 

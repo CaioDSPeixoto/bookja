@@ -24,7 +24,7 @@ Plano de evolução e correções priorizadas: [PLANO_IMPLEMENTACAO.md](PLANO_IM
 - Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS 4.
 - Internacionalização: `next-intl`, atualmente apenas `pt-BR`, com prefixo obrigatório de locale.
 - Banco e autenticação: Supabase via `@supabase/ssr` `^0.12.0` e `@supabase/supabase-js`.
-- Editor: TipTap com Starter Kit, underline, placeholder, contagem de caracteres, auto-save (debounce 2,5s + aviso de saída), corretor ortográfico nativo do navegador em PT-BR e status editorial por capítulo (`rascunho`, `revisao`, `revisao_supervisionada`, `publicado`).
+- Editor: TipTap com Starter Kit, underline, placeholder, contagem de caracteres, auto-save (debounce 2,5s + aviso de saída), salvamento manual explícito, corretor ortográfico nativo do navegador em PT-BR e status editorial por capítulo (`rascunho`, `revisao`, `revisao_supervisionada`, `publicado`).
 - Fichas/ambientação: editor estruturado por campos flexíveis (modelos editáveis: adicionar/remover/renomear campos, linha curta ou texto longo), salvo em `documento.conteudo` como JSON `{ v, campos }`, com compatibilidade para conteúdo legado em texto.
 - Colaboração: presença ao vivo no editor de capítulo via Supabase Realtime (avatares de quem está no capítulo + indicador editando/vendo). Edição simultânea com merge (CRDT) ainda não implementada.
 - Importação: EPUB via `jszip`, DOCX via `mammoth`.
@@ -256,6 +256,7 @@ Migrations em `supabase/migrations` definem:
 - `012_notas_reacoes_capitulo.sql` cria `documento_nota` e `documento_reacao`: escrita de nota restrita a dono/colaborador, reação restrita ao próprio usuário.
 - `013_fix_rls_select_notas_reacoes.sql` corrige o `select` de notas/reações: deixa de ser público e passa a exigir capítulo público de projeto publicado, ou dono/colaborador — evitando vazamento de bastidores de rascunhos.
 - `015_status_documento_notificacoes.sql` adiciona status editorial em `documento`, sincroniza publicação por capítulo e cria RPCs seguras para notificações internas sem policy ampla de insert.
+- `016_aprovacao_revisao_documento.sql` cria `documento_aprovacao` para revisão supervisionada por colaboradores, com RLS para dono/colaboradores e aprovação individual.
 
 ### Storage
 
@@ -383,6 +384,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Editor: auto-save mais responsivo (debounce 2,5s) com aviso de alterações não salvas e corretor ortográfico nativo PT-BR (`spellcheck`).
 - Observabilidade: adicionado logger interno estruturado para APIs críticas, com testes unitários de redaction e sem saída em `NODE_ENV=test`.
 - Publicação por capítulo: documentos novos agora nascem como `rascunho`/`publico=false`; editor permite mudar para revisão, revisão supervisionada ou publicado; leitura pública filtra somente capítulos publicados; publicação de capítulo notifica favoritos.
+- UX editorial: tela de edição ganhou criação direta de capítulo e CTA de importação mais claro; sumário do editor mostra exclusão de capítulo sempre visível; tela de leitura foi redesenhada com cabeçalho editorial, tipografia revisada e navegação anterior/próximo mais clara.
 - Provisionado bucket `capas` (público) e policies de storage escopadas ao dono via `011_storage_capas.sql`; upload de capa migrado de base64 para Supabase Storage, salvando URL pública e removendo objeto antigo.
 
 - Corrigida a notificação de comentários para usar `projeto.dono_id`.

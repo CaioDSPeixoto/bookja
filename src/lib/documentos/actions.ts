@@ -148,6 +148,59 @@ function erroDocumento(mensagem: string): Error {
   return erroOperacao(mensagem)
 }
 
+async function criarAprovacoesPendentes(
+  supabase: ClienteSupabase,
+  documentoId: string,
+  projetoId: string,
+) {
+  await supabase
+    .from('documento_aprovacao')
+    .delete()
+    .eq('documento_id', documentoId)
+
+  const { data: colaboradores } = await supabase
+    .from('projeto_colaborador')
+    .select('usuario_id')
+    .eq('projeto_id', projetoId)
+    .not('aceito_em', 'is', null)
+
+  const aprovacoes = (colaboradores || []).map((colaborador) => ({
+    documento_id: documentoId,
+    usuario_id: colaborador.usuario_id,
+  }))
+
+  if (aprovacoes.length === 0) return
+
+  const { error } = await supabase
+    .from('documento_aprovacao')
+    .insert(aprovacoes)
+
+  if (error) throw erroDocumento('Não foi possível criar aprovações de revisão')
+}
+
+async function validarPublicacaoDocumento(
+  supabase: ClienteSupabase,
+  documentoId: string,
+  statusAnterior: StatusDocumento,
+) {
+  if (statusAnterior !== 'revisao' && statusAnterior !== 'revisao_supervisionada') {
+    throw erroPublico('Capítulo precisa passar por revisão antes de ser publicado')
+  }
+
+  if (statusAnterior !== 'revisao_supervisionada') return
+
+  const { data: pendentes } = await supabase
+    .from('documento_aprovacao')
+    .select('usuario_id')
+    .eq('documento_id', documentoId)
+    .is('aprovado_em', null)
+    .limit(1)
+
+  if (pendentes && pendentes.length > 0) {
+    throw erroPublico('Aprovação dos colaboradores pendente')
+  }
+}
+
 export async function criarDocumento(projetoId: string, titulo: string, tipo: TipoDocumento) {
   const supabase = await criarClienteServidor()
   const projetoIdValidado = validarIdProjeto(projetoId)
@@ -202,6 +255,10 @@ export async function alterarStatusDocumento(id: string, status: StatusDocumento
   await verificarAcesso(supabase, doc.projeto_id)
 
   const statusAnterior = doc.status
+  if (status === 'publicado') {
+    await validarPublicacaoDocumento(supabase, documentoId, statusAnterior)
+  }
+
   const { data, error } = await supabase
     .from('documento')
     .update(dadosStatusDocumento(status))
@@ -210,6 +267,10 @@ export async function alterarStatusDocumento(id: string, status: StatusDocumento
     .single()
 
   if (error || !data) throw erroDocumento('Não foi possível atualizar o status do documento')
+
+  if (status === 'revisao_supervisionada') {
+    await criarAprovacoesPendentes(supabase, data.id, data.projeto_id)
+  }
 
   if (status === 'publicado' && statusAnterior !== 'publicado') {
     await notificarFavoritosNovoCapitulo(
@@ -220,6 +281,29 @@ export async function alterarStatusDocumento(id: string, status: StatusDocumento
   }
 
   return data
+}
+
+export async function aprovarRevisaoDocumento(id: string) {
+  const supabase = await criarClienteServidor()
+  const documentoId = validarIdDocumento(id)
+  const user = await obterUsuarioAutenticado(supabase)
+
+  const { data: doc } = await supabase
+    .from('documento')
+    .select('id, projeto_id, status')
+    .eq('id', documentoId)
+    .single()
+
+  if (!doc) throw erroPublico('Documento não encontrado')
+  await verificarAcesso(supabase, doc.projeto_id)
+
+  const { error } = await supabase
+    .from('documento_aprovacao')
+    .update({ aprovado_em: new Date().toISOString() })
+    .eq('documento_id', documentoId)
+    .eq('usuario_id', user.id)
+
+  if (error) throw erroDocumento('Não foi possível aprovar a revisão')
 }
 
 export async function atualizarDocumento(

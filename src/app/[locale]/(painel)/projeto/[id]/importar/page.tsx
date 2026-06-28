@@ -119,6 +119,9 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
 
       <h1 className="mb-2 text-3xl font-bold text-gray-900">{t('titulo')}</h1>
       <p className="mb-8 text-gray-500">{t('descricao')}</p>
+      <p className="mb-6 rounded-md border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+        Os capítulos importados entram como rascunho. Depois você pode revisar, solicitar revisão supervisionada ou publicar cada capítulo no editor.
+      </p>
 
       {/* Etapa: Upload */}
       {etapa === 'upload' && (
@@ -216,7 +219,7 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-700 disabled:opacity-50"
             >
               <Check size={16} />
-              {t('confirmarImportacao', { count: selecionadosCount })}
+              Importar {selecionadosCount} capítulo{selecionadosCount === 1 ? '' : 's'} selecionado{selecionadosCount === 1 ? '' : 's'}
             </button>
           </div>
         </div>

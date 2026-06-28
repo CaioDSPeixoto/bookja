@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Trash2, FileText, PenLine, Eye, Upload, Check, Tag, Users, Plus, Save, ChevronDown, ChevronRight, ImageIcon, X, Globe } from 'lucide-react'
 import { obterProjeto, atualizarProjeto, excluirProjeto, publicarProjeto, despublicarProjeto, type StatusProjeto } from '@/lib/projetos/actions'
 import { listarColaboradores } from '@/lib/colaboradores/actions'
+import { criarDocumento } from '@/lib/documentos/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 
 const statusCores: Record<string, string> = {
@@ -170,6 +171,11 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
     await removerObjetoCapa(urlAntiga)
   }
 
+  async function handleNovoCapitulo() {
+    const doc = await criarDocumento(id, '', 'capitulo')
+    router.push(`/${locale}/projeto/${id}/escrita?doc=${doc.id}`)
+  }
+
   const temCapitulos = (projeto?.documento?.length || 0) > 0
   const podePublicar = titulo.length > 0 && temCapitulos
 
@@ -225,6 +231,11 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
             <PenLine size={13} />
             <span className="hidden md:inline">Escrever</span>
           </Link>
+
+          <button onClick={handleNovoCapitulo} type="button" title="Novo capítulo" className="inline-flex shrink-0 items-center gap-1 rounded-md border border-indigo-200 px-2 py-1.5 text-[11px] font-medium text-indigo-700 hover:bg-indigo-50 sm:gap-1.5 sm:px-3 sm:text-xs">
+            <Plus size={13} />
+            <span className="hidden md:inline">Novo capítulo</span>
+          </button>
 
           {/* Prévia */}
           <Link href={`/${locale}/projeto/${id}/previa`} title="Prévia" className="inline-flex shrink-0 items-center rounded-md border px-2 py-1.5 text-gray-700 hover:bg-gray-50">
@@ -321,6 +332,14 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
             {abertos.capitulos ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
             <FileText size={12} /> Capítulos
           </button>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <button type="button" onClick={handleNovoCapitulo} className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-indigo-700">
+              <Plus size={13} /> Novo capítulo
+            </button>
+            <Link href={`/${locale}/projeto/${id}/importar`} className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+              <Upload size={13} /> Importar capítulos
+            </Link>
+          </div>
           {abertos.capitulos && (
             <>
               {projeto.documento && projeto.documento.length > 0 ? (
@@ -341,9 +360,6 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
               ) : (
                 <p className="text-xs text-gray-400">{tGeral('semResultados')}</p>
               )}
-              <Link href={`/${locale}/projeto/${id}/importar`} className="mt-3 inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700">
-                <Upload size={14} /> Importar
-              </Link>
             </>
           )}
         </section>
