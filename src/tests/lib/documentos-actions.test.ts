@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 const mockFrom = vi.fn()
 const mockObterUsuarioAutenticado = vi.fn()
 const mockVerificarAcessoProjeto = vi.fn()
+const mockNotificarFavoritosNovoCapitulo = vi.fn()
 
 const PROJETO_ID = '123e4567-e89b-12d3-a456-426614174000'
 const DOCUMENTO_ID = '223e4567-e89b-12d3-a456-426614174000'
@@ -16,6 +17,10 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/projetos/acesso', () => ({
   obterUsuarioAutenticado: (...args: unknown[]) => mockObterUsuarioAutenticado(...args),
   verificarAcessoProjeto: (...args: unknown[]) => mockVerificarAcessoProjeto(...args),
+}))
+
+vi.mock('@/lib/notificacoes/actions', () => ({
+  notificarFavoritosNovoCapitulo: (...args: unknown[]) => mockNotificarFavoritosNovoCapitulo(...args),
 }))
 
 function setupChain(dados: unknown = null, erro: unknown = null) {
@@ -62,7 +67,7 @@ describe('Server Actions - Documentos', () => {
     expect(mockFrom).not.toHaveBeenCalled()
   })
 
-  it('criarDocumento define ordem e normaliza título', async () => {
+  it('criarDocumento define ordem, normaliza título e nasce como rascunho', async () => {
     const ultimoChain = setupChain({ ordem: 2 })
     const inserirChain = setupChain({ id: DOCUMENTO_ID, titulo: 'Capítulo', ordem: 3 })
     mockFrom.mockReturnValueOnce(ultimoChain).mockReturnValueOnce(inserirChain)
@@ -77,8 +82,42 @@ describe('Server Actions - Documentos', () => {
       titulo: 'Capítulo',
       tipo: 'capitulo',
       ordem: 3,
-      publico: true,
+      publico: false,
+      status: 'rascunho',
     }))
+  })
+
+  it('alterarStatusDocumento publica capítulo e notifica favoritos', async () => {
+    const buscarChain = setupChain({
+      id: DOCUMENTO_ID,
+      projeto_id: PROJETO_ID,
+      titulo: 'Capítulo 1',
+      status: 'revisao',
+    })
+    const atualizarChain = setupChain({
+      id: DOCUMENTO_ID,
+      projeto_id: PROJETO_ID,
+      titulo: 'Capítulo 1',
+      status: 'publicado',
+      publico: true,
+      publicado_em: new Date().toISOString(),
+    })
+    mockFrom.mockReturnValueOnce(buscarChain).mockReturnValueOnce(atualizarChain)
+    mockNotificarFavoritosNovoCapitulo.mockResolvedValue(undefined)
+    const { alterarStatusDocumento } = await import('@/lib/documentos/actions')
+
+    await alterarStatusDocumento(DOCUMENTO_ID, 'publicado')
+
+    expect(atualizarChain.update).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'publicado',
+      publico: true,
+      publicado_em: expect.any(String),
+    }))
+    expect(mockNotificarFavoritosNovoCapitulo).toHaveBeenCalledWith(
+      PROJETO_ID,
+      DOCUMENTO_ID,
+      'Novo capítulo publicado: Capítulo 1',
+    )
   })
 
   it('atualizarDocumento rejeita conteúdo inválido antes de buscar o documento', async () => {

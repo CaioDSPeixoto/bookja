@@ -9,6 +9,21 @@ type Capitulo = {
   id: string
   titulo: string
   ordem: number
+  status?: 'rascunho' | 'revisao' | 'revisao_supervisionada' | 'publicado'
+}
+
+const statusClasse: Record<string, string> = {
+  rascunho: 'bg-gray-100 text-gray-500',
+  revisao: 'bg-yellow-50 text-yellow-700',
+  revisao_supervisionada: 'bg-purple-50 text-purple-700',
+  publicado: 'bg-green-50 text-green-700',
+}
+
+const statusLabel: Record<string, string> = {
+  rascunho: 'Rascunho',
+  revisao: 'Revisão',
+  revisao_supervisionada: 'Revisão supervisionada',
+  publicado: 'Publicado',
 }
 
 interface Props {
@@ -81,6 +96,9 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
               >
                 <span className="block truncate">
                   {cap.titulo || t('capitulo', { numero: index + 1 })}
+                </span>
+                <span className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[10px] ${statusClasse[cap.status ?? 'rascunho']}`}>
+                  {statusLabel[cap.status ?? 'rascunho']}
                 </span>
               </button>
 

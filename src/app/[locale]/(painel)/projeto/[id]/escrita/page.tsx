@@ -16,6 +16,7 @@ type Documento = {
   tipo: string
   conteudo: unknown
   ordem: number
+  status?: 'rascunho' | 'revisao' | 'revisao_supervisionada' | 'publicado'
   contagem_palavras?: number
   publico?: boolean
 }

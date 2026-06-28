@@ -73,7 +73,7 @@ export async function buscarHistoriaPublica(id: string) {
       perfil:dono_id(nome_usuario, nome_exibicao, avatar_url, chave_pix),
       projeto_colaborador(usuario_id, papel, aceito_em, perfil:usuario_id(nome_usuario, nome_exibicao, avatar_url)),
       projeto_tag(tag:tag_id(id, nome, categoria)),
-      documento(id, titulo, tipo, publico, ordem)
+      documento(id, titulo, tipo, publico, status, ordem)
     `)
     .eq('id', id)
     .eq('status', 'publicado')
@@ -85,8 +85,8 @@ export async function buscarHistoriaPublica(id: string) {
   const tags = ((data.projeto_tag || []) as Array<{ tag: TagClassificacao }>).map(pt => pt.tag)
   if (!permitePorIdade(tags, idadeUsuario)) return null
 
-  const documentosPublicos = (data.documento as Array<{ id: string; titulo: string; tipo: string; publico: boolean; ordem: number }>)
-    .filter((d) => d.publico)
+  const documentosPublicos = (data.documento as Array<{ id: string; titulo: string; tipo: string; publico: boolean; status?: string; ordem: number }>)
+    .filter((d) => d.publico && (d.status ?? 'publicado') === 'publicado')
     .sort((a, b) => a.ordem - b.ordem)
 
   return { ...data, documento: documentosPublicos }

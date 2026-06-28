@@ -8,7 +8,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import CharacterCount from '@tiptap/extension-character-count'
 import UnderlineExt from '@tiptap/extension-underline'
 import { Check, Loader2, Lock } from 'lucide-react'
-import { atualizarDocumento } from '@/lib/documentos/actions'
+import { alterarStatusDocumento, atualizarDocumento, type StatusDocumento } from '@/lib/documentos/actions'
 import { useLockEdicao } from '@/hooks/useLockEdicao'
 import BarraFerramentas from './BarraFerramentas'
 import PainelNotasAutor from './PainelNotasAutor'
@@ -19,7 +19,15 @@ type Documento = {
   id: string
   titulo: string
   conteudo: unknown
+  status?: StatusDocumento
 }
+
+const OPCOES_STATUS: Array<{ valor: StatusDocumento; rotulo: string }> = [
+  { valor: 'rascunho', rotulo: 'Rascunho' },
+  { valor: 'revisao', rotulo: 'Revisão' },
+  { valor: 'revisao_supervisionada', rotulo: 'Revisão supervisionada' },
+  { valor: 'publicado', rotulo: 'Publicado' },
+]
 
 interface Props {
   documento: Documento
@@ -43,7 +51,9 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
   const presentes = usePresencaDocumento(documento.id, !somenteLeitura)
 
   const [titulo, setTitulo] = useState(documento.titulo || '')
+  const [statusEditorial, setStatusEditorial] = useState<StatusDocumento>(documento.status ?? 'rascunho')
   const [status, setStatus] = useState<'salvo' | 'salvando' | 'pendente'>('salvo')
+  const [alterandoStatus, setAlterandoStatus] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const pendente = useRef(false)
 
@@ -132,6 +142,21 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
     pendente.current = true
   }
 
+  async function mudarStatus(novoStatus: StatusDocumento) {
+    if (somenteLeitura || novoStatus === statusEditorial) return
+    const statusAnterior = statusEditorial
+    setStatusEditorial(novoStatus)
+    setAlterandoStatus(true)
+    try {
+      await alterarStatusDocumento(documento.id, novoStatus)
+      onAtualizado()
+    } catch {
+      setStatusEditorial(statusAnterior)
+    } finally {
+      setAlterandoStatus(false)
+    }
+  }
+
   if (carregando) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -165,6 +190,25 @@ export default function EditorCapitulo({ documento, projetoId, onAtualizado }: P
           disabled={somenteLeitura}
           className="w-full text-3xl font-bold text-gray-900 placeholder-gray-300 outline-none disabled:opacity-60"
         />
+        <div className="mt-3 flex items-center gap-2">
+          <label htmlFor={`status-${documento.id}`} className="text-xs font-medium uppercase tracking-wide text-gray-400">
+            Status
+          </label>
+          <select
+            id={`status-${documento.id}`}
+            value={statusEditorial}
+            onChange={(e) => mudarStatus(e.target.value as StatusDocumento)}
+            disabled={somenteLeitura || alterandoStatus}
+            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 outline-none transition focus:border-indigo-400 disabled:opacity-60"
+          >
+            {OPCOES_STATUS.map((opcao) => (
+              <option key={opcao.valor} value={opcao.valor}>
+                {opcao.rotulo}
+              </option>
+            ))}
+          </select>
+          {alterandoStatus && <Loader2 size={12} className="animate-spin text-indigo-500" />}
+        </div>
       </div>
 
       {/* Toolbar */}

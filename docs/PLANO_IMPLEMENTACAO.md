@@ -65,6 +65,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 - Segurança (code review): corrigido o `select` aberto de `documento_nota`/`documento_reacao` (migration `013`) que expunha bastidores de capítulos em rascunho; leitura agora exige capítulo público publicado ou dono/colaborador.
 - Segurança (advisor Supabase): removida a policy de SELECT ampla do bucket público `capas` (migration `014`) que permitia listar arquivos; URLs públicas continuam funcionando.
 - Consolidação: testes unitários para `fichas/modelo` e `documentos/interacoes` (validação, permissão, toggle de reação, agregação). Validação local em 2026-06-27: `npm run lint`, `npm run test` (100 testes), `npm run build` e `npm run test:e2e` (11 testes) passaram.
+- Correções editor/leitura/notificações: migration `015` adiciona `documento.status`, RPCs seguras para notificações e notificação de favoritos quando capítulo é publicado; capítulos novos nascem em rascunho; leitura filtra apenas capítulos publicados; textos quebrados na leitura/reação foram normalizados.
 
 ## Achados prioritários
 
@@ -157,6 +158,12 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Problema: save assíncrono no cleanup não é aguardado; navegação pode cancelar a chamada.
     - Impacto: perda silenciosa de texto.
     - Status: parcialmente concluído em 2026-06-27. Debounce reduzido de 30s para 2,5s, `beforeunload` avisa sobre alterações não salvas; ainda falta salvar de forma garantida na navegação client-side (ex.: flush via API/sendBeacon).
+
+14.1. Aprovação supervisionada ainda não tem tela formal de aprovação
+    - Local: editor/documentos e colaboradores.
+    - Problema: `revisao_supervisionada` já existe como status editorial e bloqueia leitura pública, mas ainda falta fluxo dedicado para colaboradores aprovarem antes da publicação.
+    - Impacto: a regra de produto fica preparada no banco/UI, mas a governança de aprovação precisa de tela/registro próprio.
+    - Ação: criar tabela/ação/UI de aprovações por capítulo e bloquear transição para `publicado` quando houver revisores pendentes.
 
 15. Logs de debug em produção
     - Local: `src/lib/projetos/actions.ts`

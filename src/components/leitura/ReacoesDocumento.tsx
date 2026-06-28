@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Smile } from 'lucide-react'
-import { reagirDocumento, listarReacoesDocumento } from '@/lib/documentos/interacoes'
+import { listarReacoesDocumento, reagirDocumento } from '@/lib/documentos/interacoes'
 
 const EMOJIS = ['❤️', '🔥', '😢', '👏', '😂', '🤔', '😍', '😱']
 
@@ -32,7 +32,7 @@ export default function ReacoesDocumento({ documentoId, podeReagir = false }: Pr
     }
   }
 
-  const entradas = Object.entries(reacoes).filter(([, v]) => v.contagem > 0)
+  const entradas = Object.entries(reacoes).filter(([, valor]) => valor.contagem > 0)
 
   return (
     <div className="mt-10 border-t border-gray-200 pt-6">
@@ -63,9 +63,14 @@ export default function ReacoesDocumento({ documentoId, podeReagir = false }: Pr
             </button>
             {aberto && (
               <div className="absolute bottom-full left-0 z-10 mb-1 flex flex-wrap gap-1 rounded-lg border bg-white p-2 shadow-lg">
-                {EMOJIS.map((e) => (
-                  <button key={e} type="button" onClick={() => handleReagir(e)} className="text-xl transition-transform hover:scale-125">
-                    {e}
+                {EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => handleReagir(emoji)}
+                    className="text-xl transition-transform hover:scale-125"
+                  >
+                    {emoji}
                   </button>
                 ))}
               </div>

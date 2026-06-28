@@ -138,11 +138,13 @@ export async function publicarProjeto(id: string, dados: { titulo?: string; sino
     .select('id')
     .eq('projeto_id', projetoId)
     .eq('tipo', 'capitulo')
+    .eq('status', 'publicado')
+    .eq('publico', true)
     .limit(1)
 
   if (erroDocumentos) throw erroProjeto('Não foi possível validar os capítulos do projeto')
   if (!documentos || documentos.length === 0) {
-    throw erroPublico('Projeto precisa ter pelo menos um capítulo')
+    throw erroPublico('Projeto precisa ter pelo menos um capítulo publicado')
   }
 
   const agora = new Date().toISOString()

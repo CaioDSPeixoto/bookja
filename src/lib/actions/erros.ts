@@ -16,6 +16,7 @@ const MENSAGENS_PUBLICAS = new Set([
   'Projeto inválido',
   'Projeto não publicado',
   'Projeto precisa ter pelo menos um capítulo',
+  'Projeto precisa ter pelo menos um capítulo publicado',
   'Sem permissão',
   'Usuário inválido',
   'Título obrigatório',

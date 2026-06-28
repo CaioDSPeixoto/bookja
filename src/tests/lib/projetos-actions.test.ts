@@ -68,6 +68,8 @@ describe('Server Actions - Projetos (lógica de validação)', () => {
 
     expect(mockFrom).toHaveBeenNthCalledWith(1, 'documento')
     expect(mockFrom).toHaveBeenNthCalledWith(2, 'projeto')
+    expect(documentosChain.eq).toHaveBeenCalledWith('status', 'publicado')
+    expect(documentosChain.eq).toHaveBeenCalledWith('publico', true)
     expect(projetoChain.update).toHaveBeenCalledWith(expect.objectContaining({
       titulo: 'Livro',
       sinopse: 'Resumo',

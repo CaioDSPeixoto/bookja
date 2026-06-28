@@ -24,7 +24,7 @@ Plano de evolução e correções priorizadas: [PLANO_IMPLEMENTACAO.md](PLANO_IM
 - Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS 4.
 - Internacionalização: `next-intl`, atualmente apenas `pt-BR`, com prefixo obrigatório de locale.
 - Banco e autenticação: Supabase via `@supabase/ssr` `^0.12.0` e `@supabase/supabase-js`.
-- Editor: TipTap com Starter Kit, underline, placeholder, contagem de caracteres, auto-save (debounce 2,5s + aviso de saída) e corretor ortográfico nativo do navegador em PT-BR.
+- Editor: TipTap com Starter Kit, underline, placeholder, contagem de caracteres, auto-save (debounce 2,5s + aviso de saída), corretor ortográfico nativo do navegador em PT-BR e status editorial por capítulo (`rascunho`, `revisao`, `revisao_supervisionada`, `publicado`).
 - Fichas/ambientação: editor estruturado por campos flexíveis (modelos editáveis: adicionar/remover/renomear campos, linha curta ou texto longo), salvo em `documento.conteudo` como JSON `{ v, campos }`, com compatibilidade para conteúdo legado em texto.
 - Colaboração: presença ao vivo no editor de capítulo via Supabase Realtime (avatares de quem está no capítulo + indicador editando/vendo). Edição simultânea com merge (CRDT) ainda não implementada.
 - Importação: EPUB via `jszip`, DOCX via `mammoth`.
@@ -98,7 +98,7 @@ flowchart TD
 - `/{locale}`: página inicial com busca e seções de histórias.
 - `/{locale}/historias`: catálogo público com filtros por busca, tags e paginação.
 - `/{locale}/historia/{id}`: detalhe de história publicada, capítulos públicos, coautores, tags, comentários e apoio via PIX.
-- `/{locale}/historia/{id}/ler/{docId}`: leitura de capítulo público, com bastidores do autor (post-its), reações e comentários do capítulo.
+- `/{locale}/historia/{id}/ler/{docId}`: leitura de capítulo publicado (`documento.status = publicado` e `publico = true`), com bastidores do autor (post-its), reações e comentários do capítulo.
 - `/{locale}/perfil/{nomeUsuario}`: perfil público com histórias publicadas, leitura atual, mural e PIX.
 
 ### Autenticação
@@ -255,6 +255,7 @@ Migrations em `supabase/migrations` definem:
 - `010_colaborador_aceite_obrigatorio.sql` exige `aceito_em` para acesso efetivo de colaborador, adiciona policy de aceite e trigger para limitar o update do convite.
 - `012_notas_reacoes_capitulo.sql` cria `documento_nota` e `documento_reacao`: escrita de nota restrita a dono/colaborador, reação restrita ao próprio usuário.
 - `013_fix_rls_select_notas_reacoes.sql` corrige o `select` de notas/reações: deixa de ser público e passa a exigir capítulo público de projeto publicado, ou dono/colaborador — evitando vazamento de bastidores de rascunhos.
+- `015_status_documento_notificacoes.sql` adiciona status editorial em `documento`, sincroniza publicação por capítulo e cria RPCs seguras para notificações internas sem policy ampla de insert.
 
 ### Storage
 
@@ -311,6 +312,7 @@ Headers configurados em `next.config.ts`:
 - Validações puras compartilhadas em `src/lib/validacao/comum.ts`, usadas por APIs e Server Actions.
 - Server Actions de projetos, documentos, colaboradores, comentários, mural, perfil, favoritos e notificações usam `src/lib/actions/erros.ts` para respostas públicas e deixam de repassar mensagens técnicas do Supabase.
 - APIs de importação/exportação/lock usam `src/lib/observabilidade/logger.ts` para logging interno estruturado em falhas inesperadas, mantendo resposta pública genérica e redigindo campos sensíveis no contexto.
+- Notificações internas para convite/comentário e novo capítulo usam RPCs `security definer` escopadas (`criar_notificacao_sistema`, `notificar_favoritos_capitulo_publicado`) para inserir notificações de outro usuário sem abrir policy ampla de insert em `notificacao`.
 - Camada de dados acoplada ao Supabase, com RLS como barreira principal de autorização.
 - Conteúdo de documentos armazenado como JSON compatível com TipTap.
 - Mensagens de UI centralizadas em `src/messages/pt-BR.json`, mas ainda existem strings hardcoded em componentes/páginas.
@@ -380,6 +382,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Relação leitor-escritor: post-its do autor (bastidores por capítulo), reações de leitor por capítulo e comentários por capítulo (reuso de `comentario.documento_id`, sem nota de avaliação). Migration `012`, actions em `src/lib/documentos/interacoes.ts`, componentes `ReacoesDocumento` e `PainelNotasAutor`.
 - Editor: auto-save mais responsivo (debounce 2,5s) com aviso de alterações não salvas e corretor ortográfico nativo PT-BR (`spellcheck`).
 - Observabilidade: adicionado logger interno estruturado para APIs críticas, com testes unitários de redaction e sem saída em `NODE_ENV=test`.
+- Publicação por capítulo: documentos novos agora nascem como `rascunho`/`publico=false`; editor permite mudar para revisão, revisão supervisionada ou publicado; leitura pública filtra somente capítulos publicados; publicação de capítulo notifica favoritos.
 - Provisionado bucket `capas` (público) e policies de storage escopadas ao dono via `011_storage_capas.sql`; upload de capa migrado de base64 para Supabase Storage, salvando URL pública e removendo objeto antigo.
 
 - Corrigida a notificação de comentários para usar `projeto.dono_id`.

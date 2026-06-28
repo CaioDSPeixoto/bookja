@@ -177,6 +177,7 @@ export interface Database {
           conteudo: Json | null
           ordem: number
           publico: boolean
+          status: 'rascunho' | 'revisao' | 'revisao_supervisionada' | 'publicado'
           contagem_palavras: number
           publicado_em: string | null
         },
@@ -188,6 +189,7 @@ export interface Database {
           conteudo?: Json | null
           ordem?: number
           publico?: boolean
+          status?: 'rascunho' | 'revisao' | 'revisao_supervisionada' | 'publicado'
           contagem_palavras?: number
           criado_em?: string
           atualizado_em?: string | null
@@ -199,6 +201,7 @@ export interface Database {
           conteudo?: Json | null
           ordem?: number
           publico?: boolean
+          status?: 'rascunho' | 'revisao' | 'revisao_supervisionada' | 'publicado'
           contagem_palavras?: number
           atualizado_em?: string | null
           publicado_em?: string | null
@@ -615,6 +618,25 @@ export interface Database {
           p_usuario_id: Id
         }
         Returns: boolean
+      }
+      criar_notificacao_sistema: {
+        Args: {
+          p_usuario_id: Id
+          p_tipo: string
+          p_projeto_id?: Id | null
+          p_documento_id?: Id | null
+          p_comentario_id?: Id | null
+          p_mensagem?: string
+        }
+        Returns: undefined
+      }
+      notificar_favoritos_capitulo_publicado: {
+        Args: {
+          p_projeto_id: Id
+          p_documento_id: Id
+          p_mensagem: string
+        }
+        Returns: undefined
       }
     } & Record<string, FuncaoGenerica>
     Enums: { [_ in never]: never }

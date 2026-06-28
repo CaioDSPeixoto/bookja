@@ -106,9 +106,39 @@ export async function criarNotificacao(dados: DadosNotificacao) {
   const supabase = await criarClienteServidor()
   const payload = normalizarNotificacao(dados)
 
-  const { error } = await supabase
-    .from('notificacao')
-    .insert(payload)
+  const { error } = await supabase.rpc('criar_notificacao_sistema', {
+    p_usuario_id: payload.usuario_id,
+    p_tipo: payload.tipo,
+    p_projeto_id: payload.projeto_id,
+    p_documento_id: payload.documento_id,
+    p_comentario_id: payload.comentario_id,
+    p_mensagem: payload.mensagem,
+  })
 
   if (error) throw erroOperacao('Não foi possível criar a notificação')
+}
+
+export async function notificarFavoritosNovoCapitulo(
+  projetoId: string,
+  documentoId: string,
+  mensagem: string,
+) {
+  const payload = {
+    projetoId: validarIdOpcional(projetoId, 'Projeto inválido'),
+    documentoId: validarIdOpcional(documentoId, 'Documento inválido'),
+    mensagem: normalizarTextoObrigatorio(mensagem, 'Mensagem obrigatória'),
+  }
+
+  if (!payload.projetoId || !payload.documentoId) {
+    throw erroPublico('Notificação inválida')
+  }
+
+  const supabase = await criarClienteServidor()
+  const { error } = await supabase.rpc('notificar_favoritos_capitulo_publicado', {
+    p_projeto_id: payload.projetoId,
+    p_documento_id: payload.documentoId,
+    p_mensagem: payload.mensagem,
+  })
+
+  if (error) throw erroOperacao('Não foi possível notificar favoritos')
 }
