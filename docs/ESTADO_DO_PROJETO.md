@@ -310,6 +310,7 @@ Headers configurados em `next.config.ts`:
 - Respostas de APIs internas centralizadas em `src/lib/api/respostas.ts` para evitar duplicação de validação básica e exposição de detalhes internos.
 - Validações puras compartilhadas em `src/lib/validacao/comum.ts`, usadas por APIs e Server Actions.
 - Server Actions de projetos, documentos, colaboradores, comentários, mural, perfil, favoritos e notificações usam `src/lib/actions/erros.ts` para respostas públicas e deixam de repassar mensagens técnicas do Supabase.
+- APIs de importação/exportação/lock usam `src/lib/observabilidade/logger.ts` para logging interno estruturado em falhas inesperadas, mantendo resposta pública genérica e redigindo campos sensíveis no contexto.
 - Camada de dados acoplada ao Supabase, com RLS como barreira principal de autorização.
 - Conteúdo de documentos armazenado como JSON compatível com TipTap.
 - Mensagens de UI centralizadas em `src/messages/pt-BR.json`, mas ainda existem strings hardcoded em componentes/páginas.
@@ -378,6 +379,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Higiene de repositório: `.gitattributes` com normalização de fim de linha (LF) e working tree convertido de CRLF para LF; README expandido com setup completo.
 - Relação leitor-escritor: post-its do autor (bastidores por capítulo), reações de leitor por capítulo e comentários por capítulo (reuso de `comentario.documento_id`, sem nota de avaliação). Migration `012`, actions em `src/lib/documentos/interacoes.ts`, componentes `ReacoesDocumento` e `PainelNotasAutor`.
 - Editor: auto-save mais responsivo (debounce 2,5s) com aviso de alterações não salvas e corretor ortográfico nativo PT-BR (`spellcheck`).
+- Observabilidade: adicionado logger interno estruturado para APIs críticas, com testes unitários de redaction e sem saída em `NODE_ENV=test`.
 - Provisionado bucket `capas` (público) e policies de storage escopadas ao dono via `011_storage_capas.sql`; upload de capa migrado de base64 para Supabase Storage, salvando URL pública e removendo objeto antigo.
 
 - Corrigida a notificação de comentários para usar `projeto.dono_id`.

@@ -7,6 +7,7 @@ import {
   responderErroInterno,
   validarUuid,
 } from '@/lib/api/respostas'
+import { registrarErroInterno } from '@/lib/observabilidade/logger'
 import { criarClienteServidor } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
@@ -38,7 +39,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ sucesso: true })
-  } catch {
+  } catch (error) {
+    registrarErroInterno('api.lock.heartbeat.post', error, {
+      rota: request.nextUrl.pathname,
+      contentLength: request.headers.get('content-length'),
+    })
+
     return responderErroInterno()
   }
 }

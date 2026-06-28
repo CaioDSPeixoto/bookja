@@ -9,6 +9,7 @@ import {
   responderErroInterno,
   validarUuid,
 } from '@/lib/api/respostas'
+import { registrarErroInterno } from '@/lib/observabilidade/logger'
 import { verificarAcessoProjeto } from '@/lib/projetos/acesso'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import type { Json } from '@/types/database'
@@ -81,7 +82,12 @@ export async function POST(request: NextRequest) {
     if (error) throw new Error(error.message)
 
     return NextResponse.json({ dados: { documentos: data } })
-  } catch {
+  } catch (error) {
+    registrarErroInterno('api.importar.confirmar.post', error, {
+      rota: request.nextUrl.pathname,
+      contentLength: request.headers.get('content-length'),
+    })
+
     return responderErroInterno()
   }
 }

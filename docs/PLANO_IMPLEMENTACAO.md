@@ -136,7 +136,7 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
     - Locais: importação/exportação e Server Actions.
     - Problema: `error.message` é retornado ao usuário em vários pontos.
     - Impacto: vazamento de detalhe interno e experiência inconsistente.
-    - Status: parcialmente corrigido em 2026-06-27 nas APIs de importação/exportação/lock e nas Server Actions principais. Ainda falta adicionar logging interno estruturado para preservar diagnóstico sem expor erro ao usuário.
+    - Status: concluído em 2026-06-27 para APIs de importação/exportação/lock e Server Actions principais: respostas públicas não expõem detalhes internos e as APIs registram falhas via logger estruturado (`src/lib/observabilidade/logger.ts`) com redaction de campos sensíveis.
 
 12. Validação de entrada ainda é pontual e duplicada
     - Locais: Server Actions e rotas em `src/app/api`.
@@ -160,9 +160,9 @@ O principal risco atual não é falta de tela, mas inconsistência entre modelo,
 
 15. Logs de debug em produção
     - Local: `src/lib/projetos/actions.ts`
-    - Problema: `console.log` e `console.error` em Server Action.
+    - Problema: `console.log` e `console.error` em Server Action/API.
     - Impacto: ruído, possível vazamento de metadados.
-    - Ação: remover logs ou encapsular em logger controlado por ambiente.
+    - Status: concluído em 2026-06-27. Logs diretos foram removidos das actions e APIs críticas passaram a usar logger estruturado controlado por ambiente, sem registrar headers/cookies e com redaction de chaves sensíveis.
 
 16. Strings hardcoded e mojibake em arquivos antigos
     - Locais: componentes, migrations antigas, mensagens e comentários (inclui os componentes novos desta sessão: post-its, reações, fichas, presença).

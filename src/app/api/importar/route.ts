@@ -8,6 +8,7 @@ import {
 } from '@/lib/api/respostas'
 import { importarDocx } from '@/lib/importacao/docx'
 import { importarEpub } from '@/lib/importacao/epub'
+import { registrarErroInterno } from '@/lib/observabilidade/logger'
 import { verificarAcessoProjeto } from '@/lib/projetos/acesso'
 import { criarClienteServidor } from '@/lib/supabase/server'
 
@@ -60,7 +61,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ dados: { capitulos } })
-  } catch {
+  } catch (error) {
+    registrarErroInterno('api.importar.post', error, {
+      rota: request.nextUrl.pathname,
+      contentLength: request.headers.get('content-length'),
+    })
+
     return responderErroInterno()
   }
 }

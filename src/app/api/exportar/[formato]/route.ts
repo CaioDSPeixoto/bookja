@@ -9,6 +9,7 @@ import {
 import { exportarDocx } from '@/lib/exportacao/docx'
 import { exportarEpub } from '@/lib/exportacao/epub'
 import { exportarPdf } from '@/lib/exportacao/pdf'
+import { registrarErroInterno } from '@/lib/observabilidade/logger'
 import { obterUsuarioOpcional, verificarAcessoProjeto } from '@/lib/projetos/acesso'
 import { criarClienteServidor } from '@/lib/supabase/server'
 
@@ -107,7 +108,13 @@ export async function GET(
         'Content-Disposition': `attachment; filename="${encodeURIComponent(nomeArquivo)}"`,
       },
     })
-  } catch {
+  } catch (error) {
+    registrarErroInterno('api.exportar.get', error, {
+      rota: request.nextUrl.pathname,
+      formato: request.nextUrl.pathname.split('/').at(-1) ?? null,
+      temProjetoId: request.nextUrl.searchParams.has('projetoId'),
+    })
+
     return responderErroInterno()
   }
 }
