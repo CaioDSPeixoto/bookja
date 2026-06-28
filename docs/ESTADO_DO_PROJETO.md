@@ -118,7 +118,7 @@ flowchart TD
 - `/{locale}/projeto/{id}/editar`: edição de metadados, status, capa e tags.
 - `/{locale}/projeto/{id}/documentos`: listagem, criação e reordenação de documentos.
 - `/{locale}/projeto/{id}/doc/{docId}`: redirecionamento para área de escrita.
-- `/{locale}/projeto/{id}/escrita`: editor TipTap com sumário, lock, presença ao vivo, e baú de informações onde fichas/ambientação abrem na coluna central como formulário estruturado por campos.
+- `/{locale}/projeto/{id}/escrita`: editor TipTap com sumário, lock e presença ao vivo. A visualização do baú de informações foi retirada desta tela; o motor de fichas/ambientação permanece no código para ser reposicionado em outro fluxo.
 - `/{locale}/projeto/{id}/colaboradores`: convites, listagem e remoção de colaboradores.
 - `/{locale}/projeto/{id}/importar`: importação de EPUB/DOCX.
 - `/{locale}/projeto/{id}/previa`: prévia/impressão.
@@ -375,7 +375,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 - Segurança (advisor Supabase): removida a policy de SELECT ampla do bucket `capas` (`014`), que permitia listar todos os arquivos; URLs públicas seguem funcionando.
 - Segurança: corrigido vazamento em que notas/reações de capítulos em rascunho eram legíveis por qualquer um via API (`select` aberto). Migration `013` restringe a leitura a capítulos públicos publicados ou ao dono/colaborador.
 - Colaboração — presença ao vivo: `usePresencaDocumento` (Supabase Realtime) + `PresencaBarra` no `EditorCapitulo`, mostrando quem está no capítulo e quem está editando. Sem dependência ou tabela nova. Requer teste com dois navegadores.
-- Redesign de fichas/ambientação: substituído o campo único de texto livre por editor de campos flexíveis (`EditorFicha`), com modelos por tipo, abertura na coluna central e parsing compatível com fichas antigas. Modelo em `src/lib/fichas/modelo.ts`; `BauInformacoes` virou lista selecionável.
+- Redesign de fichas/ambientação: substituído o campo único de texto livre por editor de campos flexíveis (`EditorFicha`), com modelos por tipo e parsing compatível com fichas antigas. Modelo em `src/lib/fichas/modelo.ts`; `BauInformacoes` e `EditorFicha` permanecem disponíveis, mas a visualização foi removida temporariamente da tela de escrita para redesenho em outro lugar.
 - Higiene de repositório: `.gitattributes` com normalização de fim de linha (LF) e working tree convertido de CRLF para LF; README expandido com setup completo.
 - Relação leitor-escritor: post-its do autor (bastidores por capítulo), reações de leitor por capítulo e comentários por capítulo (reuso de `comentario.documento_id`, sem nota de avaliação). Migration `012`, actions em `src/lib/documentos/interacoes.ts`, componentes `ReacoesDocumento` e `PainelNotasAutor`.
 - Editor: auto-save mais responsivo (debounce 2,5s) com aviso de alterações não salvas e corretor ortográfico nativo PT-BR (`spellcheck`).

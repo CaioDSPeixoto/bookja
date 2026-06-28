@@ -9,8 +9,6 @@ import { ArrowLeft, Eye } from 'lucide-react'
 import { listarDocumentos, criarDocumento } from '@/lib/documentos/actions'
 import SumarioCapitulos from '@/components/editor/SumarioCapitulos'
 import EditorCapitulo from '@/components/editor/EditorCapitulo'
-import EditorFicha from '@/components/editor/EditorFicha'
-import BauInformacoes from '@/components/editor/BauInformacoes'
 
 type Documento = {
   id: string
@@ -29,21 +27,13 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
   const [projetoId, setProjetoId] = useState('')
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [capituloAtivoId, setCapituloAtivoId] = useState<string | null>(null)
-  const [fichaAtivaId, setFichaAtivaId] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
 
   const capitulos = documentos.filter(d => d.tipo === 'capitulo')
-  const outros = documentos.filter(d => d.tipo !== 'capitulo')
   const capituloAtivo = capitulos.find(c => c.id === capituloAtivoId) || null
-  const fichaAtiva = outros.find(d => d.id === fichaAtivaId) || null
 
   function selecionarCapitulo(id: string) {
-    setFichaAtivaId(null)
     setCapituloAtivoId(id)
-  }
-
-  function selecionarFicha(id: string) {
-    setFichaAtivaId(id)
   }
 
   const recarregar = useCallback(async (pid: string) => {
@@ -106,12 +96,12 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
         </Link>
       </header>
 
-      {/* 3-column layout */}
+      {/* Layout de escrita */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sumário */}
         <SumarioCapitulos
           capitulos={capitulos}
-          capituloAtivoId={fichaAtiva ? null : capituloAtivoId}
+          capituloAtivoId={capituloAtivoId}
           onSelecionar={selecionarCapitulo}
           onNovo={handleNovoCapitulo}
           projetoId={projetoId}
@@ -120,13 +110,7 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
 
         {/* Editor central */}
         <div className="flex-1 overflow-hidden">
-          {fichaAtiva ? (
-            <EditorFicha
-              key={fichaAtiva.id}
-              documento={fichaAtiva}
-              onAtualizado={handleDocumentoAtualizado}
-            />
-          ) : capituloAtivo ? (
+          {capituloAtivo ? (
             <EditorCapitulo
               key={capituloAtivo.id}
               documento={capituloAtivo}
@@ -141,13 +125,6 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
         </div>
 
         {/* Baú */}
-        <BauInformacoes
-          documentos={outros}
-          projetoId={projetoId}
-          ativoId={fichaAtivaId}
-          onSelecionar={selecionarFicha}
-          onAtualizado={() => recarregar(projetoId)}
-        />
       </div>
     </div>
   )
