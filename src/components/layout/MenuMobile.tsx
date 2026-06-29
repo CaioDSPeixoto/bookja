@@ -49,10 +49,10 @@ export default function MenuMobile({ logado, nomeUsuario, sairAction }: Props) {
             onClick={() => setAberto(false)}
             aria-hidden="true"
           />
-          <nav className="absolute left-0 top-0 flex h-full w-64 flex-col bg-white p-4 shadow-lg" aria-label="Menu principal">
+          <nav className="absolute right-0 top-0 flex h-full w-64 flex-col bg-white p-4 shadow-lg" aria-label="Menu principal">
             <button
               onClick={() => setAberto(false)}
-              className="mb-6 p-2 hover:bg-gray-100 rounded-md self-start"
+              className="mb-6 p-2 hover:bg-gray-100 rounded-md self-end"
               aria-label="Fechar menu"
             >
               <X className="h-5 w-5" aria-hidden="true" />
