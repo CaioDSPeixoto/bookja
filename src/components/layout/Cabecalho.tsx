@@ -87,7 +87,7 @@ export default async function Cabecalho() {
           )}
 
           {/* Mobile menu */}
-          <MenuMobile logado={!!user} nomeUsuario={nomeUsuario} sairAction={sairComLocale} />
+          <MenuMobile logado={!!user} nomeUsuario={nomeUsuario} nomeExibicao={nomeExibicao} sairAction={sairComLocale} />
         </div>
       </div>
     </header>
