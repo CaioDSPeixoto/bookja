@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useParams } from 'next/navigation'
-import { Plus, FileText, BookOpen } from 'lucide-react'
+import { Plus, FileText, BookOpen, Eye, Star, MessageSquare } from 'lucide-react'
 import { listarProjetos } from '@/lib/projetos/actions'
 
 type Projeto = {
@@ -13,7 +13,11 @@ type Projeto = {
   sinopse: string | null
   status: string
   criado_em: string
+  contagem_visualizacoes?: number
+  media_avaliacao?: number
+  contagem_avaliacoes?: number
   documento?: { count: number }[]
+  comentario?: { count: number }[]
 }
 
 const bordaStatus: Record<string, string> = {
@@ -101,12 +105,28 @@ export default function PainelPage() {
               )}
               <div className="mt-3 flex items-center gap-2 text-[11px] text-gray-400">
                 <span>{new Date(projeto.criado_em).toLocaleDateString('pt-BR')}</span>
-                <span className="flex items-center gap-0.5">
+                <span className="flex items-center gap-0.5" title="Capítulos">
                   <FileText size={10} />
                   {projeto.documento?.[0]?.count ?? 0}
                 </span>
                 <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeStatus[projeto.status] || badgeStatus.rascunho}`}>
                   {t(projeto.status)}
+                </span>
+              </div>
+              <div className="mt-2 flex items-center gap-3 border-t border-gray-100 pt-2 text-[11px] text-gray-500">
+                <span className="flex items-center gap-1" title="Visualizações">
+                  <Eye size={11} className="text-gray-400" />
+                  {projeto.contagem_visualizacoes ?? 0}
+                </span>
+                <span className="flex items-center gap-1" title="Nota média">
+                  <Star size={11} className={projeto.contagem_avaliacoes ? 'text-yellow-500' : 'text-gray-300'} fill={projeto.contagem_avaliacoes ? 'currentColor' : 'none'} />
+                  {projeto.contagem_avaliacoes
+                    ? `${(projeto.media_avaliacao ?? 0).toFixed(1)} (${projeto.contagem_avaliacoes})`
+                    : '—'}
+                </span>
+                <span className="flex items-center gap-1" title="Comentários">
+                  <MessageSquare size={11} className="text-gray-400" />
+                  {projeto.comentario?.[0]?.count ?? 0}
                 </span>
               </div>
             </Link>

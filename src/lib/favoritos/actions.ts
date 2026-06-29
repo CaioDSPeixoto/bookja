@@ -18,6 +18,16 @@ export async function toggleFavorito(projetoId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw erroPublico('Autenticação necessária')
 
+  const { data: projeto } = await supabase
+    .from('projeto')
+    .select('dono_id')
+    .eq('id', projetoIdValidado)
+    .single()
+
+  if (projeto?.dono_id === user.id) {
+    throw erroPublico('Você não pode favoritar a própria história')
+  }
+
   const { data: existente } = await supabase
     .from('favorito')
     .select('usuario_id')

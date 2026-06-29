@@ -84,7 +84,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
             {historia.contagem_avaliacoes > 0 && (
               <span>{historia.contagem_avaliacoes} {t('avaliacoes')}</span>
             )}
-            {user && <BotaoFavoritar projetoId={id} favoritado={favoritado} usuarioLogado={true} />}
+            {user && user.id !== historia.dono_id && <BotaoFavoritar projetoId={id} favoritado={favoritado} usuarioLogado={true} />}
           </div>
 
           {/* Tags */}

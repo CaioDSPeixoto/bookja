@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Loader2, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { excluirDocumento, reordenarDocumentos } from '@/lib/documentos/actions'
 
 type Capitulo = {
@@ -18,6 +18,10 @@ interface Props {
   onNovo: () => void | Promise<void>
   projetoId: string
   onReordenar: () => void
+  /** Controla a abertura do drawer no mobile. No desktop o sumário fica sempre visível. */
+  aberto?: boolean
+  /** Solicita o fechamento do drawer no mobile. */
+  onFechar?: () => void
 }
 
 const statusClasse: Record<string, string> = {
@@ -34,7 +38,7 @@ const statusLabel: Record<string, string> = {
   publicado: 'Publicado',
 }
 
-export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecionar, onNovo, projetoId, onReordenar }: Props) {
+export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecionar, onNovo, projetoId, onReordenar, aberto = false, onFechar }: Props) {
   const [operando, setOperando] = useState<string | null>(null)
   const [confirmandoExclusaoId, setConfirmandoExclusaoId] = useState<string | null>(null)
 
@@ -56,6 +60,11 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
     }
   }
 
+  async function selecionarEFechar(id: string) {
+    await onSelecionar(id)
+    onFechar?.()
+  }
+
   async function handleExcluir(id: string) {
     if (confirmandoExclusaoId !== id) {
       setConfirmandoExclusaoId(id)
@@ -73,9 +82,32 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
   }
 
   return (
-    <aside className="flex w-64 flex-col border-r border-gray-100 bg-white">
-      <div className="border-b border-gray-100 px-4 py-3">
+    <>
+      {/* Overlay no mobile */}
+      {aberto && (
+        <button
+          type="button"
+          aria-label="Fechar sumário"
+          onClick={onFechar}
+          className="fixed inset-0 z-30 bg-black/30 md:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col border-r border-gray-100 bg-white shadow-xl transition-transform duration-200 md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0 md:shadow-none ${
+          aberto ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Sumário</h2>
+        <button
+          type="button"
+          onClick={onFechar}
+          aria-label="Fechar sumário"
+          className="-mr-1 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 md:hidden"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
@@ -90,7 +122,7 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
               className={`mb-1 rounded-lg border ${ativo ? 'border-indigo-200 bg-indigo-50' : 'border-transparent hover:bg-gray-50'}`}
             >
               <button
-                onClick={() => onSelecionar(capitulo.id)}
+                onClick={() => selecionarEFechar(capitulo.id)}
                 className="w-full px-3 pt-2.5 text-left text-sm"
               >
                 <span className={`block truncate ${ativo ? 'font-semibold text-indigo-700' : 'text-gray-800'}`}>
@@ -154,6 +186,7 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
           Novo capítulo
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

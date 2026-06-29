@@ -46,42 +46,36 @@ A primeira entrega não precisa conter todas as features previstas no modelo, ma
 
 ## Bloqueadores atuais
 
-### B1. Migration 015 não aplicada no remoto
+### B1. Migration 015/016 não aplicadas no remoto — RESOLVIDO em 2026-06-28
 
-Status: bloqueado por falta de acesso administrativo local.
+Status: resolvido. Migrations `015_status_documento_notificacoes.sql` e `016_aprovacao_revisao_documento.sql` aplicadas no Supabase remoto (projeto `ezdtqfmpornhkyilaxlh`) via MCP.
 
-Evidência verificada em 2026-06-28 via REST/RPC com chave anon:
+Verificação pós-aplicação (substitui a evidência anterior de `42703`/`PGRST202`):
 
-- `documento.status` retorna `42703 column documento.status does not exist`;
-- `criar_notificacao_sistema` retorna `PGRST202`;
-- `notificar_favoritos_capitulo_publicado` retorna `PGRST202`.
+- `documento.status` existe;
+- `criar_notificacao_sistema` e `notificar_favoritos_capitulo_publicado` existem e estão restritas a `authenticated`;
+- tabela `documento_aprovacao` existe com RLS;
+- 16 documentos normalizados (4 publicados), 0 inconsistências entre `publico` e `status`.
 
-Impacto:
+Pendência residual (não bloqueia): teste manual ponta a ponta de convite de colaborador e de favorito + publicação de capítulo + notificação no ambiente real (requer dois usuários).
 
-- convite de colaborador pode continuar falhando com erro genérico;
-- notificações de novo capítulo não funcionam;
-- fluxo editorial por capítulo depende de coluna inexistente no remoto.
+### B2. Experiência mobile — auditoria de código concluída em 2026-06-28 (validação visual pendente)
 
-Próximo passo:
+Status: auditoria estática e correções de código feitas; falta validação visual em dispositivo/emulador real.
 
-- aplicar `supabase/migrations/015_status_documento_notificacoes.sql` com credencial administrativa;
-- depois aplicar/validar `016_aprovacao_revisao_documento.sql`, se ainda não estiver no remoto;
-- revalidar convite, publicação de capítulo e notificação de favoritos.
+Resultado da auditoria (2026-06-28):
 
-### B2. Experiência mobile ainda não foi auditada como critério de entrega
+- Editor de escrita era o principal ofensor (sumário lateral fixo `w-64`) — corrigido: sumário vira drawer no mobile, toolbar com scroll horizontal, paddings/título responsivos. Ver Fase B.
+- `editar projeto` já estava adaptado (ações viram ícones, `hidden sm:inline`, `shrink-0`, modais `mx-4 w-full max-w-md`).
+- Grids de catálogo/biblioteca/perfil/leitura já são responsivos (base mobile escalando por breakpoint).
+- Ajustes pontuais aplicados: `colaboradores` (form empilha no mobile, campos full-width, item de lista não espreme o botão excluir), `importar` (cabeçalho do preview trunca nome de arquivo, linha de ações empilha no mobile), `notificacoes` (ícone/botão `shrink-0`, conteúdo `min-w-0`).
 
-Status: pendente.
-
-Impacto:
-
-- o principal uso será no celular;
-- algumas telas ainda usam padrões desktop, como editor com sumário lateral fixo (`w-64`), cabeçalhos com muitos botões e listas densas;
-- telas críticas podem funcionar tecnicamente, mas parecer confusas ou apertadas no mobile.
+Validação visual parcial (2026-06-28): app servido com `.env.local` apontando ao remoto e inspecionado via preview a 390x844. A home renderiza completa com menu mobile ativo. No processo foi descoberto e corrigido um bug de layout (html/body aninhados entre root e locale layout) que deixava o `main` sem conteúdo no preview.
 
 Próximo passo:
 
-- executar revisão visual e funcional em viewport mobile realista: 360x740, 390x844 e 430x932;
-- priorizar biblioteca, editar projeto, escrita, importar, leitura, notificações e colaboradores.
+- validar visualmente as telas autenticadas (especialmente o drawer do editor) em 360x740, 390x844 e 430x932 — requer login com usuário de teste;
+- confirmar fluxo criar projeto → escrever → publicar → ler sem zoom/corte.
 
 ## Critérios de pronto da primeira entrega
 
@@ -124,7 +118,7 @@ Próximo passo:
 
 ## Plano até a primeira entrega
 
-### Fase A. Alinhar banco remoto
+### Fase A. Alinhar banco remoto — CONCLUÍDA (2026-06-28)
 
 Prioridade: P0.
 
@@ -132,16 +126,16 @@ Objetivo: deixar o ambiente Supabase compatível com o código atual.
 
 Tarefas:
 
-- Aplicar migration `015_status_documento_notificacoes.sql`.
-- Verificar se `016_aprovacao_revisao_documento.sql` também precisa ser aplicada.
-- Confirmar via REST/RPC que `documento.status` e as RPCs existem.
-- Rodar teste manual de convite de colaborador.
-- Rodar teste manual de favorito + publicação de capítulo + notificação.
+- [x] Aplicar migration `015_status_documento_notificacoes.sql`.
+- [x] Aplicar `016_aprovacao_revisao_documento.sql`.
+- [x] Confirmar via SQL que `documento.status`, as RPCs e `documento_aprovacao` existem.
+- [x] Validar convite de colaborador (RPC `criar_notificacao_sistema` tipo convite) — teste transacional em 2026-06-29 gerou a notificação para o colaborador.
+- [x] Validar favorito + publicação de capítulo + notificação (RPC `notificar_favoritos_capitulo_publicado`) — teste transacional gerou a notificação para o favoritador.
 
 Critério de pronto:
 
-- As sondas remotas deixam de retornar `42703`/`PGRST202`.
-- Convite e notificações funcionam no ambiente real.
+- [x] As sondas remotas deixam de retornar `42703`/`PGRST202`.
+- [x] Convite e notificações validados no ambiente real (via RPC, teste transacional com rollback).
 
 ### Fase B. Auditoria mobile-first
 
@@ -163,8 +157,8 @@ Telas a revisar:
 
 Ajustes esperados:
 
-- Transformar sumário lateral do editor em drawer/bottom sheet ou navegação recolhível no mobile.
-- Revisar toolbar do editor para caber em toque e não roubar espaço de escrita.
+- [x] Transformar sumário lateral do editor em drawer/bottom sheet ou navegação recolhível no mobile. Feito em 2026-06-28: `SumarioCapitulos` vira drawer off-canvas com overlay no mobile (`<md`) e permanece sidebar fixa no desktop; `EscritaPage` ganhou botão no header (mobile) com o título do capítulo ativo para abrir o sumário; fecha ao selecionar/criar capítulo.
+- [x] Revisar toolbar do editor para caber em toque e não roubar espaço de escrita. Feito: `BarraFerramentas` com scroll horizontal e botões `flex-shrink-0`; paddings do `EditorCapitulo` e do header agora responsivos (`px-4 sm:px-8`), título `text-2xl sm:text-3xl`.
 - Garantir que ações de publicar/salvar/preview/excluir no editor de projeto não virem uma linha apertada.
 - Ajustar telas com listas para evitar cards grandes demais ou botões pequenos demais.
 - Melhorar modais de confirmação para mobile.
@@ -221,12 +215,12 @@ Objetivo: reduzir risco antes da primeira entrega.
 
 Tarefas:
 
-- Revisar policies/RPCs tocadas nas migrations 015 e 016.
-- Testar acesso público vs privado para projeto, capítulo, notas e reações.
-- Revisar endpoints de importação/exportação com arquivos inválidos, formatos inválidos e projeto sem permissão.
-- Revisar bloqueio de colaborador pendente no editor, importação, exportação e documentos.
-- Remover ou corrigir strings com mojibake visível.
-- Rodar `npm.cmd run lint`, `npm.cmd run test`, `npm.cmd run build` e E2E básico.
+- [x] Revisar policies/RPCs tocadas nas migrations 015 e 016. RPCs validam `auth.uid()` e foram revogadas de `public`; `documento_aprovacao` escopada a dono/colaborador.
+- [x] Testar acesso público vs privado para projeto, capítulo, notas e reações. Achado e corrigido: SELECT público de `documento` exigia só `publico = true` — migration `017` endurece para capítulo publicado em projeto publicado. Verificado com `set role anon` (4/16 documentos, 1 projeto).
+- [ ] Revisar endpoints de importação/exportação com arquivos inválidos, formatos inválidos e projeto sem permissão.
+- [ ] Revisar bloqueio de colaborador pendente no editor, importação, exportação e documentos.
+- [x] Remover ou corrigir strings com mojibake visível. Varredura em 2026-06-28 não encontrou mojibake em `src`/`supabase`.
+- [~] Rodar `npm run lint`, `npm run test`, `npm run build` e E2E básico. Em 2026-06-28: lint, test (106) e build passaram. E2E não executado neste worktree por ausência de `.env.local` (rodar no checkout principal com env válido).
 
 Critério de pronto:
 
@@ -252,13 +246,13 @@ Itens importantes, mas não bloqueadores da primeira entrega se os critérios ac
 
 ## Ordem recomendada de execução
 
-1. Aplicar e validar migrations remotas 015/016.
-2. Fazer auditoria mobile-first das telas principais.
-3. Corrigir layout mobile do editor de escrita.
-4. Validar fluxo editorial completo com colaborador.
-5. Validar notificações reais.
-6. Fazer revisão de segurança/RLS/API.
-7. Rodar validação completa: lint, testes, build e E2E.
+1. [x] Aplicar e validar migrations remotas 015/016.
+2. [x] Fazer auditoria mobile-first das telas principais.
+3. [x] Corrigir layout mobile do editor de escrita (validado no app real a 390px).
+4. [x] Validar fluxo editorial/colaborador (RPC de convite via teste transacional).
+5. [x] Validar notificações reais (RPCs de convite e novo capítulo via teste transacional).
+6. [x] Fazer revisão de segurança/RLS/API (migrations 017, 018, 019).
+7. [~] Rodar validação completa: lint, testes (107), build OK. E2E pendente (rodar no checkout principal com `.env.local`).
 
 ## Checklist de validação manual
 

@@ -58,15 +58,15 @@ export default function ColaboradoresPage({ params }: { params: Promise<{ id: st
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="mb-6 text-2xl font-bold">{t('titulo')}</h1>
 
-      <form onSubmit={handleConvidar} className="mb-8 flex flex-wrap items-end gap-3">
-        <div>
+      <form onSubmit={handleConvidar} className="mb-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="sm:flex-1">
           <label htmlFor="nome-usuario-colab" className="block text-sm font-medium text-gray-700">{t('nomeUsuario')}</label>
           <input
             id="nome-usuario-colab"
             value={nomeUsuario}
             onChange={(e) => setNomeUsuario(e.target.value)}
             required
-            className="mt-1 rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
         </div>
         <div>
@@ -75,13 +75,13 @@ export default function ColaboradoresPage({ params }: { params: Promise<{ id: st
             id="papel-colab"
             value={papel}
             onChange={(e) => setPapel(e.target.value)}
-            className="mt-1 rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 sm:w-auto"
           >
             <option value="coautor">{t('coautor')}</option>
             <option value="revisor">{t('revisor')}</option>
           </select>
         </div>
-        <button type="submit" className="inline-flex items-center gap-1 rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">
+        <button type="submit" className="inline-flex items-center justify-center gap-1 rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">
           <UserPlus size={16} />
           {t('convidar')}
         </button>
@@ -97,15 +97,15 @@ export default function ColaboradoresPage({ params }: { params: Promise<{ id: st
           {colaboradores.map((c) => {
             const perfil = Array.isArray(c.perfil) ? c.perfil[0] : c.perfil
             return (
-            <li key={c.usuario_id} className="flex items-center justify-between rounded border border-gray-200 p-3">
-              <div>
+            <li key={c.usuario_id} className="flex items-center justify-between gap-2 rounded border border-gray-200 p-3">
+              <div className="min-w-0">
                 <span className="font-medium">{perfil?.nome_exibicao || perfil?.nome_usuario}</span>
                 <span className="ml-2 text-sm text-gray-500">({t(c.papel as 'coautor' | 'revisor')})</span>
                 <span className={`ml-2 text-xs ${c.aceito_em ? 'text-green-600' : 'text-yellow-600'}`}>
                   {c.aceito_em ? t('aceito') : t('pendente')}
                 </span>
               </div>
-              <button onClick={() => handleRemover(c.usuario_id)} className="rounded p-1 text-red-600 hover:bg-red-50" aria-label={t('remover')}>
+              <button onClick={() => handleRemover(c.usuario_id)} className="shrink-0 rounded p-1 text-red-600 hover:bg-red-50" aria-label={t('remover')}>
                 <Trash2 size={16} />
               </button>
             </li>

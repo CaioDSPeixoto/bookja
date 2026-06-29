@@ -151,15 +151,15 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
       {/* Etapa: Preview */}
       {etapa === 'preview' && (
         <div>
-          <div className="mb-6 flex items-center justify-between rounded-lg bg-gray-100 px-4 py-3">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <FileText size={16} />
-              <span className="font-medium">{nomeArquivo}</span>
-              <span className="text-gray-400">— {t('capitulosDetectados', { count: capitulos.length })}</span>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-gray-100 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2 text-sm text-gray-600">
+              <FileText size={16} className="shrink-0" />
+              <span className="truncate font-medium">{nomeArquivo}</span>
+              <span className="shrink-0 text-gray-400">— {t('capitulosDetectados', { count: capitulos.length })}</span>
             </div>
             <button
               onClick={() => { setEtapa('upload'); setCapitulos([]); setNomeArquivo('') }}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="shrink-0 text-sm text-gray-500 hover:text-gray-700"
             >
               {t('trocarArquivo')}
             </button>
@@ -206,7 +206,7 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
             ))}
           </ul>
 
-          <div className="mt-8 flex items-center justify-between">
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
               onClick={() => { setEtapa('upload'); setCapitulos([]) }}
               className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -216,7 +216,7 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
             <button
               onClick={handleConfirmar}
               disabled={selecionadosCount === 0}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-700 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-700 disabled:opacity-50"
             >
               <Check size={16} />
               Importar {selecionadosCount} capítulo{selecionadosCount === 1 ? '' : 's'} selecionado{selecionadosCount === 1 ? '' : 's'}

@@ -230,13 +230,13 @@ export default function EditorCapitulo({
   return (
     <div className="flex h-full flex-col">
       {somenteLeitura && travadoPor && (
-        <div className="flex items-center gap-2 bg-amber-50 px-6 py-2 text-sm text-amber-700">
+        <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 text-sm text-amber-700 sm:px-6">
           <Lock size={14} />
           {`Travado por ${travadoPor}`}
         </div>
       )}
 
-      <div className="border-b border-gray-100 px-8 pt-6 pb-4">
+      <div className="border-b border-gray-100 px-4 pt-6 pb-4 sm:px-8">
         {presentes.length > 0 && (
           <div className="mb-2">
             <PresencaBarra usuarios={presentes} />
@@ -250,7 +250,7 @@ export default function EditorCapitulo({
           onBlur={() => salvar('automatico')}
           placeholder="Título do capítulo"
           disabled={somenteLeitura}
-          className="w-full text-3xl font-bold text-gray-900 placeholder-gray-300 outline-none disabled:opacity-60"
+          className="w-full text-2xl font-bold text-gray-900 placeholder-gray-300 outline-none disabled:opacity-60 sm:text-3xl"
         />
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -285,7 +285,7 @@ export default function EditorCapitulo({
       </div>
 
       {erroSalvamento && (
-        <div className="flex items-center justify-between gap-3 border-b border-red-100 bg-red-50 px-8 py-2 text-sm text-red-700">
+        <div className="flex items-center justify-between gap-3 border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700 sm:px-8">
           <span>{erroSalvamento}</span>
           {!somenteLeitura && (
             <button
@@ -307,7 +307,7 @@ export default function EditorCapitulo({
 
       <PainelNotasAutor projetoId={projetoId} documentoId={documento.id} />
 
-      <div className="flex items-center justify-between border-t border-gray-100 bg-white px-6 py-2.5">
+      <div className="flex items-center justify-between gap-2 border-t border-gray-100 bg-white px-4 py-2.5 sm:px-6">
         <span className="text-xs text-gray-400">
           {`${editor?.storage.characterCount.words() ?? 0} palavras`}
         </span>

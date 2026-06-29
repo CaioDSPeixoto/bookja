@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, Eye } from 'lucide-react'
+import { ArrowLeft, Eye, ListOrdered } from 'lucide-react'
 import { listarDocumentos, criarDocumento } from '@/lib/documentos/actions'
 import SumarioCapitulos from '@/components/editor/SumarioCapitulos'
 import EditorCapitulo from '@/components/editor/EditorCapitulo'
@@ -29,6 +29,7 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [capituloAtivoId, setCapituloAtivoId] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
+  const [sumarioAberto, setSumarioAberto] = useState(false)
   const salvarPendenteRef = useRef<(() => Promise<boolean>) | null>(null)
 
   const capitulos = documentos.filter(d => d.tipo === 'capitulo')
@@ -72,6 +73,7 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
     const novoDoc = await criarDocumento(projetoId, '', 'capitulo')
     await recarregar(projetoId)
     setCapituloAtivoId(novoDoc.id)
+    setSumarioAberto(false)
   }
 
   const handleDocumentoAtualizado = useCallback(() => {
@@ -95,24 +97,32 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col bg-gray-50">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-3 shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="flex items-center justify-between gap-2 border-b border-gray-100 bg-white px-4 py-3 shadow-sm sm:px-6">
+        <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             onClick={() => navegarAposSalvar(`/${locale}/projeto/${projetoId}/editar`)}
-            className="flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-indigo-600"
+            className="flex flex-shrink-0 items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-indigo-600"
           >
             <ArrowLeft size={16} />
-            {t('voltarEditor')}
+            <span className="hidden sm:inline">{t('voltarEditor')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSumarioAberto(true)}
+            className="flex min-w-0 items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+          >
+            <ListOrdered size={16} className="flex-shrink-0" />
+            <span className="truncate">{capituloAtivo?.titulo || t('semCapitulos')}</span>
           </button>
         </div>
         <button
           type="button"
           onClick={() => navegarAposSalvar(`/${locale}/projeto/${projetoId}/previa`)}
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-indigo-700 hover:shadow-md"
+          className="inline-flex flex-shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-indigo-700 hover:shadow-md sm:px-4"
         >
           <Eye size={16} />
-          {t('previa')}
+          <span className="hidden sm:inline">{t('previa')}</span>
         </button>
       </header>
 
@@ -126,6 +136,8 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
           onNovo={handleNovoCapitulo}
           projetoId={projetoId}
           onReordenar={() => recarregar(projetoId)}
+          aberto={sumarioAberto}
+          onFechar={() => setSumarioAberto(false)}
         />
 
         {/* Editor central */}

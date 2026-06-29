@@ -202,7 +202,7 @@ export async function listarProjetos() {
 
   const { data, error } = await supabase
     .from('projeto')
-    .select('*, documento(count)')
+    .select('*, documento(count), comentario(count)')
     .eq('dono_id', user.id)
     .order('criado_em', { ascending: false })
 

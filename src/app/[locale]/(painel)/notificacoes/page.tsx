@@ -90,8 +90,8 @@ export default function NotificacoesPage() {
             key={n.id}
             className={`flex items-center gap-3 rounded-lg border p-4 ${!n.lida ? 'border-blue-200 bg-blue-50' : ''}`}
           >
-            <div className="text-gray-500"><Icone tipo={n.tipo} /></div>
-            <div className="flex-1">
+            <div className="shrink-0 text-gray-500"><Icone tipo={n.tipo} /></div>
+            <div className="min-w-0 flex-1">
               <p className="text-sm">
                 {n.tipo === 'convite' && `${t('convite')} `}
                 {n.tipo === 'comentario' && `${t('novoComentario')} `}
@@ -103,7 +103,7 @@ export default function NotificacoesPage() {
               <button
                 onClick={() => handleAceitar(n)}
                 disabled={pending}
-                className="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+                className="shrink-0 rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
               >
                 {t('aceitar')}
               </button>

@@ -74,7 +74,7 @@ export async function GET(
       .order('ordem', { ascending: true })
 
     if (isPublicado && projeto.dono_id !== user?.id) {
-      query = query.eq('publico', true)
+      query = query.eq('publico', true).eq('status', 'publicado')
     }
 
     const { data: documentos } = await query
