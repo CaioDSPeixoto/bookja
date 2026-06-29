@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
+import { AlertCircle, Calendar, CheckCircle2, Lock, Loader2, Mail, Sparkles, User } from 'lucide-react'
 import { criarClienteBrowser } from '@/lib/supabase/client'
+import CampoForm from '@/components/auth/CampoForm'
 
 export default function CadastroPage() {
   const t = useTranslations('auth')
@@ -17,14 +19,19 @@ export default function CadastroPage() {
   const [senha, setSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
   const [erro, setErro] = useState('')
+  const [aviso, setAviso] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const hoje = new Date().toISOString().slice(0, 10)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErro('')
+    setAviso('')
     if (senha !== confirmarSenha) {
       setErro(t('senhasNaoCoincidem'))
       return
     }
+    setEnviando(true)
     const supabase = criarClienteBrowser()
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -33,6 +40,7 @@ export default function CadastroPage() {
     })
     if (error) {
       setErro(t('erroCadastro'))
+      setEnviando(false)
     } else if (data.session) {
       await supabase.from('perfil').update({ data_nascimento: dataNascimento }).eq('id', data.user!.id)
       router.push(`/${locale}/biblioteca`)
@@ -42,7 +50,8 @@ export default function CadastroPage() {
       const { error: loginError } = await supabase.auth.signInWithPassword({ email, password: senha })
       if (loginError) {
         // Email precisa confirmação - mostra mensagem
-        setErro('Conta criada! Verifique seu e-mail para confirmar o cadastro.')
+        setAviso('Conta criada! Verifique seu e-mail para confirmar o cadastro.')
+        setEnviando(false)
       } else {
         router.push(`/${locale}/biblioteca`)
         router.refresh()
@@ -51,80 +60,96 @@ export default function CadastroPage() {
   }
 
   return (
-    <div className="w-full max-w-md rounded-lg bg-white p-8 shadow">
-      <h1 className="mb-6 text-center text-2xl font-bold">{t('cadastrar')}</h1>
+    <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-xl shadow-indigo-100/40">
+      <div className="mb-6 flex flex-col items-center text-center">
+        <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-sm">
+          <Sparkles className="h-6 w-6" aria-hidden="true" />
+        </span>
+        <h1 className="text-2xl font-bold text-gray-900">{t('cadastrar')}</h1>
+        <p className="mt-1 text-sm text-gray-500">Crie sua conta e comece a escrever</p>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email-cadastro" className="block text-sm font-medium text-gray-700">{t('email')}</label>
-          <input
-            id="email-cadastro"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="nome-usuario-cadastro" className="block text-sm font-medium text-gray-700">{t('nomeUsuario')}</label>
-          <input
-            id="nome-usuario-cadastro"
-            type="text"
-            value={nomeUsuario}
-            onChange={(e) => setNomeUsuario(e.target.value)}
-            required
-            autoComplete="username"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="data-nascimento-cadastro" className="block text-sm font-medium text-gray-700">Data de nascimento</label>
-          <input
-            id="data-nascimento-cadastro"
-            type="date"
-            value={dataNascimento}
-            onChange={(e) => setDataNascimento(e.target.value)}
-            required
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <p className="mt-1 text-xs text-gray-500">Usamos para adequar o conteúdo à sua faixa etária</p>
-        </div>
-        <div>
-          <label htmlFor="senha-cadastro" className="block text-sm font-medium text-gray-700">{t('senha')}</label>
-          <input
-            id="senha-cadastro"
-            type="password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            required
-            autoComplete="new-password"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="confirmar-senha-cadastro" className="block text-sm font-medium text-gray-700">{t('confirmarSenha')}</label>
-          <input
-            id="confirmar-senha-cadastro"
-            type="password"
-            value={confirmarSenha}
-            onChange={(e) => setConfirmarSenha(e.target.value)}
-            required
-            autoComplete="new-password"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-        {erro && <p className="text-sm text-red-600" role="alert">{erro}</p>}
+        <CampoForm
+          id="email-cadastro"
+          label={t('email')}
+          icone={Mail}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          placeholder="voce@exemplo.com"
+        />
+        <CampoForm
+          id="nome-usuario-cadastro"
+          label={t('nomeUsuario')}
+          icone={User}
+          type="text"
+          value={nomeUsuario}
+          onChange={(e) => setNomeUsuario(e.target.value)}
+          required
+          autoComplete="username"
+          placeholder="seu_usuario"
+        />
+        <CampoForm
+          id="data-nascimento-cadastro"
+          label="Data de nascimento"
+          icone={Calendar}
+          type="date"
+          value={dataNascimento}
+          max={hoje}
+          onChange={(e) => setDataNascimento(e.target.value)}
+          required
+          ajuda="Usamos para adequar o conteúdo à sua faixa etária"
+        />
+        <CampoForm
+          id="senha-cadastro"
+          label={t('senha')}
+          icone={Lock}
+          type="password"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          required
+          autoComplete="new-password"
+          placeholder="••••••••"
+        />
+        <CampoForm
+          id="confirmar-senha-cadastro"
+          label={t('confirmarSenha')}
+          icone={Lock}
+          type="password"
+          value={confirmarSenha}
+          onChange={(e) => setConfirmarSenha(e.target.value)}
+          required
+          autoComplete="new-password"
+          placeholder="••••••••"
+        />
+        {erro && (
+          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <span>{erro}</span>
+          </div>
+        )}
+        {aviso && (
+          <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700" role="status">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <span>{aviso}</span>
+          </div>
+        )}
         <button
           type="submit"
-          className="w-full rounded bg-indigo-600 py-2 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          disabled={enviando}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
+          {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           {t('cadastrar')}
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-gray-600">
+
+      <p className="mt-6 text-center text-sm text-gray-600">
         {t('comConta')}{' '}
-        <Link href={`/${locale}/entrar`} className="text-indigo-600 hover:underline">
+        <Link href={`/${locale}/entrar`} className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline">
           {t('entrar')}
         </Link>
       </p>
