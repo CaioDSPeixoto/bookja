@@ -34,11 +34,14 @@ vi.mock('next-intl', () => ({
       navegacao: {
         inicio: 'Início',
         historias: 'Histórias',
+        biblioteca: 'Minha Biblioteca',
         painel: 'Painel',
         favoritos: 'Favoritos',
         notificacoes: 'Notificações',
         configuracoes: 'Configurações',
+        meuPerfil: 'Meu perfil',
         novoProjeto: 'Novo projeto',
+        sair: 'Sair',
       },
       idioma: {
         seletor: 'Idioma',

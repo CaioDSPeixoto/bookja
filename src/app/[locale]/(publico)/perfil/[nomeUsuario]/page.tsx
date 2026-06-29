@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { buscarPerfilPublico } from '@/lib/perfil/actions'
 import { criarClienteServidor } from '@/lib/supabase/server'
@@ -21,21 +21,31 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
 
   const { perfil, projetos, leituras } = dados
   const iniciais = (perfil.nome_exibicao || perfil.nome_usuario || '?').slice(0, 2).toUpperCase()
+  const ehMeuPerfil = usuarioLogadoId === perfil.id
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <div className="flex items-center gap-4 mb-8">
+      <div className="mb-8 flex items-start gap-4">
         {perfil.avatar_url ? (
-          <Image src={perfil.avatar_url} alt={perfil.nome_exibicao || ''} width={80} height={80} className="h-20 w-20 rounded-full object-cover" unoptimized />
+          <Image src={perfil.avatar_url} alt={perfil.nome_exibicao || ''} width={80} height={80} className="h-20 w-20 flex-shrink-0 rounded-full object-cover" unoptimized />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-indigo-600 text-2xl font-bold text-white">
+          <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 text-2xl font-bold text-white">
             {iniciais}
           </div>
         )}
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold">{perfil.nome_exibicao || perfil.nome_usuario}</h1>
           {perfil.bio && <p className="mt-1 text-gray-600">{perfil.bio}</p>}
         </div>
+        {ehMeuPerfil && (
+          <Link
+            href={`/${locale}/configuracoes`}
+            className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <Settings size={15} />
+            <span className="hidden sm:inline">{t('editarPerfil')}</span>
+          </Link>
+        )}
       </div>
 
       {perfil.chave_pix && (

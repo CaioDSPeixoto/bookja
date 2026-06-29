@@ -10,14 +10,17 @@ export default function ConfiguracoesPage() {
   const [nomeExibicao, setNomeExibicao] = useState('')
   const [bio, setBio] = useState('')
   const [chavePix, setChavePix] = useState('')
+  const [dataNascimento, setDataNascimento] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [salvo, setSalvo] = useState(false)
+  const [erro, setErro] = useState('')
 
   useEffect(() => {
     obterMeuPerfil().then((data) => {
       setNomeExibicao(data.nome_exibicao || '')
       setBio(data.bio || '')
       setChavePix(data.chave_pix || '')
+      setDataNascimento(data.data_nascimento || '')
     })
   }, [])
 
@@ -25,15 +28,21 @@ export default function ConfiguracoesPage() {
     e.preventDefault()
     setSalvando(true)
     setSalvo(false)
-    await atualizarPerfil({ nome_exibicao: nomeExibicao, bio, chave_pix: chavePix })
-    setSalvando(false)
-    setSalvo(true)
-    setTimeout(() => setSalvo(false), 3000)
+    setErro('')
+    try {
+      await atualizarPerfil({ nome_exibicao: nomeExibicao, bio, chave_pix: chavePix, data_nascimento: dataNascimento || null })
+      setSalvo(true)
+      setTimeout(() => setSalvo(false), 3000)
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : tGeral('erro'))
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">{tGeral('salvar').replace('Salvar', 'Configurações')}</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t('editarPerfil')}</h1>
       <form onSubmit={handleSalvar} className="space-y-4">
         <div>
           <label htmlFor="nome-exibicao" className="block text-sm font-medium text-gray-700">{t('nomeExibicao')}</label>
@@ -55,6 +64,18 @@ export default function ConfiguracoesPage() {
           />
         </div>
         <div>
+          <label htmlFor="data-nascimento" className="block text-sm font-medium text-gray-700">{t('dataNascimento')}</label>
+          <input
+            id="data-nascimento"
+            type="date"
+            value={dataNascimento}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setDataNascimento(e.target.value)}
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          />
+          <p className="mt-1 text-xs text-gray-500">{t('dataNascimentoAjuda')}</p>
+        </div>
+        <div>
           <label htmlFor="chave-pix" className="block text-sm font-medium text-gray-700">{t('chavePix')}</label>
           <input
             id="chave-pix"
@@ -63,6 +84,7 @@ export default function ConfiguracoesPage() {
             className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
         </div>
+        {erro && <p className="text-sm text-red-600">{erro}</p>}
         <div className="flex items-center gap-3">
           <button
             type="submit"

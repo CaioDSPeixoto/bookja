@@ -113,7 +113,7 @@ flowchart TD
 - `/{locale}/biblioteca`: biblioteca do usuário.
 - `/{locale}/favoritos`: favoritos do usuário.
 - `/{locale}/notificacoes`: notificações e ações de leitura.
-- `/{locale}/configuracoes`: edição básica de perfil.
+- `/{locale}/configuracoes`: edição de perfil (nome de exibição, bio, data de nascimento, chave PIX), apresentada como "Editar perfil" e acessada a partir da página de perfil, não como item de menu separado.
 - `/{locale}/projeto/novo`: criação de projeto.
 - `/{locale}/projeto/{id}/editar`: edição de metadados, status, capa e tags.
 - `/{locale}/projeto/{id}/documentos`: listagem, criação e reordenação de documentos.
@@ -377,6 +377,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 
 ### Concluído recentemente
 
+- Acesso ao próprio perfil e configurações no mobile (2026-06-29): o menu mobile passou a mostrar "Meu perfil" (e "Sair") quando logado, com links condicionais ao estado de login; "Configurações" deixou de ser item de menu separado (desktop e mobile) e virou o botão "Editar perfil" na página de perfil (visível só para o dono). A tela de configurações agora também edita a data de nascimento (com validação de formato/intervalo na Server Action `atualizarPerfil`). Validado ponta a ponta no app com usuário de teste descartável (menu → Meu perfil; perfil → Editar perfil; salvar data de nascimento e confirmar persistência no banco) e removido depois. lint, 109 testes (+2 no MenuMobile) e build OK.
 - Validação ponta a ponta no app real (2026-06-29, via preview com usuário de teste descartável e dados semeados depois removidos): (1) drawer do editor no mobile a 390px — sumário fica fora da tela por padrão, abre pelo botão do header (com título do capítulo ativo), lista os capítulos e fecha ao selecionar trocando o editor; (2) painel "Meus Projetos" exibindo capítulos, status, visualizações, nota média e nº de comentários; (3) RPCs de notificação `notificar_favoritos_capitulo_publicado` e `criar_notificacao_sistema` (convite) — teste transacional com rollback gerou 1 notificação de novo capítulo para favoritador e 1 de convite para colaborador. Nenhum dado de teste permaneceu (projeto/usuário removidos, rollback confirmado).
 - Mojibake: varredura definitiva em `src` e `supabase` (caractere de substituição U+FFFD, sequências UTF-8 duplo-encoded e tokens como `Ã©`/`Ã£`/`Ã§`) não encontrou nenhuma ocorrência; acentos corretos presentes nas mensagens. Item de codificação considerado resolvido em 2026-06-28.
 - Segurança (RLS): corrigido SELECT público total de `comentario`/`comentario_reacao` (era `qual = true`), que expunha comentários de projetos rascunho e capítulos privados. Migration `019` restringe a conteúdo publicado ou dono/colaborador; mural permanece público por design. Verificado por teste transacional com rollback (anon vê só o comentário de projeto publicado).

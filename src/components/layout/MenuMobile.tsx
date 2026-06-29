@@ -2,20 +2,34 @@
 
 import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LogOut } from 'lucide-react'
 import Link from 'next/link'
 
-export default function MenuMobile() {
+interface Props {
+  logado: boolean
+  nomeUsuario: string
+  sairAction?: () => Promise<void>
+}
+
+export default function MenuMobile({ logado, nomeUsuario, sairAction }: Props) {
   const t = useTranslations('navegacao')
+  const tAuth = useTranslations('auth')
   const locale = useLocale()
   const [aberto, setAberto] = useState(false)
 
-  const links = [
-    { href: `/${locale}`, label: t('inicio') },
-    { href: `/${locale}/historias`, label: t('historias') },
-    { href: `/${locale}/biblioteca`, label: t('biblioteca') },
-    { href: `/${locale}/configuracoes`, label: t('configuracoes') },
-  ]
+  const links = logado
+    ? [
+        { href: `/${locale}`, label: t('inicio') },
+        { href: `/${locale}/historias`, label: t('historias') },
+        { href: `/${locale}/biblioteca`, label: t('biblioteca') },
+        { href: `/${locale}/perfil/${nomeUsuario}`, label: t('meuPerfil') },
+      ]
+    : [
+        { href: `/${locale}`, label: t('inicio') },
+        { href: `/${locale}/historias`, label: t('historias') },
+        { href: `/${locale}/entrar`, label: tAuth('entrar') },
+        { href: `/${locale}/cadastro`, label: tAuth('cadastrar') },
+      ]
 
   return (
     <>
@@ -35,10 +49,10 @@ export default function MenuMobile() {
             onClick={() => setAberto(false)}
             aria-hidden="true"
           />
-          <nav className="absolute left-0 top-0 h-full w-64 bg-white p-4 shadow-lg" aria-label="Menu principal">
+          <nav className="absolute left-0 top-0 flex h-full w-64 flex-col bg-white p-4 shadow-lg" aria-label="Menu principal">
             <button
               onClick={() => setAberto(false)}
-              className="mb-6 p-2 hover:bg-gray-100 rounded-md"
+              className="mb-6 p-2 hover:bg-gray-100 rounded-md self-start"
               aria-label="Fechar menu"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -56,6 +70,18 @@ export default function MenuMobile() {
                 </li>
               ))}
             </ul>
+
+            {logado && sairAction && (
+              <form action={sairAction} className="mt-auto border-t pt-2">
+                <button
+                  type="submit"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  {t('sair')}
+                </button>
+              </form>
+            )}
           </nav>
         </div>
       )}

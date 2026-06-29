@@ -8,6 +8,7 @@ type DadosPerfil = {
   nome_exibicao?: string | null
   bio?: string | null
   chave_pix?: string | null
+  data_nascimento?: string | null
 }
 
 async function obterUsuarioOuErro() {
@@ -23,6 +24,33 @@ function normalizarTextoOpcional(valor: unknown): string | null {
 
   const texto = valor.trim()
   return texto || null
+}
+
+function normalizarDataNascimento(valor: unknown): string | null {
+  if (valor === undefined || valor === null) return null
+  if (typeof valor !== 'string') return null
+
+  const texto = valor.trim()
+  if (!texto) return null
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+    throw erroPublico('Data de nascimento inválida')
+  }
+
+  const data = new Date(`${texto}T00:00:00`)
+  if (Number.isNaN(data.getTime())) {
+    throw erroPublico('Data de nascimento inválida')
+  }
+
+  const hoje = new Date()
+  if (data > hoje) {
+    throw erroPublico('A data de nascimento não pode estar no futuro')
+  }
+  if (data.getUTCFullYear() < 1900) {
+    throw erroPublico('Data de nascimento inválida')
+  }
+
+  return texto
 }
 
 function normalizarNomeUsuario(nomeUsuario: unknown): string {
@@ -51,6 +79,10 @@ function normalizarDadosPerfil(dados: unknown): DadosPerfil {
 
   if ('chave_pix' in dados) {
     payload.chave_pix = normalizarTextoOpcional(dados.chave_pix)
+  }
+
+  if ('data_nascimento' in dados) {
+    payload.data_nascimento = normalizarDataNascimento(dados.data_nascimento)
   }
 
   return payload
@@ -100,7 +132,7 @@ export async function obterMeuPerfil() {
 
   const { data, error } = await supabase
     .from('perfil')
-    .select('nome_exibicao, bio, chave_pix')
+    .select('nome_exibicao, bio, chave_pix, data_nascimento')
     .eq('id', user.id)
     .single()
 

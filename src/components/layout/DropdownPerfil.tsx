@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { User, Settings, LogOut, ChevronDown } from 'lucide-react'
+import { User, LogOut, ChevronDown } from 'lucide-react'
 
 interface Props {
   nomeUsuario: string
@@ -52,13 +52,6 @@ export default function DropdownPerfil({ nomeUsuario, nomeExibicao, email, local
             className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
           >
             <User className="h-4 w-4" /> Meu perfil
-          </Link>
-          <Link
-            href={`/${locale}/configuracoes`}
-            onClick={() => setAberto(false)}
-            className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
-          >
-            <Settings className="h-4 w-4" /> Configurações
           </Link>
           <div className="border-t" />
           <form action={sairAction}>
