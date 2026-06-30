@@ -60,7 +60,7 @@ export default function CadastroPage() {
       setErro(t('erroCadastro'))
       setEnviando(false)
     } else if (data.session) {
-      await supabase.from('perfil').update({ data_nascimento: dataNascimento }).eq('id', data.user!.id)
+      // data_nascimento é gravada em perfil_privado pelo trigger handle_new_user (via metadata).
       router.push(`/${locale}/biblioteca`)
       router.refresh()
     } else {

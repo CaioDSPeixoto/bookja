@@ -92,12 +92,25 @@ export async function atualizarPerfil(dados: DadosPerfil) {
   const { supabase, user } = await obterUsuarioOuErro()
   const payload = normalizarDadosPerfil(dados)
 
-  const { error } = await supabase
-    .from('perfil')
-    .update(payload)
-    .eq('id', user.id)
+  const { data_nascimento, ...camposPublicos } = payload
 
-  if (error) throw erroOperacao('Não foi possível atualizar o perfil')
+  if (Object.keys(camposPublicos).length > 0) {
+    const { error } = await supabase
+      .from('perfil')
+      .update(camposPublicos)
+      .eq('id', user.id)
+
+    if (error) throw erroOperacao('Não foi possível atualizar o perfil')
+  }
+
+  // Data de nascimento é privada (tabela própria, legível só pelo dono).
+  if ('data_nascimento' in payload) {
+    const { error } = await supabase
+      .from('perfil_privado')
+      .upsert({ id: user.id, data_nascimento })
+
+    if (error) throw erroOperacao('Não foi possível atualizar o perfil')
+  }
 }
 
 export async function buscarPerfilPublico(nomeUsuario: string) {
@@ -132,10 +145,17 @@ export async function obterMeuPerfil() {
 
   const { data, error } = await supabase
     .from('perfil')
-    .select('nome_exibicao, bio, chave_pix, data_nascimento')
+    .select('nome_exibicao, bio, chave_pix')
     .eq('id', user.id)
     .single()
 
   if (error || !data) throw erroOperacao('Não foi possível obter o perfil')
-  return data
+
+  const { data: privado } = await supabase
+    .from('perfil_privado')
+    .select('data_nascimento')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  return { ...data, data_nascimento: privado?.data_nascimento ?? null }
 }

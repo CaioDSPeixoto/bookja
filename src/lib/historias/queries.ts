@@ -16,10 +16,10 @@ async function obterIdadeUsuario(): Promise<number | null> {
   if (!user) return null
 
   const { data: perfil } = await supabase
-    .from('perfil')
+    .from('perfil_privado')
     .select('data_nascimento')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!perfil?.data_nascimento) return null
 

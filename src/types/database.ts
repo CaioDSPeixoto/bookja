@@ -56,7 +56,6 @@ export interface Database {
           papel: string
           criado_em: string
           atualizado_em: string | null
-          data_nascimento: string | null
         },
         {
           id: Id
@@ -68,7 +67,6 @@ export interface Database {
           papel?: string
           criado_em?: string
           atualizado_em?: string | null
-          data_nascimento?: string | null
         },
         {
           nome_usuario?: string
@@ -78,6 +76,18 @@ export interface Database {
           chave_pix?: string | null
           papel?: string
           atualizado_em?: string | null
+        }
+      >
+      perfil_privado: Tabela<
+        {
+          id: Id
+          data_nascimento: string | null
+        },
+        {
+          id: Id
+          data_nascimento?: string | null
+        },
+        {
           data_nascimento?: string | null
         }
       >
