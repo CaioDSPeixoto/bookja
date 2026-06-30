@@ -84,7 +84,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
                 Capítulo {idxAtual + 1} de {lista.length}
               </p>
               <h1 className="mt-2 text-3xl font-bold leading-tight tracking-normal text-gray-950 sm:text-4xl">
-                {documento.titulo}
+                {documento.titulo || `Capítulo ${idxAtual + 1}`}
               </h1>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
               <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 group-hover:text-indigo-600">
                 <ChevronLeft size={14} /> {t('capituloAnterior')}
               </span>
-              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{anterior.titulo}</span>
+              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{anterior.titulo || `Capítulo ${idxAtual}`}</span>
             </Link>
           ) : <div />}
           {proximo ? (
@@ -143,7 +143,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
               <span className="inline-flex items-center justify-end gap-1 text-xs font-medium text-gray-400 group-hover:text-indigo-600">
                 {t('proximoCapitulo')} <ChevronRight size={14} />
               </span>
-              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{proximo.titulo}</span>
+              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{proximo.titulo || `Capítulo ${idxAtual + 2}`}</span>
             </Link>
           ) : <div />}
         </nav>
