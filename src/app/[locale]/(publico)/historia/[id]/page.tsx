@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
-import { Eye, Star, BookOpen } from 'lucide-react'
+import { Eye, Star, BookOpen, Download } from 'lucide-react'
 import { buscarHistoriaPublica, registrarVisualizacao } from '@/lib/historias/queries'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { ListaComentarios } from '@/components/comentarios/ListaComentarios'
@@ -36,12 +36,12 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
       <div className="flex flex-col gap-6 md:flex-row">
         {/* Capa */}
         <div className="w-full flex-shrink-0 md:w-64">
-          <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100">
+          <div className="aspect-[3/4] overflow-hidden rounded-2xl border border-gray-100 bg-gray-100 shadow-sm">
             {historia.capa_url ? (
               <Image src={historia.capa_url} alt={historia.titulo} width={384} height={512} className="h-full w-full object-cover" unoptimized />
             ) : (
-              <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-                <BookOpen size={64} className="text-gray-300" />
+              <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-50">
+                <BookOpen size={64} className="text-indigo-200" />
               </div>
             )}
           </div>
@@ -72,19 +72,19 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
           )}
 
           {/* Estatísticas */}
-          <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
-            <span className="flex items-center gap-1">
-              <Eye size={16} /> {historia.contagem_visualizacoes || 0} {t('visualizacoes')}
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+            <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1">
+              <Eye size={15} /> {historia.contagem_visualizacoes || 0} {t('visualizacoes')}
             </span>
             {historia.media_avaliacao != null && historia.media_avaliacao > 0 && (
-              <span className="flex items-center gap-1 text-yellow-600">
-                <Star size={16} fill="currentColor" /> {historia.media_avaliacao.toFixed(1)}
+              <span className="flex items-center gap-1 rounded-full bg-yellow-50 px-2.5 py-1 font-medium text-yellow-700">
+                <Star size={15} fill="currentColor" /> {historia.media_avaliacao.toFixed(1)}
+                {historia.contagem_avaliacoes > 0 && <span className="font-normal text-yellow-600/80">({historia.contagem_avaliacoes})</span>}
               </span>
             )}
-            {historia.contagem_avaliacoes > 0 && (
-              <span>{historia.contagem_avaliacoes} {t('avaliacoes')}</span>
+            {user && user.id !== historia.dono_id && (
+              <span className="ml-auto"><BotaoFavoritar projetoId={id} favoritado={favoritado} usuarioLogado={true} /></span>
             )}
-            {user && user.id !== historia.dono_id && <BotaoFavoritar projetoId={id} favoritado={favoritado} usuarioLogado={true} />}
           </div>
 
           {/* Tags */}
@@ -116,19 +116,19 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
       <div className="mt-10">
         <h2 className="mb-4 text-xl font-bold">{t('capitulos')}</h2>
         {capitulos.length === 0 ? (
-          <p className="text-gray-500">{t('semCapitulos')}</p>
+          <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center text-sm text-gray-500">{t('semCapitulos')}</div>
         ) : (
           <ol className="space-y-2">
             {capitulos.map((cap, idx) => (
               <li key={cap.id}>
                 <Link
                   href={`/${locale}/historia/${id}/ler/${cap.id}`}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 transition hover:bg-gray-50"
+                  className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50/40"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-50 text-sm font-semibold text-indigo-600">
                     {idx + 1}
                   </span>
-                  <span className="font-medium">{cap.titulo}</span>
+                  <span className="font-medium text-gray-800 group-hover:text-indigo-700">{cap.titulo}</span>
                 </Link>
               </li>
             ))}
@@ -138,9 +138,13 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
 
       {/* Exportar - só logado */}
       {user && (
-        <div className="mt-6 flex gap-3">
-          <a href={`/api/exportar/epub?projetoId=${id}`} className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" download>EPUB</a>
-          <a href={`/api/exportar/pdf?projetoId=${id}`} className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" download>PDF</a>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <a href={`/api/exportar/epub?projetoId=${id}`} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50" download>
+            <Download size={15} /> EPUB
+          </a>
+          <a href={`/api/exportar/pdf?projetoId=${id}`} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50" download>
+            <Download size={15} /> PDF
+          </a>
         </div>
       )}
 
