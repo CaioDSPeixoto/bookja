@@ -655,6 +655,12 @@ export interface Database {
         }
         Returns: undefined
       }
+      recalcular_avaliacao_projeto: {
+        Args: {
+          p_projeto_id: Id
+        }
+        Returns: undefined
+      }
     } & Record<string, FuncaoGenerica>
     Enums: { [_ in never]: never }
     CompositeTypes: { [_ in never]: never }

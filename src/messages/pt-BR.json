@@ -181,7 +181,9 @@
     "copiarPix": "Copiar chave PIX",
     "pixCopiado": "Copiado!",
     "naoEncontrada": "História não encontrada",
-    "semCapitulos": "Nenhum capítulo publicado ainda"
+    "semCapitulos": "Nenhum capítulo publicado ainda",
+    "seuProgresso": "Seu progresso",
+    "continuarLendo": "Continuar lendo"
   },
   "catalogo": {
     "titulo": "Histórias",

@@ -64,26 +64,12 @@ function erroComentario(mensagem: string): Error {
   return erroOperacao(mensagem)
 }
 
-/** Recalcula média e contagem de avaliações de um projeto a partir das notas dos comentários. */
+/** Recalcula média e contagem de avaliações de um projeto de forma atômica (RPC). */
 async function recalcularAvaliacaoProjeto(
   supabase: Awaited<ReturnType<typeof criarClienteServidor>>,
   projetoId: string,
 ) {
-  const { data: stats } = await supabase
-    .from('comentario')
-    .select('nota')
-    .eq('projeto_id', projetoId)
-    .not('nota', 'is', null)
-
-  const total = stats?.length ?? 0
-  const media = total > 0
-    ? Math.round((stats!.reduce((soma, c) => soma + (c.nota as number), 0) / total) * 10) / 10
-    : 0
-
-  await supabase
-    .from('projeto')
-    .update({ media_avaliacao: media, contagem_avaliacoes: total })
-    .eq('id', projetoId)
+  await supabase.rpc('recalcular_avaliacao_projeto', { p_projeto_id: projetoId })
 }
 
 export async function criarComentario(

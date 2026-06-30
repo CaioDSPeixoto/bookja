@@ -31,6 +31,30 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
   const tags = ((historia.projeto_tag as Array<{ tag: { id: number; nome: string } }>) || []).map((pt) => pt.tag)
   const capitulos = historia.documento as Array<{ id: string; titulo: string; ordem: number }>
 
+  // Progresso de leitura (usuário logado): posição do último capítulo lido.
+  let progressoLeitura: { atual: number; total: number; percentual: number; proximoId: string } | null = null
+  if (user && capitulos.length > 0) {
+    const { data: leitura } = await supabase
+      .from('leitura_atual')
+      .select('ultimo_documento_id')
+      .eq('usuario_id', user.id)
+      .eq('projeto_id', id)
+      .maybeSingle()
+    const idx = leitura?.ultimo_documento_id
+      ? capitulos.findIndex((c) => c.id === leitura.ultimo_documento_id)
+      : -1
+    if (idx >= 0) {
+      const atual = idx + 1
+      const proximoId = capitulos[Math.min(idx + 1, capitulos.length - 1)].id
+      progressoLeitura = {
+        atual,
+        total: capitulos.length,
+        percentual: Math.round((atual / capitulos.length) * 100),
+        proximoId,
+      }
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex flex-col gap-6 md:flex-row">
@@ -111,6 +135,26 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
           )}
         </div>
       </div>
+
+      {/* Progresso de leitura */}
+      {progressoLeitura && (
+        <div className="mt-8 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-medium text-indigo-900">
+              {t('seuProgresso')}: {progressoLeitura.atual}/{progressoLeitura.total} ({progressoLeitura.percentual}%)
+            </span>
+            <Link
+              href={`/${locale}/historia/${id}/ler/${progressoLeitura.proximoId}`}
+              className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
+            >
+              {t('continuarLendo')}
+            </Link>
+          </div>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-indigo-100">
+            <div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: `${progressoLeitura.percentual}%` }} />
+          </div>
+        </div>
+      )}
 
       {/* Capítulos */}
       <div className="mt-10">
