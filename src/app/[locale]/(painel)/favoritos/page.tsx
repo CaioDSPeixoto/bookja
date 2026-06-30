@@ -45,7 +45,7 @@ export default async function FavoritosPage({ params }: { params: Promise<{ loca
               <Link
                 key={fav.projeto_id}
                 href={`/${locale}/historia/${proj.id}`}
-                className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md"
+                className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md"
               >
                 <h2 className="text-lg font-semibold text-gray-900">{proj.titulo}</h2>
                 {proj.sinopse && (

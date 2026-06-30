@@ -40,17 +40,19 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  const inputClass = 'mt-1.5 w-full rounded-lg border border-gray-300 bg-gray-50/60 px-3 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30'
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">{t('editarPerfil')}</h1>
-      <form onSubmit={handleSalvar} className="space-y-4">
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">{t('editarPerfil')}</h1>
+      <form onSubmit={handleSalvar} className="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
         <div>
           <label htmlFor="nome-exibicao" className="block text-sm font-medium text-gray-700">{t('nomeExibicao')}</label>
           <input
             id="nome-exibicao"
             value={nomeExibicao}
             onChange={(e) => setNomeExibicao(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className={inputClass}
           />
         </div>
         <div>
@@ -60,7 +62,7 @@ export default function ConfiguracoesPage() {
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={4}
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className={`${inputClass} resize-none`}
           />
         </div>
         <div>
@@ -71,7 +73,7 @@ export default function ConfiguracoesPage() {
             value={dataNascimento}
             max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => setDataNascimento(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className={inputClass}
           />
           <p className="mt-1 text-xs text-gray-500">{t('dataNascimentoAjuda')}</p>
         </div>
@@ -81,19 +83,21 @@ export default function ConfiguracoesPage() {
             id="chave-pix"
             value={chavePix}
             onChange={(e) => setChavePix(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className={inputClass}
           />
         </div>
-        {erro && <p className="text-sm text-red-600">{erro}</p>}
-        <div className="flex items-center gap-3">
+        {erro && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</div>
+        )}
+        <div className="flex items-center gap-3 pt-1">
           <button
             type="submit"
             disabled={salvando}
-            className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             {salvando ? tGeral('carregando') : t('salvarPerfil')}
           </button>
-          {salvo && <span className="text-sm text-green-600">{t('perfilSalvo')}</span>}
+          {salvo && <span className="text-sm font-medium text-green-600">{t('perfilSalvo')}</span>}
         </div>
       </form>
     </div>
