@@ -124,13 +124,15 @@ export default async function PaginaInicial({ params }: { params: Promise<{ loca
                 <Link
                   key={`${leitura.projeto_id}:${leitura.ultimo_documento_id || ''}`}
                   href={`/${locale}/historia/${leitura.projeto_id}/ler/${leitura.ultimo_documento_id}`}
-                  className="flex items-center gap-4 rounded-xl border border-gray-200 p-4 transition-all hover:border-indigo-200 hover:shadow-lg"
+                  className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
                 >
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate font-semibold text-gray-900">{leitura.projeto?.titulo}</h3>
                     <p className="truncate text-sm text-gray-500">{leitura.documento?.titulo}</p>
                   </div>
-                  <BookOpen className="h-5 w-5 flex-shrink-0 text-indigo-600" />
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                    <BookOpen className="h-5 w-5" />
+                  </span>
                 </Link>
               ))}
             </div>
@@ -139,7 +141,7 @@ export default async function PaginaInicial({ params }: { params: Promise<{ loca
 
         {/* Seções de ranking */}
         {secoes.length === 0 ? (
-          <p className="py-12 text-center text-gray-500">{t('emBreve')}</p>
+          <div className="my-12 rounded-2xl border border-dashed border-gray-200 px-6 py-16 text-center text-sm text-gray-500">{t('emBreve')}</div>
         ) : (
           secoes.map((secao) => (
             <section key={secao.titulo} className="py-12">
@@ -160,17 +162,16 @@ export default async function PaginaInicial({ params }: { params: Promise<{ loca
                     nome: pt.tag.nome,
                   }))
                   return (
-                    <div key={p.id} className="rounded-xl border border-gray-200 transition-all hover:border-indigo-200 hover:shadow-lg">
-                      <CardHistoria
-                        titulo={p.titulo}
-                        autor={perfil?.nome_exibicao || perfil?.nome_usuario || ''}
-                        sinopse={p.sinopse}
-                        tags={tags}
-                        avaliacao={p.media_avaliacao}
-                        capa_url={p.capa_url}
-                        href={`/${locale}/historia/${p.id}`}
-                      />
-                    </div>
+                    <CardHistoria
+                      key={p.id}
+                      titulo={p.titulo}
+                      autor={perfil?.nome_exibicao || perfil?.nome_usuario || ''}
+                      sinopse={p.sinopse}
+                      tags={tags}
+                      avaliacao={p.media_avaliacao}
+                      capa_url={p.capa_url}
+                      href={`/${locale}/historia/${p.id}`}
+                    />
                   )
                 })}
               </div>

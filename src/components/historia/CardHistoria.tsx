@@ -14,30 +14,30 @@ interface CardHistoriaProps {
 
 export function CardHistoria({ titulo, autor, sinopse, tags, avaliacao, capa_url, href }: CardHistoriaProps) {
   return (
-    <Link href={href} className="group block overflow-hidden rounded-lg border border-gray-200 transition hover:shadow-lg">
-      <div className="aspect-[3/4] w-full bg-gray-100">
+    <Link href={href} className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md">
+      <div className="aspect-[3/4] w-full overflow-hidden bg-gray-100">
         {capa_url ? (
-          <Image src={capa_url} alt={titulo} width={360} height={480} className="h-full w-full object-cover" unoptimized />
+          <Image src={capa_url} alt={titulo} width={360} height={480} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" unoptimized />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-            <span className="text-4xl font-bold text-gray-300">{titulo.charAt(0)}</span>
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-50">
+            <span className="text-4xl font-bold text-indigo-200">{titulo.charAt(0)}</span>
           </div>
         )}
       </div>
       <div className="p-3">
-        <h3 className="line-clamp-1 font-semibold group-hover:text-blue-600">{titulo}</h3>
+        <h3 className="line-clamp-1 font-semibold text-gray-900 group-hover:text-indigo-600">{titulo}</h3>
         <p className="text-sm text-gray-500">{autor}</p>
         {sinopse && <p className="mt-1 line-clamp-2 text-xs text-gray-600">{sinopse}</p>}
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1">
-            {tags.slice(0, 3).map((tag) => (
-              <span key={tag.id} className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+            {tags.slice(0, 2).map((tag) => (
+              <span key={tag.id} className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-600">
                 {tag.nome}
               </span>
             ))}
           </div>
           {avaliacao != null && avaliacao > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-yellow-600">
+            <span className="flex flex-shrink-0 items-center gap-0.5 rounded-full bg-yellow-50 px-1.5 py-0.5 text-xs font-medium text-yellow-700">
               <Star size={12} fill="currentColor" />
               {avaliacao.toFixed(1)}
             </span>

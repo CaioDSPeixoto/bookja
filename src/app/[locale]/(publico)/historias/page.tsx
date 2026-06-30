@@ -21,22 +21,23 @@ export default async function CatalogoPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">{t('titulo')}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">{t('titulo')}</h1>
 
       {/* Busca */}
       <form className="mb-6 flex gap-2">
         <div className="relative flex-1">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             name="busca"
             defaultValue={sp.busca}
             placeholder={t('buscar')}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-gray-300 bg-gray-50/60 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           />
         </div>
         {sp.tag && <input type="hidden" name="tag" value={sp.tag} />}
-        <button type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">
-          {t('titulo')}
+        <button type="submit" className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700">
+          <Search size={16} className="sm:hidden" />
+          <span className="hidden sm:inline">{t('titulo')}</span>
         </button>
       </form>
 
@@ -61,7 +62,7 @@ export default async function CatalogoPage({
 
       {/* Grid */}
       {projetos.length === 0 ? (
-        <p className="py-12 text-center text-gray-500">{t('semResultados')}</p>
+        <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-16 text-center text-sm text-gray-500">{t('semResultados')}</div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {projetos.map((p: Record<string, unknown>) => {
