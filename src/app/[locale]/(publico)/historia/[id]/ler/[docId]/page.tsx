@@ -98,11 +98,13 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
         />
 
         {notas.length > 0 && (
-          <section className="mt-12 border-t border-amber-200 pt-6">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-amber-700">
-              <StickyNote size={16} /> Bastidores do capítulo
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2">
+          <details className="group mt-12">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-amber-700 transition-colors hover:text-amber-800">
+              <StickyNote size={15} className="shrink-0" />
+              <span>Bastidores do capítulo ({notas.length})</span>
+              <ChevronRight size={15} className="ml-auto shrink-0 transition-transform group-open:rotate-90" />
+            </summary>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {notas.map((nota) => (
                 <div key={nota.id} className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
                   <p className="whitespace-pre-line break-words">{nota.conteudo}</p>
@@ -112,7 +114,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
                 </div>
               ))}
             </div>
-          </section>
+          </details>
         )}
 
         {perfilAutor?.chave_pix && (
