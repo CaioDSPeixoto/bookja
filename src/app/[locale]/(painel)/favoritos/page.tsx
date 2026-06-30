@@ -18,7 +18,11 @@ export default async function FavoritosPage({ params }: { params: Promise<{ loca
       .select('projeto_id, projeto:projeto(id, titulo, sinopse, status)')
       .eq('usuario_id', user.id)
 
-    favoritos = data || []
+    // Só exibe favoritos cujo projeto ainda está publicado (evita cards quebrados/404).
+    favoritos = (data || []).filter((fav) => {
+      const proj = Array.isArray(fav.projeto) ? fav.projeto[0] : fav.projeto
+      return proj && proj.status === 'publicado'
+    })
   }
 
   return (

@@ -108,6 +108,16 @@ export async function criarComentario(
 
   if (!projeto || projeto.status !== 'publicado') throw erroPublico('Projeto não publicado')
 
+  // Uma avaliação por usuário: zera a nota da avaliação anterior antes de registrar a nova.
+  if (notaValidada) {
+    await supabase
+      .from('comentario')
+      .update({ nota: null })
+      .eq('projeto_id', projetoIdValidado)
+      .eq('autor_id', user.id)
+      .not('nota', 'is', null)
+  }
+
   const { error } = await supabase.from('comentario').insert({
     projeto_id: projetoIdValidado,
     documento_id: documentoIdValidado,
