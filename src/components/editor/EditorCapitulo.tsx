@@ -309,21 +309,25 @@ export default function EditorCapitulo({
 
       <div className="flex items-center justify-between gap-2 border-t border-gray-100 bg-white px-4 py-2.5 sm:px-6">
         <span className="text-xs text-gray-400">
-          {`${editor?.storage.characterCount.words() ?? 0} palavras`}
+          {editor?.storage.characterCount.words() ?? 0}
+          <span className="hidden sm:inline"> palavras</span>
         </span>
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-2 text-xs sm:gap-3">
           {statusSalvamento === 'salvando' && (
             <span className="flex items-center gap-1.5 text-indigo-500">
               <Loader2 size={12} className="animate-spin" />
-              Salvando
+              <span className="hidden sm:inline">Salvando</span>
             </span>
           )}
           {statusSalvamento === 'salvo' && ultimoSalvamento && (
-            <span className="flex items-center gap-1.5 text-green-500">
+            <span className="flex items-center gap-1.5 text-green-500" title={`${ultimoSalvamento.tipo === 'automatico' ? 'Salvo automaticamente' : 'Salvo manualmente'} às ${ultimoSalvamento.horario}`}>
               <Check size={12} />
-              {ultimoSalvamento.tipo === 'automatico'
-                ? `Salvo automaticamente às ${ultimoSalvamento.horario}`
-                : `Salvo manualmente às ${ultimoSalvamento.horario}`}
+              <span className="hidden sm:inline">
+                {ultimoSalvamento.tipo === 'automatico'
+                  ? `Salvo automaticamente às ${ultimoSalvamento.horario}`
+                  : `Salvo manualmente às ${ultimoSalvamento.horario}`}
+              </span>
+              <span className="sm:hidden">Salvo</span>
             </span>
           )}
           {statusSalvamento === 'pendente' && (
@@ -335,7 +339,8 @@ export default function EditorCapitulo({
               disabled={statusSalvamento === 'salvando'}
               className="rounded-md bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-100 disabled:opacity-50"
             >
-              {manualFeedback ? 'Salvo manualmente' : 'Salvar manualmente'}
+              <span className="hidden sm:inline">{manualFeedback ? 'Salvo manualmente' : 'Salvar manualmente'}</span>
+              <span className="sm:hidden">{manualFeedback ? 'Salvo' : 'Salvar'}</span>
             </button>
           )}
         </div>

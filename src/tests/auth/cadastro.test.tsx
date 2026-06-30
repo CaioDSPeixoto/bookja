@@ -12,8 +12,10 @@ vi.mock('@/lib/supabase/client', () => ({
       signInWithPassword: mockSignInWithPassword,
     },
     from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
       update: mockUpdatePerfil.mockReturnThis(),
-      eq: vi.fn(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null }),
     })),
   }),
 }))

@@ -49,7 +49,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
 
         {/* Info */}
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">{historia.titulo}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{historia.titulo}</h1>
           <p className="mt-2 text-gray-600">
             {t('por')}{' '}
             <Link href={`/${locale}/perfil/${perfil.nome_usuario}`} className="font-medium text-indigo-600 hover:underline">

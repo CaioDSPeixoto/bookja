@@ -59,7 +59,7 @@ export default function PainelNotasAutor({ projetoId, documentoId }: Props) {
       <button
         type="button"
         onClick={() => setAberto(!aberto)}
-        className="flex w-full items-center gap-2 px-6 py-2 text-xs font-medium text-amber-700"
+        className="flex w-full items-center gap-2 px-4 py-2 text-xs font-medium text-amber-700 sm:px-6"
       >
         {aberto ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         <StickyNote size={14} />
@@ -67,7 +67,7 @@ export default function PainelNotasAutor({ projetoId, documentoId }: Props) {
       </button>
 
       {aberto && (
-        <div className="max-h-56 overflow-y-auto px-6 pb-3">
+        <div className="max-h-56 overflow-y-auto px-4 pb-3 sm:px-6">
           <p className="mb-2 text-[11px] text-amber-700/80">
             Notas e curiosidades visíveis para as leitoras na página de leitura.
           </p>

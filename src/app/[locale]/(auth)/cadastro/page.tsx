@@ -31,12 +31,30 @@ export default function CadastroPage() {
       setErro(t('senhasNaoCoincidem'))
       return
     }
+    const usuario = nomeUsuario.trim().toLowerCase()
+    if (!/^[a-z0-9_]{3,20}$/.test(usuario)) {
+      setErro(t('nomeUsuarioInvalido'))
+      return
+    }
     setEnviando(true)
     const supabase = criarClienteBrowser()
+
+    // Verifica disponibilidade do nome de usuário antes do cadastro (mensagem clara em vez de erro genérico).
+    const { data: existente } = await supabase
+      .from('perfil')
+      .select('id')
+      .eq('nome_usuario', usuario)
+      .maybeSingle()
+    if (existente) {
+      setErro(t('nomeUsuarioEmUso'))
+      setEnviando(false)
+      return
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: { data: { nome_usuario: nomeUsuario, data_nascimento: dataNascimento } },
+      options: { data: { nome_usuario: usuario, data_nascimento: dataNascimento } },
     })
     if (error) {
       setErro(t('erroCadastro'))
@@ -91,6 +109,7 @@ export default function CadastroPage() {
           required
           autoComplete="username"
           placeholder="seu_usuario"
+          ajuda={t('nomeUsuarioAjuda')}
         />
         <CampoForm
           id="data-nascimento-cadastro"

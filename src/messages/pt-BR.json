@@ -24,7 +24,10 @@
     "comConta": "Já tem uma conta?",
     "erroLogin": "E-mail ou senha inválidos",
     "erroCadastro": "Erro ao criar conta. Tente novamente.",
-    "senhasNaoCoincidem": "As senhas não coincidem"
+    "senhasNaoCoincidem": "As senhas não coincidem",
+    "nomeUsuarioInvalido": "Use 3 a 20 caracteres: letras minúsculas, números ou _",
+    "nomeUsuarioEmUso": "Este nome de usuário já está em uso",
+    "nomeUsuarioAjuda": "Apenas letras minúsculas, números e _ (3 a 20 caracteres)"
   },
   "navegacao": {
     "inicio": "Início",
