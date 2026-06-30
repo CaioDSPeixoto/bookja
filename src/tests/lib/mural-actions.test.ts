@@ -9,6 +9,7 @@ vi.mock('@/lib/supabase/server', () => ({
   criarClienteServidor: vi.fn(() => ({
     auth: { getUser: vi.fn(() => ({ data: { user: mockUser } })) },
     from: mockFrom,
+    rpc: vi.fn(() => ({ data: false })),
   })),
 }))
 

@@ -1,6 +1,7 @@
 'use server'
 
 import { erroOperacao, erroPublico } from '@/lib/actions/erros'
+import { listarIdsBloqueados } from '@/lib/bloqueio/actions'
 import { criarNotificacao } from '@/lib/notificacoes/actions'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { validarUuid } from '@/lib/validacao/comum'
@@ -176,7 +177,11 @@ export async function listarComentarios(projetoId: string, documentoId?: string 
 
   const { data, error } = await query
   if (error) throw erroComentario('Não foi possível listar comentários')
-  return data || []
+
+  // Oculta comentários de usuários que o visitante bloqueou.
+  const bloqueados = new Set(await listarIdsBloqueados())
+  if (bloqueados.size === 0) return data || []
+  return (data || []).filter((c) => !bloqueados.has(c.autor_id as string))
 }
 
 export async function responderComentario(comentarioId: string, conteudo: string) {

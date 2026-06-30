@@ -4,8 +4,10 @@ import Image from 'next/image'
 import { BookOpen, Settings, Star, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { buscarPerfilPublico } from '@/lib/perfil/actions'
+import { estaBloqueado } from '@/lib/bloqueio/actions'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import BotaoCopiarPix from './BotaoCopiarPix'
+import BotaoBloquear from '@/components/perfil/BotaoBloquear'
 import MuralPerfil from '@/components/mural/MuralPerfil'
 
 export default async function PerfilAutorPage({ params }: { params: Promise<{ locale: string; nomeUsuario: string }> }) {
@@ -22,6 +24,7 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
   const { perfil, projetos, leituras } = dados
   const iniciais = (perfil.nome_exibicao || perfil.nome_usuario || '?').slice(0, 2).toUpperCase()
   const ehMeuPerfil = usuarioLogadoId === perfil.id
+  const bloqueadoInicial = usuarioLogadoId && !ehMeuPerfil ? await estaBloqueado(perfil.id) : false
 
   type ProjetoPerfil = {
     id: string
@@ -52,7 +55,7 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
             <p className="text-sm text-gray-400">@{perfil.nome_usuario}</p>
             {perfil.bio && <p className="mt-2 text-gray-600">{perfil.bio}</p>}
           </div>
-          {ehMeuPerfil && (
+          {ehMeuPerfil ? (
             <Link
               href={`/${locale}/configuracoes`}
               className="mt-3 inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
@@ -60,7 +63,11 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
               <Settings size={15} />
               <span className="hidden sm:inline">{t('editarPerfil')}</span>
             </Link>
-          )}
+          ) : usuarioLogadoId ? (
+            <div className="mt-3">
+              <BotaoBloquear usuarioId={perfil.id} bloqueadoInicial={bloqueadoInicial} />
+            </div>
+          ) : null}
         </div>
       </div>
 

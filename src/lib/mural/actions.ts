@@ -1,8 +1,14 @@
 'use server'
 
 import { erroOperacao, erroPublico } from '@/lib/actions/erros'
+import { listarIdsBloqueados } from '@/lib/bloqueio/actions'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { validarUuid } from '@/lib/validacao/comum'
+
+function autorId(item: { autor: unknown }): string | null {
+  const autor = Array.isArray(item.autor) ? item.autor[0] : item.autor
+  return (autor as { id?: string } | null)?.id ?? null
+}
 
 async function obterUsuarioOuErro() {
   const supabase = await criarClienteServidor()
@@ -67,7 +73,13 @@ export async function listarMural(perfilId: string) {
 
   if (error) throw erroOperacao('Não foi possível listar o mural')
 
-  const ids = (data || []).map((comentario) => comentario.id)
+  // Oculta comentários de usuários que o visitante bloqueou.
+  const bloqueados = new Set(await listarIdsBloqueados())
+  const comentarios = bloqueados.size > 0
+    ? (data || []).filter((c) => { const a = autorId(c); return !a || !bloqueados.has(a) })
+    : (data || [])
+
+  const ids = comentarios.map((comentario) => comentario.id)
   let respostas: typeof data = []
   if (ids.length > 0) {
     const { data: resp, error: erroRespostas } = await supabase
@@ -77,7 +89,7 @@ export async function listarMural(perfilId: string) {
       .order('criado_em', { ascending: true })
 
     if (erroRespostas) throw erroOperacao('Não foi possível listar respostas do mural')
-    respostas = resp || []
+    respostas = (resp || []).filter((r) => { const a = autorId(r); return !a || !bloqueados.has(a) })
   }
 
   const todosIds = [...ids, ...(respostas || []).map((resposta) => resposta.id)]
@@ -92,7 +104,7 @@ export async function listarMural(perfilId: string) {
     reacoes = react || []
   }
 
-  return { comentarios: data || [], respostas: respostas || [], reacoes }
+  return { comentarios, respostas: respostas || [], reacoes }
 }
 
 export async function criarComentarioMural(perfilId: string, conteudo: string, paiId?: string) {
@@ -100,6 +112,15 @@ export async function criarComentarioMural(perfilId: string, conteudo: string, p
   const perfilIdValidado = validarIdPerfil(perfilId)
   const conteudoValidado = normalizarConteudo(conteudo)
   const paiIdValidado = validarIdComentarioOpcional(paiId)
+
+  // Quem foi bloqueado pelo dono do mural não pode postar nele.
+  if (perfilIdValidado !== user.id) {
+    const { data: bloqueado } = await supabase.rpc('existe_bloqueio', {
+      p_bloqueador: perfilIdValidado,
+      p_bloqueado: user.id,
+    })
+    if (bloqueado) throw erroPublico('Você não pode comentar no mural deste usuário')
+  }
 
   const { error } = await supabase
     .from('mural_comentario')
