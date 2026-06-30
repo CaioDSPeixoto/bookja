@@ -114,7 +114,7 @@ export async function buscarPerfilPublico(nomeUsuario: string) {
 
   const { data: projetos } = await supabase
     .from('projeto')
-    .select('id, titulo, sinopse, status')
+    .select('id, titulo, sinopse, status, capa_url, media_avaliacao, contagem_avaliacoes, contagem_visualizacoes')
     .eq('dono_id', perfil.id)
     .eq('status', 'publicado')
     .order('criado_em', { ascending: false })
