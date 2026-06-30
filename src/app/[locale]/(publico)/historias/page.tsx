@@ -10,7 +10,7 @@ const CATEGORIA_LABEL: Record<string, string> = {
   fandom: 'Fandom',
 }
 import { buscarCatalogo, buscarTagsDisponiveis } from '@/lib/historias/queries'
-import { CardHistoria } from '@/components/historia/CardHistoria'
+import CatalogoInfinito from '@/components/historia/CatalogoInfinito'
 
 export default async function CatalogoPage({
   params,
@@ -23,8 +23,7 @@ export default async function CatalogoPage({
   const sp = await searchParams
   const t = await getTranslations('catalogo')
 
-  const pagina = Number(sp.pagina) || 1
-  const { projetos, totalPaginas } = await buscarCatalogo({ busca: sp.busca, tagId: sp.tag, pagina })
+  const { projetos, totalPaginas } = await buscarCatalogo({ busca: sp.busca, tagId: sp.tag, pagina: 1 })
   const tagsAgrupadas = await buscarTagsDisponiveis()
 
   return (
@@ -95,53 +94,17 @@ export default async function CatalogoPage({
         )
       })()}
 
-      {/* Grid */}
+      {/* Grid com scroll infinito */}
       {projetos.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-16 text-center text-sm text-gray-500">{t('semResultados')}</div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {projetos.map((p: Record<string, unknown>) => {
-            const perfil = (Array.isArray(p.perfil) ? p.perfil[0] : p.perfil) as { nome_exibicao?: string; nome_usuario?: string } | null
-            const tags = ((p.projeto_tag as Array<{ tag: { id: string; nome: string } }>) || []).map((pt) => pt.tag)
-            return (
-              <CardHistoria
-                key={p.id as string}
-                titulo={p.titulo as string}
-                autor={perfil?.nome_exibicao || perfil?.nome_usuario || ''}
-                sinopse={p.sinopse as string}
-                tags={tags}
-                avaliacao={p.media_avaliacao as number}
-                capa_url={p.capa_url as string}
-                href={`/${locale}/historia/${p.id}`}
-              />
-            )
-          })}
-        </div>
-      )}
-
-      {/* Paginação */}
-      {totalPaginas > 1 && (
-        <div className="mt-8 flex items-center justify-center gap-4">
-          {pagina > 1 && (
-            <Link
-              href={`/${locale}/historias?pagina=${pagina - 1}${sp.busca ? `&busca=${sp.busca}` : ''}${sp.tag ? `&tag=${sp.tag}` : ''}`}
-              className="rounded-lg border px-4 py-2 hover:bg-gray-50"
-            >
-              {t('anterior')}
-            </Link>
-          )}
-          <span className="text-sm text-gray-600">
-            {t('pagina', { atual: pagina, total: totalPaginas })}
-          </span>
-          {pagina < totalPaginas && (
-            <Link
-              href={`/${locale}/historias?pagina=${pagina + 1}${sp.busca ? `&busca=${sp.busca}` : ''}${sp.tag ? `&tag=${sp.tag}` : ''}`}
-              className="rounded-lg border px-4 py-2 hover:bg-gray-50"
-            >
-              {t('proxima')}
-            </Link>
-          )}
-        </div>
+        <CatalogoInfinito
+          key={`${sp.busca ?? ''}|${sp.tag ?? ''}`}
+          inicial={projetos as React.ComponentProps<typeof CatalogoInfinito>['inicial']}
+          totalPaginas={totalPaginas}
+          busca={sp.busca}
+          tagId={sp.tag}
+        />
       )}
     </div>
   )
