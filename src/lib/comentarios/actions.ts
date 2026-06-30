@@ -64,6 +64,28 @@ function erroComentario(mensagem: string): Error {
   return erroOperacao(mensagem)
 }
 
+/** Recalcula média e contagem de avaliações de um projeto a partir das notas dos comentários. */
+async function recalcularAvaliacaoProjeto(
+  supabase: Awaited<ReturnType<typeof criarClienteServidor>>,
+  projetoId: string,
+) {
+  const { data: stats } = await supabase
+    .from('comentario')
+    .select('nota')
+    .eq('projeto_id', projetoId)
+    .not('nota', 'is', null)
+
+  const total = stats?.length ?? 0
+  const media = total > 0
+    ? Math.round((stats!.reduce((soma, c) => soma + (c.nota as number), 0) / total) * 10) / 10
+    : 0
+
+  await supabase
+    .from('projeto')
+    .update({ media_avaliacao: media, contagem_avaliacoes: total })
+    .eq('id', projetoId)
+}
+
 export async function criarComentario(
   projetoId: string,
   documentoId: string | null,
@@ -112,20 +134,7 @@ export async function criarComentario(
   }
 
   if (notaValidada) {
-    const { data: stats } = await supabase
-      .from('comentario')
-      .select('nota')
-      .eq('projeto_id', projetoIdValidado)
-      .not('nota', 'is', null)
-
-    if (stats) {
-      const total = stats.length
-      const media = stats.reduce((s, c) => s + (c.nota as number), 0) / total
-      await supabase
-        .from('projeto')
-        .update({ media_avaliacao: Math.round(media * 10) / 10, contagem_avaliacoes: total })
-        .eq('id', projetoIdValidado)
-    }
+    await recalcularAvaliacaoProjeto(supabase, projetoIdValidado)
   }
 }
 
@@ -137,7 +146,7 @@ export async function excluirComentario(id: string) {
 
   const { data: comentario } = await supabase
     .from('comentario')
-    .select('autor_id')
+    .select('autor_id, projeto_id, nota')
     .eq('id', comentarioId)
     .single()
 
@@ -145,6 +154,11 @@ export async function excluirComentario(id: string) {
 
   const { error } = await supabase.from('comentario').delete().eq('id', comentarioId)
   if (error) throw erroComentario('Não foi possível excluir o comentário')
+
+  // Mantém a avaliação do projeto consistente ao remover um comentário com nota.
+  if (comentario.nota != null) {
+    await recalcularAvaliacaoProjeto(supabase, comentario.projeto_id as string)
+  }
 }
 
 export async function listarComentarios(projetoId: string, documentoId?: string | null) {
