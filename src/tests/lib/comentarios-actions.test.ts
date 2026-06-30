@@ -41,7 +41,7 @@ describe('Server Actions - Comentários', () => {
   it('criarComentario notifica o dono do projeto usando dono_id', async () => {
     const projetoPublicadoChain = criarChain({ status: 'publicado' })
     const inserirComentarioChain = criarChain(null)
-    const projetoDonoChain = criarChain({ dono_id: 'dono-1' })
+    const projetoDonoChain = criarChain({ dono_id: 'dono-1', titulo: 'Minha Obra' })
 
     mockFrom
       .mockReturnValueOnce(projetoPublicadoChain)
@@ -52,12 +52,13 @@ describe('Server Actions - Comentários', () => {
 
     await criarComentario(PROJETO_ID, null, 'Comentário novo')
 
-    expect(projetoDonoChain.select).toHaveBeenCalledWith('dono_id')
+    expect(projetoDonoChain.select).toHaveBeenCalledWith('dono_id, titulo')
     expect(mockCriarNotificacao).toHaveBeenCalledWith({
       usuario_id: 'dono-1',
       tipo: 'comentario',
       projeto_id: PROJETO_ID,
-      mensagem: 'Novo comentário no seu projeto',
+      documento_id: null,
+      mensagem: 'Novo comentário em "Minha Obra"',
     })
   })
 

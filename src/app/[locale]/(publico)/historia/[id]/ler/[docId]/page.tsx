@@ -5,7 +5,6 @@ import { BookOpen, ChevronLeft, ChevronRight, StickyNote } from 'lucide-react'
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { renderizarConteudoHTML } from '@/lib/historias/renderizar'
 import BarraProgresso from '@/components/leitura/BarraProgresso'
-import HeaderLeitura from '@/components/leitura/HeaderLeitura'
 import BotaoCopiarPix from '@/components/leitura/BotaoCopiarPix'
 import { registrarLeituraAtual } from '@/lib/leitura/actions'
 import { listarNotasDocumento } from '@/lib/documentos/interacoes'
@@ -66,15 +65,8 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
   return (
     <main className="min-h-screen bg-[#f7f7f5] text-gray-950">
       <BarraProgresso />
-      <HeaderLeitura
-        voltarHref={`/${locale}/historia/${id}`}
-        titulo={documento.titulo}
-        capituloAtual={idxAtual + 1}
-        totalCapitulos={lista.length}
-        voltarLabel={t('voltarHistoria')}
-      />
 
-      <section className="border-b border-gray-200 bg-white pt-20">
+      <section className="border-b border-gray-200 bg-white pt-8">
         <div className="mx-auto max-w-3xl px-5 pb-10">
           <Link
             href={`/${locale}/historia/${id}`}
@@ -123,10 +115,6 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
           </section>
         )}
 
-        <section className="mt-12 border-t border-gray-200 pt-6">
-          <ReacoesDocumento documentoId={docId} podeReagir={!!user} />
-        </section>
-
         {perfilAutor?.chave_pix && (
           <section className="mt-10 border-t border-indigo-100 pt-6 text-center">
             <p className="font-medium text-indigo-900">{t('apoiarAutor')}</p>
@@ -157,6 +145,10 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
             </Link>
           ) : <div />}
         </nav>
+
+        <section className="mt-12 border-t border-gray-200 pt-6">
+          <ReacoesDocumento documentoId={docId} podeReagir={!!user} />
+        </section>
 
         <section className="mt-12 border-t border-gray-200 pt-8">
           <ListaComentarios projetoId={id} documentoId={docId} usuarioId={user?.id ?? null} permitirAvaliacao={false} />

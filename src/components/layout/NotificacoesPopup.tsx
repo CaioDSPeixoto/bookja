@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Bell, Mail, MessageSquare } from 'lucide-react'
+import { Bell, Mail, MessageSquare, BookOpen } from 'lucide-react'
 import { listarNotificacoes, marcarComoLida } from '@/lib/notificacoes/actions'
 import { aceitarConvite } from '@/lib/colaboradores/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
+import { hrefNotificacao } from '@/lib/notificacoes/link'
 
-type Notificacao = { id: string; tipo: string; projeto_id: string | null; mensagem: string; lida: boolean; criado_em: string }
+type Notificacao = { id: string; tipo: string; projeto_id: string | null; documento_id: string | null; mensagem: string; lida: boolean; criado_em: string }
 
 function tempoRelativo(data: string) {
   const diff = Date.now() - new Date(data).getTime()
@@ -63,6 +64,19 @@ export default function NotificacoesPopup({ locale }: { locale: string }) {
     setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, lida: true } : x))
   }
 
+  function handleAbrir(n: Notificacao) {
+    setAberto(false)
+    if (n.lida) return
+    setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, lida: true } : x))
+    marcarComoLida(n.id).catch(() => undefined)
+  }
+
+  function icone(tipo: string) {
+    if (tipo === 'convite') return <Mail size={14} />
+    if (tipo === 'novo_capitulo') return <BookOpen size={14} />
+    return <MessageSquare size={14} />
+  }
+
   const naoLidas = notifs.filter(n => !n.lida).length
 
   return (
@@ -85,18 +99,33 @@ export default function NotificacoesPopup({ locale }: { locale: string }) {
             <p className="p-4 text-center text-sm text-gray-500">Nenhuma notificação</p>
           ) : (
             <ul>
-              {notifs.slice(0, 8).map(n => (
-                <li key={n.id} className={`flex items-start gap-2 px-4 py-3 text-sm border-b last:border-0 ${!n.lida ? 'bg-indigo-50' : ''}`}>
-                  <span className="mt-0.5 text-gray-400">{n.tipo === 'convite' ? <Mail size={14}/> : <MessageSquare size={14}/>}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-gray-700 truncate">{n.mensagem}</p>
-                    <span className="text-xs text-gray-400">{tempoRelativo(n.criado_em)}</span>
-                  </div>
-                  {n.tipo === 'convite' && !n.lida && (
-                    <button onClick={() => handleAceitar(n)} className="shrink-0 rounded bg-green-600 px-2 py-0.5 text-xs text-white hover:bg-green-700">Aceitar</button>
-                  )}
-                </li>
-              ))}
+              {notifs.slice(0, 8).map(n => {
+                const href = hrefNotificacao(n, locale)
+                const corpo = (
+                  <>
+                    <span className="mt-0.5 text-gray-400">{icone(n.tipo)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="line-clamp-2 text-gray-700">{n.mensagem}</p>
+                      <span className="text-xs text-gray-400">{tempoRelativo(n.criado_em)}</span>
+                    </div>
+                  </>
+                )
+                const base = `flex items-start gap-2 px-4 py-3 text-sm border-b last:border-0 ${!n.lida ? 'bg-indigo-50' : ''}`
+                return (
+                  <li key={n.id} className="flex items-stretch">
+                    {href ? (
+                      <Link href={href} onClick={() => handleAbrir(n)} className={`${base} flex-1 hover:bg-gray-50`}>
+                        {corpo}
+                      </Link>
+                    ) : (
+                      <div className={`${base} flex-1`}>{corpo}</div>
+                    )}
+                    {n.tipo === 'convite' && !n.lida && (
+                      <button onClick={() => handleAceitar(n)} className="shrink-0 self-center rounded bg-green-600 px-2 py-0.5 text-xs text-white hover:bg-green-700 mr-3">Aceitar</button>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           )}
           <Link href={`/${locale}/notificacoes`} onClick={() => setAberto(false)} className="block border-t px-4 py-2 text-center text-xs font-medium text-indigo-600 hover:bg-gray-50">

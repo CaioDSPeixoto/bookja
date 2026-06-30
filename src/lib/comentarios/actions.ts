@@ -117,7 +117,7 @@ export async function criarComentario(
 
   const { data: projetoDono } = await supabase
     .from('projeto')
-    .select('dono_id')
+    .select('dono_id, titulo')
     .eq('id', projetoIdValidado)
     .single()
 
@@ -126,7 +126,8 @@ export async function criarComentario(
       usuario_id: projetoDono.dono_id,
       tipo: 'comentario',
       projeto_id: projetoIdValidado,
-      mensagem: 'Novo comentário no seu projeto',
+      documento_id: documentoIdValidado,
+      mensagem: `Novo comentário em "${projetoDono.titulo || 'sua história'}"`,
     })
   }
 

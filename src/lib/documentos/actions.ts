@@ -273,10 +273,17 @@ export async function alterarStatusDocumento(id: string, status: StatusDocumento
   }
 
   if (status === 'publicado' && statusAnterior !== 'publicado') {
+    const { data: projeto } = await supabase
+      .from('projeto')
+      .select('titulo')
+      .eq('id', data.projeto_id)
+      .single()
+    const tituloObra = projeto?.titulo || 'uma história que você acompanha'
+    const tituloCapitulo = data.titulo || 'Novo capítulo'
     await notificarFavoritosNovoCapitulo(
       data.projeto_id,
       data.id,
-      `Novo capítulo publicado: ${data.titulo || 'Sem título'}`,
+      `${tituloObra}: novo capítulo "${tituloCapitulo}"`,
     ).catch(() => undefined)
   }
 

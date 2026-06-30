@@ -52,7 +52,6 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
           </div>
           <div className="min-w-0 flex-1 pt-3">
             <h1 className="text-2xl font-bold text-gray-900">{perfil.nome_exibicao || perfil.nome_usuario}</h1>
-            <p className="text-sm text-gray-400">@{perfil.nome_usuario}</p>
             {perfil.bio && <p className="mt-2 text-gray-600">{perfil.bio}</p>}
           </div>
           {ehMeuPerfil ? (

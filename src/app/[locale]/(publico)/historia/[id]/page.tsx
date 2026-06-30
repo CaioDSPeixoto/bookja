@@ -29,7 +29,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
   const colaboradores = ((historia.projeto_colaborador as Array<{ papel: string; aceito_em: string | null; perfil: { nome_usuario: string; nome_exibicao: string } }>) || [])
     .filter((colaborador) => colaborador.aceito_em)
   const tags = ((historia.projeto_tag as Array<{ tag: { id: number; nome: string } }>) || []).map((pt) => pt.tag)
-  const capitulos = historia.documento as Array<{ id: string; titulo: string; ordem: number }>
+  const capitulos = historia.documento as Array<{ id: string; titulo: string; ordem: number; publicado_em: string | null }>
 
   // Progresso de leitura (usuário logado): posição do último capítulo lido.
   let progressoLeitura: { atual: number; total: number; percentual: number; proximoId: string } | null = null
@@ -172,7 +172,14 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
                   <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-50 text-sm font-semibold text-indigo-600">
                     {idx + 1}
                   </span>
-                  <span className="font-medium text-gray-800 group-hover:text-indigo-700">{cap.titulo}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-gray-800 group-hover:text-indigo-700">{cap.titulo}</span>
+                    {cap.publicado_em && (
+                      <span className="text-xs text-gray-400">
+                        {new Date(cap.publicado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </span>
+                    )}
+                  </span>
                 </Link>
               </li>
             ))}

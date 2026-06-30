@@ -103,7 +103,8 @@ describe('Server Actions - Documentos', () => {
       publico: true,
       publicado_em: new Date().toISOString(),
     })
-    mockFrom.mockReturnValueOnce(buscarChain).mockReturnValueOnce(atualizarChain)
+    const projetoChain = setupChain({ titulo: 'Minha Obra' })
+    mockFrom.mockReturnValueOnce(buscarChain).mockReturnValueOnce(atualizarChain).mockReturnValueOnce(projetoChain)
     mockNotificarFavoritosNovoCapitulo.mockResolvedValue(undefined)
     const { alterarStatusDocumento } = await import('@/lib/documentos/actions')
 
@@ -117,7 +118,7 @@ describe('Server Actions - Documentos', () => {
     expect(mockNotificarFavoritosNovoCapitulo).toHaveBeenCalledWith(
       PROJETO_ID,
       DOCUMENTO_ID,
-      'Novo capítulo publicado: Capítulo 1',
+      'Minha Obra: novo capítulo "Capítulo 1"',
     )
   })
 
