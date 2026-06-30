@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Bell, Mail, MessageSquare } from 'lucide-react'
 import { listarNotificacoes, marcarComoLida } from '@/lib/notificacoes/actions'
 import { aceitarConvite } from '@/lib/colaboradores/actions'
+import { criarClienteBrowser } from '@/lib/supabase/client'
 
 type Notificacao = { id: string; tipo: string; projeto_id: string | null; mensagem: string; lida: boolean; criado_em: string }
 
@@ -21,7 +22,6 @@ function tempoRelativo(data: string) {
 export default function NotificacoesPopup({ locale }: { locale: string }) {
   const [aberto, setAberto] = useState(false)
   const [notifs, setNotifs] = useState<Notificacao[]>([])
-  const [carregado, setCarregado] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -32,13 +32,29 @@ export default function NotificacoesPopup({ locale }: { locale: string }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  async function abrir() {
-    setAberto(!aberto)
-    if (!carregado) {
-      const data = await listarNotificacoes()
-      setNotifs(data)
-      setCarregado(true)
+  // Carrega ao montar (badge atualizado) e assina novas notificações em tempo real.
+  useEffect(() => {
+    let ativo = true
+    const supabase = criarClienteBrowser()
+
+    listarNotificacoes().then((data) => { if (ativo) setNotifs(data) })
+
+    const canal = supabase
+      .channel('notificacoes-usuario')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacao' }, (payload) => {
+        const nova = payload.new as Notificacao
+        setNotifs((prev) => (prev.some((n) => n.id === nova.id) ? prev : [nova, ...prev]))
+      })
+      .subscribe()
+
+    return () => {
+      ativo = false
+      void supabase.removeChannel(canal)
     }
+  }, [])
+
+  function abrir() {
+    setAberto((v) => !v)
   }
 
   async function handleAceitar(n: Notificacao) {
