@@ -1,0 +1,115 @@
+# Status do Bookja — planejamento e tratativas
+
+Snapshot do andamento do projeto. Complementa os documentos vivos:
+[ESTADO_DO_PROJETO.md](ESTADO_DO_PROJETO.md) (mapa técnico) e
+[PLANO_IMPLEMENTACAO.md](PLANO_IMPLEMENTACAO.md) (plano da 1ª entrega).
+
+Última atualização: 2026-06-29.
+
+## Resumo executivo
+
+A base funcional do MVP está completa e o foco recente foi **destravar o banco
+remoto, segurança (RLS), usabilidade mobile, padronização visual e correção de
+bugs**. O banco remoto (`ezdtqfmpornhkyilaxlh`) está alinhado às migrations 015→025.
+Não há pendências de **alta prioridade** em aberto; o que resta são validações
+manuais (2 usuários / device físico) e itens de **backlog**.
+
+Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run test`
+(109 testes) e `npm run build` com sucesso.
+
+---
+
+## ✅ Concluído
+
+### Banco remoto e segurança (RLS)
+- Migrations 015/016 aplicadas no remoto (status editorial por capítulo, RPCs de
+  notificação, aprovação de revisão supervisionada) — desbloqueio do `42703`/`PGRST202`.
+- **017** — SELECT público de `documento` exige capítulo publicado em projeto publicado.
+- **018** — dono não pode favoritar a própria história (UI + action + RLS).
+- **019** — SELECT de `comentario`/`comentario_reacao` restrito a conteúdo publicado ou dono/colaborador.
+- **020** — tags duplicadas removidas + índice único case-insensitive.
+- **021** — uma avaliação por usuário por projeto (índice único parcial).
+- **022** — recálculo de avaliação atômico via RPC `recalcular_avaliacao_projeto`.
+- **023** — `data_nascimento` movida para `perfil_privado` (privacidade; coluna pública removida).
+- **024** — `notificacao` no Realtime.
+- **025** — RPC `existe_bloqueio` para bloqueio recíproco.
+- Verificações de RLS feitas com `set role anon` e testes transacionais com rollback.
+
+### Mobile e usabilidade
+- Editor de escrita: sumário vira **drawer** no mobile; toolbar com scroll horizontal; barra inferior compacta.
+- Menu mobile: abre pela direita, com cabeçalho de usuário, ícones e animação; mostra "Meu perfil" e "Sair".
+- "Configurações" passou a ser **"Editar perfil"** acessada pelo perfil (não item de menu solto).
+- Catálogo: filtro de tags **recolhível** (fim do paredão de tags) + **scroll infinito**.
+- Skeletons de carregamento (catálogo, história, perfil).
+
+### Visual
+- Linguagem unificada (cards `rounded-2xl`, sombra, paleta **indigo/violeta**; zero `blue-`).
+- Redesenho de entrar, cadastro, perfil, detalhe da história, home, catálogo, configurações,
+  favoritos, documentos, prévia e componentes (CardHistoria, comentários, mural, reações, popup).
+- Correção de bug de layout: `<html>/<body>` aninhados entre root e locale layout.
+
+### Funcionalidades
+- Perfil: cards de histórias com **capa, nota e visualizações**; cadastro valida nome de usuário.
+- Painel "Meus Projetos": visualizações, nota média e nº de comentários por card.
+- **Progresso de leitura** na página da história (barra + continuar lendo).
+- **PWA** (base): manifest standalone, ícone, theme-color, meta Apple.
+- **Notificações em tempo real** (#19).
+- **Bloqueio entre usuários** (#20): bloquear/desbloquear no perfil; oculta conteúdo de bloqueados; impede post no mural.
+- Correções: avaliação recalculada ao excluir comentário; favoritos despublicados ocultados.
+
+---
+
+## ⏳ Pendente
+
+### Validações manuais (precisam de ambiente real / 2 contas)
+- Fluxo editorial completo com **colaborador** (convite → aceite → aprovar revisão) ponta a ponta no app.
+- **Notificações em tempo real** e de favorito/novo capítulo com duas contas no preview.
+- **Bloqueio (#20)** validado visualmente com duas contas.
+- Passada **visual mobile** ampla em dispositivo físico (telas autenticadas).
+- **E2E (Playwright)** no checkout principal (com `.env.local`).
+
+### Configuração (fora do código)
+- Habilitar **Leaked Password Protection** no dashboard do Supabase (Auth).
+- Sincronizar a `main` **local** no diretório principal (`git stash` + `git pull`) — está atrás do remoto.
+
+---
+
+## 🔭 Ajustes e ideias futuras (backlog)
+
+### Curto prazo (bom retorno)
+- Filtrar **reações** (comentário/mural) por autor bloqueado (hoje só os comentários são ocultados).
+- **PWA offline**: service worker (via `next-pwa`) para cache e prompt de instalação no Android.
+- **Avaliação por estrelas dedicada**, separada do comentário (UX mais clara).
+- Barra de **progresso de leitura no card** (catálogo/biblioteca).
+
+### Médio prazo
+- Busca com **debounce** e por autor/tag combinados.
+- Edição de comentários; denúncia/moderação de conteúdo.
+- Acessibilidade: revisar `aria-label` de botões só de ícone.
+- Substituir tipos manuais do Supabase por tipos gerados pela CLI.
+
+### Maior esforço
+- Edição simultânea real (CRDT/Yjs) no editor.
+- Reordenação transacional de capítulos por RPC.
+- `plataforma_config`: decidir se vira feature flags ou é removida.
+- Internacionalização app-wide quando houver 2º idioma.
+
+---
+
+## Migrations aplicadas no remoto (histórico recente)
+
+`015` status/notificações · `016` aprovação revisão · `017` RLS documento ·
+`018` favorito não-dono · `019` RLS comentário · `020` dedup tags ·
+`021` 1 avaliação/usuário · `022` RPC avaliação · `023` perfil_privado ·
+`024` realtime notificação · `025` helper bloqueio.
+
+Repositório e banco remoto estão sincronizados.
+
+## Como validar
+
+```bash
+npm run lint
+npm run test
+npm run build
+npm run test:e2e   # requer .env.local e navegadores do Playwright
+```

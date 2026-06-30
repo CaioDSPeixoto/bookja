@@ -6,6 +6,7 @@ Stack: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Supabase (
 
 ## Documentação viva do projeto
 
+- Status do projeto (concluído / pendente / futuro): [docs/STATUS.md](docs/STATUS.md).
 - Estado técnico e funcional atual: [docs/ESTADO_DO_PROJETO.md](docs/ESTADO_DO_PROJETO.md).
 - Plano de correções e evolução priorizada: [docs/PLANO_IMPLEMENTACAO.md](docs/PLANO_IMPLEMENTACAO.md).
 
