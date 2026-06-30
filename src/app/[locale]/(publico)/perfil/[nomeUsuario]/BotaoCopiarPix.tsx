@@ -17,7 +17,7 @@ export default function BotaoCopiarPix({ chavePix }: { chavePix: string }) {
   return (
     <div className="flex items-center gap-2">
       <code className="rounded bg-gray-100 px-2 py-1 text-sm">{chavePix}</code>
-      <button onClick={copiar} className="inline-flex items-center gap-1 rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700" aria-label={t('copiarPix')}>
+      <button onClick={copiar} className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-indigo-700" aria-label={t('copiarPix')}>
         {copiado ? <Check size={14} /> : <Copy size={14} />}
         {copiado ? t('pixCopiado') : t('copiarPix')}
       </button>

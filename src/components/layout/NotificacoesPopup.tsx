@@ -70,7 +70,7 @@ export default function NotificacoesPopup({ locale }: { locale: string }) {
           ) : (
             <ul>
               {notifs.slice(0, 8).map(n => (
-                <li key={n.id} className={`flex items-start gap-2 px-4 py-3 text-sm border-b last:border-0 ${!n.lida ? 'bg-blue-50' : ''}`}>
+                <li key={n.id} className={`flex items-start gap-2 px-4 py-3 text-sm border-b last:border-0 ${!n.lida ? 'bg-indigo-50' : ''}`}>
                   <span className="mt-0.5 text-gray-400">{n.tipo === 'convite' ? <Mail size={14}/> : <MessageSquare size={14}/>}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-gray-700 truncate">{n.mensagem}</p>

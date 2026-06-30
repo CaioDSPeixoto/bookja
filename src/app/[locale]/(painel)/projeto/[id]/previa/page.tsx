@@ -52,7 +52,7 @@ export default async function PreviaPage({
         ))}
 
         {capitulos.length === 0 && (
-          <p className="text-center text-gray-400">{t('semCapitulos')}</p>
+          <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-16 text-center font-sans text-sm text-gray-500">{t('semCapitulos')}</div>
         )}
       </main>
     </div>

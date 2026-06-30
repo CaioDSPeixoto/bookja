@@ -31,7 +31,7 @@ export function Reacoes({ comentarioId }: ReacoesProps) {
           key={emoji}
           onClick={() => handleReagir(emoji)}
           className={`rounded-full border px-2 py-0.5 text-xs transition ${
-            reagiu ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+            reagiu ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-200 hover:bg-gray-50'
           }`}
         >
           {emoji} {contagem}

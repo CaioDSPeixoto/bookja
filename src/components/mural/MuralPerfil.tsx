@@ -120,12 +120,12 @@ export default function MuralPerfil({
             value={novoTexto}
             onChange={(e) => setNovoTexto(e.target.value)}
             placeholder={t('placeholder')}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="flex-1 rounded-lg border border-gray-300 bg-gray-50/60 px-4 py-2.5 text-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           />
           <button
             type="submit"
             disabled={!novoTexto.trim() || isPending}
-            className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow disabled:opacity-50"
           >
             <Send size={14} />
             {t('enviar')}
@@ -145,14 +145,14 @@ export default function MuralPerfil({
             const reacoesAgrupadas = getReacoesAgrupadas(c.id)
             const respostasDoComentario = respostas.filter(r => r.pai_id === c.id)
             return (
-              <li key={c.id} className="rounded-lg border border-gray-200 bg-white p-4">
+              <li key={c.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white">
                       {(autor?.nome_exibicao || autor?.nome_usuario || '?').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <Link href={`/${locale}/perfil/${autor?.nome_usuario}`} className="text-sm font-medium hover:text-blue-600 hover:underline">{autor?.nome_exibicao || autor?.nome_usuario}</Link>
+                      <Link href={`/${locale}/perfil/${autor?.nome_usuario}`} className="text-sm font-medium hover:text-indigo-600 hover:underline">{autor?.nome_exibicao || autor?.nome_usuario}</Link>
                       <span className="ml-2 text-xs text-gray-400">{tempoRelativo(c.criado_em)}</span>
                     </div>
                   </div>
@@ -218,7 +218,7 @@ export default function MuralPerfil({
                       return (
                         <li key={r.id} className="flex items-start justify-between">
                           <div>
-                            <Link href={`/${locale}/perfil/${autorR?.nome_usuario}`} className="text-xs font-medium hover:text-blue-600 hover:underline">{autorR?.nome_exibicao || autorR?.nome_usuario}</Link>
+                            <Link href={`/${locale}/perfil/${autorR?.nome_usuario}`} className="text-xs font-medium hover:text-indigo-600 hover:underline">{autorR?.nome_exibicao || autorR?.nome_usuario}</Link>
                             <span className="ml-1 text-xs text-gray-400">{tempoRelativo(r.criado_em)}</span>
                             <p className="text-sm text-gray-600">{r.conteudo}</p>
                           </div>
@@ -240,13 +240,13 @@ export default function MuralPerfil({
                       value={textoResposta}
                       onChange={(e) => setTextoResposta(e.target.value)}
                       placeholder={t('placeholderResposta')}
-                      className="flex-1 rounded border border-gray-200 px-3 py-1.5 text-sm focus:border-indigo-400 focus:outline-none"
+                      className="flex-1 rounded-lg border border-gray-300 bg-gray-50/60 px-3 py-1.5 text-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                       onKeyDown={(e) => { if (e.key === 'Enter') handleResponder(c.id) }}
                     />
                     <button
                       onClick={() => handleResponder(c.id)}
                       disabled={!textoResposta.trim()}
-                      className="rounded bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700 disabled:opacity-50"
+                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
                     >
                       <Send size={12} />
                     </button>

@@ -79,7 +79,7 @@ export default function NotificacoesPage() {
         <button
           onClick={handleMarcarTodas}
           disabled={pending}
-          className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+          className="text-sm font-medium text-indigo-600 hover:underline disabled:opacity-50"
         >
           {t('marcarTodasLidas')}
         </button>
@@ -88,7 +88,7 @@ export default function NotificacoesPage() {
         {notificacoes.map(n => (
           <div
             key={n.id}
-            className={`flex items-center gap-3 rounded-lg border p-4 ${!n.lida ? 'border-blue-200 bg-blue-50' : ''}`}
+            className={`flex items-center gap-3 rounded-xl border p-4 transition-colors ${!n.lida ? 'border-indigo-200 bg-indigo-50' : 'border-gray-100 bg-white shadow-sm'}`}
           >
             <div className="shrink-0 text-gray-500"><Icone tipo={n.tipo} /></div>
             <div className="min-w-0 flex-1">

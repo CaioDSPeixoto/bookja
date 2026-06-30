@@ -29,32 +29,34 @@ export default async function DocumentosPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('titulo')}</h1>
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">{t('titulo')}</h1>
         <NovoDocumentoForm projetoId={projetoId} locale={locale} />
       </div>
 
       {documentos.length === 0 ? (
-        <p className="text-center text-gray-500">{t('semDocumentos')}</p>
+        <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center text-sm text-gray-500">{t('semDocumentos')}</div>
       ) : (
         <ul className="space-y-2">
           {documentos.map((doc, index) => (
             <li
               key={doc.id}
-              className="flex items-center justify-between rounded border border-gray-200 p-4 hover:bg-gray-50"
+              className="flex items-center justify-between gap-2 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-colors hover:border-indigo-200"
             >
               <Link
                 href={`/${locale}/projeto/${projetoId}/doc/${doc.id}`}
-                className="flex flex-1 items-center gap-3"
+                className="group flex min-w-0 flex-1 items-center gap-3"
               >
-                <FileText size={20} className="text-gray-400" />
-                <div>
-                  <p className="font-medium">{doc.titulo}</p>
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500">
+                  <FileText size={18} />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-gray-800 group-hover:text-indigo-700">{doc.titulo}</p>
                   <p className="text-sm text-gray-500">{tipoLabel[doc.tipo] ?? doc.tipo}</p>
                 </div>
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-shrink-0 items-center gap-2">
                 {doc.publico ? (
                   <span title={t('publico')}><Globe size={16} className="text-green-600" /></span>
                 ) : (
