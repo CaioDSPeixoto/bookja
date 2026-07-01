@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { Loader2, Plus, X, Tag, Users } from 'lucide-react'
+import { AlertCircle, Loader2, Plus, X, Tag, Users } from 'lucide-react'
 import { criarProjeto } from '@/lib/projetos/actions'
 import { convidarColaborador } from '@/lib/colaboradores/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
@@ -17,6 +17,8 @@ export default function NovoProjetoPage() {
   const router = useRouter()
   const locale = useLocale()
   const [enviando, setEnviando] = useState(false)
+  const [erro, setErro] = useState('')
+  const projetoCriadoRef = useRef<string | null>(null)
 
   // Tags
   const [tags, setTags] = useState<TagItem[]>([])
@@ -56,24 +58,42 @@ export default function NovoProjetoPage() {
       return
     }
     setErroClassificacao(false)
+    setErro('')
     setEnviando(true)
     const formData = new FormData(e.currentTarget)
     try {
-      const id = await criarProjeto(formData)
+      // Não recria o projeto se já foi criado numa tentativa anterior (ex.: convite falhou).
+      let id = projetoCriadoRef.current
+      if (!id) {
+        id = await criarProjeto(formData)
+        projetoCriadoRef.current = id
 
-      if (tagsSelecionadas.length > 0) {
-        const supabase = criarClienteBrowser()
-        await supabase.from('projeto_tag').insert(
-          tagsSelecionadas.map(tagId => ({ projeto_id: id, tag_id: tagId }))
-        )
+        if (tagsSelecionadas.length > 0) {
+          const supabase = criarClienteBrowser()
+          await supabase.from('projeto_tag').insert(
+            tagsSelecionadas.map(tagId => ({ projeto_id: id!, tag_id: tagId }))
+          )
+        }
       }
 
+      const falhas: string[] = []
       for (const c of colaboradores) {
-        await convidarColaborador(id, c.nomeUsuario, c.papel)
+        try {
+          await convidarColaborador(id, c.nomeUsuario, c.papel)
+        } catch {
+          falhas.push(c.nomeUsuario)
+        }
+      }
+
+      if (falhas.length > 0) {
+        setErro(`Projeto criado, mas não foi possível convidar: ${falhas.join(', ')}. Verifique o nome de usuário (sem espaços/@) e tente novamente, ou gerencie depois em Colaboradores.`)
+        setEnviando(false)
+        return
       }
 
       router.push(`/${locale}/projeto/${id}/editar`)
-    } catch {
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Não foi possível criar o projeto')
       setEnviando(false)
     }
   }
@@ -189,6 +209,13 @@ export default function NovoProjetoPage() {
               </ul>
             )}
           </div>
+
+          {erro && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              <span>{erro}</span>
+            </div>
+          )}
 
           <button
             type="submit"
