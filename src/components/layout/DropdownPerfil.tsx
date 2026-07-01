@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { User, LogOut, ChevronDown } from 'lucide-react'
+import { User, ChevronDown } from 'lucide-react'
+import BotaoSair from './BotaoSair'
 
 interface Props {
   nomeUsuario: string
@@ -55,9 +56,7 @@ export default function DropdownPerfil({ nomeUsuario, nomeExibicao, email, local
           </Link>
           <div className="border-t" />
           <form action={sairAction}>
-            <button className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-              <LogOut className="h-4 w-4" /> Sair
-            </button>
+            <BotaoSair label="Sair" className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-60" />
           </form>
         </div>
       )}

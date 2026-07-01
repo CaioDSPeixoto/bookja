@@ -46,6 +46,8 @@ function setupChain(dados: unknown = null, erro: unknown = null) {
 describe('Server Actions - Documentos', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // clearAllMocks não limpa a fila de mockReturnValueOnce; reset garante isolamento entre testes.
+    mockFrom.mockReset()
     mockObterUsuarioAutenticado.mockResolvedValue({ id: 'user-123' })
     mockVerificarAcessoProjeto.mockResolvedValue(undefined)
   })
@@ -171,5 +173,18 @@ describe('Server Actions - Documentos', () => {
     await expect(
       atualizarDocumento(DOCUMENTO_ID, { titulo: 'Novo título' }),
     ).rejects.toThrow('Não foi possível atualizar o documento')
+  })
+
+  it('atualizarDocumento aceita conteúdo com undefined e o normaliza (não quebra o autosave)', async () => {
+    const buscarChain = setupChain({ projeto_id: PROJETO_ID })
+    const atualizarChain = setupChain({ id: DOCUMENTO_ID })
+    mockFrom.mockReturnValueOnce(buscarChain).mockReturnValueOnce(atualizarChain)
+    const { atualizarDocumento } = await import('@/lib/documentos/actions')
+
+    const conteudo = { type: 'doc', content: [{ type: 'text', text: 'x', attrs: undefined }] }
+    await atualizarDocumento(DOCUMENTO_ID, { conteudo: conteudo as never })
+
+    const enviado = (atualizarChain.update.mock.calls[0][0] as { conteudo: unknown }).conteudo
+    expect(enviado).toEqual({ type: 'doc', content: [{ type: 'text', text: 'x' }] })
   })
 })
