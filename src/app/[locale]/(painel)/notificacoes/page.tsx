@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Bell, Mail, MessageSquare, BookOpen, Check } from 'lucide-react'
+import { Bell, Mail, MessageSquare, BookOpen, Check, Loader2, RefreshCw } from 'lucide-react'
 import { listarNotificacoes, marcarComoLida, marcarTodasComoLidas } from '@/lib/notificacoes/actions'
 import { aceitarConvite } from '@/lib/colaboradores/actions'
 import { hrefNotificacao } from '@/lib/notificacoes/link'
@@ -41,13 +42,28 @@ function Icone({ tipo }: { tipo: string }) {
 export default function NotificacoesPage() {
   const t = useTranslations('notificacoes')
   const locale = useLocale()
+  const router = useRouter()
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [aceitos, setAceitos] = useState<Set<string>>(new Set())
+  const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState('')
   const [pending, startTransition] = useTransition()
 
   useEffect(() => {
-    listarNotificacoes().then(setNotificacoes)
+    carregar()
   }, [])
+
+  async function carregar() {
+    setErro('')
+    setCarregando(true)
+    try {
+      setNotificacoes(await listarNotificacoes())
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : 'Não foi possível carregar notificações')
+    } finally {
+      setCarregando(false)
+    }
+  }
 
   function handleMarcarTodas() {
     startTransition(async () => {
@@ -58,10 +74,16 @@ export default function NotificacoesPage() {
 
   function handleAceitar(n: Notificacao) {
     startTransition(async () => {
-      await aceitarConvite(n.projeto_id!)
-      await marcarComoLida(n.id)
-      setAceitos(prev => new Set(prev).add(n.id))
-      setNotificacoes(prev => prev.map(x => x.id === n.id ? { ...x, lida: true } : x))
+      setErro('')
+      try {
+        await aceitarConvite(n.projeto_id!)
+        await marcarComoLida(n.id)
+        setAceitos(prev => new Set(prev).add(n.id))
+        setNotificacoes(prev => prev.map(x => x.id === n.id ? { ...x, lida: true } : x))
+        router.push(`/${locale}/projeto/${n.projeto_id}/escrita`)
+      } catch (error) {
+        setErro(error instanceof Error ? error.message : 'Não foi possível aceitar o convite')
+      }
     })
   }
 
@@ -71,13 +93,14 @@ export default function NotificacoesPage() {
     marcarComoLida(n.id).catch(() => undefined)
   }
 
-  if (!notificacoes.length) {
+  const naoLidas = notificacoes.filter((notificacao) => !notificacao.lida).length
+
+  if (carregando) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="mb-6 text-2xl font-bold">{t('titulo')}</h1>
-        <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-          <Bell size={48} className="mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-600">{t('vazio')}</p>
+        <div className="flex justify-center rounded-xl border border-gray-200 bg-white py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
         </div>
       </div>
     )
@@ -85,16 +108,45 @@ export default function NotificacoesPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('titulo')}</h1>
-        <button
-          onClick={handleMarcarTodas}
-          disabled={pending}
-          className="text-sm font-medium text-indigo-600 hover:underline disabled:opacity-50"
-        >
-          {t('marcarTodasLidas')}
-        </button>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">{t('titulo')}</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {naoLidas > 0 ? `${naoLidas} não lida${naoLidas === 1 ? '' : 's'}` : 'Tudo em dia'}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={carregar}
+            disabled={pending || carregando}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            <RefreshCw size={14} />
+            Atualizar
+          </button>
+          <button
+            onClick={handleMarcarTodas}
+            disabled={pending || naoLidas === 0}
+            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {t('marcarTodasLidas')}
+          </button>
+        </div>
       </div>
+
+      {erro && (
+        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          {erro}
+        </div>
+      )}
+
+      {!notificacoes.length ? (
+        <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
+          <Bell size={48} className="mx-auto mb-4 text-gray-400" />
+          <p className="text-gray-600">{t('vazio')}</p>
+        </div>
+      ) : null}
+
       <div className="space-y-2">
         {notificacoes.map(n => {
           const href = hrefNotificacao(n, locale)
@@ -111,9 +163,9 @@ export default function NotificacoesPage() {
               </div>
             </>
           )
-          const classe = `flex items-center gap-3 rounded-xl border p-4 transition-colors ${!n.lida ? 'border-indigo-200 bg-indigo-50' : 'border-gray-100 bg-white shadow-sm'}`
+          const classe = `flex items-start gap-3 rounded-xl border p-4 transition-colors ${!n.lida ? 'border-indigo-200 bg-indigo-50' : 'border-gray-100 bg-white shadow-sm'}`
           return (
-            <div key={n.id} className="flex items-stretch gap-2">
+            <div key={n.id} className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
               {href ? (
                 <Link href={href} onClick={() => handleAbrir(n)} className={`${classe} flex-1 hover:border-indigo-300`}>
                   {conteudo}
@@ -125,9 +177,9 @@ export default function NotificacoesPage() {
                 <button
                   onClick={() => handleAceitar(n)}
                   disabled={pending}
-                  className="shrink-0 self-center rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+                  className="inline-flex shrink-0 items-center justify-center rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 sm:self-center"
                 >
-                  {t('aceitar')}
+                  {pending ? 'Aceitando...' : 'Aceitar e abrir'}
                 </button>
               )}
               {aceitos.has(n.id) && (

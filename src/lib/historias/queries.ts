@@ -85,7 +85,15 @@ export async function buscarHistoriaPublica(id: string) {
   const tags = ((data.projeto_tag || []) as Array<{ tag: TagClassificacao }>).map(pt => pt.tag)
   if (!permitePorIdade(tags, idadeUsuario)) return null
 
-  const documentosPublicos = (data.documento as Array<{ id: string; titulo: string; tipo: string; publico: boolean; status?: string; ordem: number }>)
+  const documentosPublicos = (data.documento as Array<{
+    id: string
+    titulo: string
+    tipo: string
+    publico: boolean
+    status?: string
+    ordem: number
+    publicado_em: string | null
+  }>)
     .filter((d) => d.publico && (d.status ?? 'publicado') === 'publicado')
     .sort((a, b) => a.ordem - b.ordem)
 

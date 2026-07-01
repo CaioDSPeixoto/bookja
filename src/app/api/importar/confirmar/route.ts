@@ -9,6 +9,7 @@ import {
   responderErroInterno,
   validarUuid,
 } from '@/lib/api/respostas'
+import { MAX_CAPITULOS_IMPORTACAO } from '@/lib/importacao/limites'
 import { registrarErroInterno } from '@/lib/observabilidade/logger'
 import { verificarAcessoProjeto } from '@/lib/projetos/acesso'
 import { criarClienteServidor } from '@/lib/supabase/server'
@@ -17,6 +18,11 @@ import type { Json } from '@/types/database'
 interface Capitulo {
   titulo: string
   conteudo: Json | null
+}
+
+function normalizarTitulo(valor: string, indice: number): string {
+  const titulo = valor.trim().slice(0, 140)
+  return titulo || `Capítulo ${indice + 1}`
 }
 
 function validarCapitulo(valor: unknown): valor is Capitulo {
@@ -48,6 +54,10 @@ export async function POST(request: NextRequest) {
       return responderErro('Nenhum capítulo válido para importar', 400)
     }
 
+    if (capitulos.length > MAX_CAPITULOS_IMPORTACAO) {
+      return responderErro(`Importe no máximo ${MAX_CAPITULOS_IMPORTACAO} capítulos por vez`, 400)
+    }
+
     try {
       await verificarAcessoProjeto(supabase, projetoId, user.id)
     } catch (error) {
@@ -68,10 +78,12 @@ export async function POST(request: NextRequest) {
 
     const documentos = capitulos.map((cap, indice) => ({
       projeto_id: projetoId,
-      titulo: cap.titulo || `Capítulo ${ordemInicial + indice}`,
+      titulo: normalizarTitulo(cap.titulo, ordemInicial + indice - 1),
       tipo: 'capitulo' as const,
       conteudo: cap.conteudo,
       ordem: ordemInicial + indice,
+      publico: false,
+      status: 'rascunho' as const,
     }))
 
     const { data, error } = await supabase

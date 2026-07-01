@@ -20,6 +20,7 @@ function setupChain(dados: unknown = null, erro: unknown = null) {
     update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    not: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     single: vi.fn(() => ({ data: dados, error: erro })),
@@ -38,14 +39,52 @@ describe('Server Actions - Projetos (lógica de validação)', () => {
   })
 
   it('listarProjetos usa o id do usuário autenticado', async () => {
-    const chain = setupChain([])
+    const meusProjetosChain = setupChain([])
+    const colaboracoesChain = setupChain([])
+    mockFrom.mockReturnValueOnce(meusProjetosChain).mockReturnValueOnce(colaboracoesChain)
     const { listarProjetos } = await import('@/lib/projetos/actions')
 
     await listarProjetos()
 
-    expect(mockFrom).toHaveBeenCalledWith('projeto')
-    expect(chain.select).toHaveBeenCalled()
-    expect(chain.eq).toHaveBeenCalledWith('dono_id', 'user-123')
+    expect(mockFrom).toHaveBeenNthCalledWith(1, 'projeto')
+    expect(mockFrom).toHaveBeenNthCalledWith(2, 'projeto_colaborador')
+    expect(meusProjetosChain.select).toHaveBeenCalled()
+    expect(meusProjetosChain.eq).toHaveBeenCalledWith('dono_id', 'user-123')
+    expect(colaboracoesChain.eq).toHaveBeenCalledWith('usuario_id', 'user-123')
+    expect(colaboracoesChain.not).toHaveBeenCalledWith('aceito_em', 'is', null)
+  })
+
+  it('listarProjetos inclui projetos aceitos como colaborador', async () => {
+    const meusProjetosChain = setupChain([
+      { id: 'projeto-dono', titulo: 'Meu livro', criado_em: '2026-01-01T00:00:00.000Z' },
+    ])
+    const colaboracoesChain = setupChain([
+      {
+        papel: 'coautor',
+        projeto: {
+          id: 'projeto-colab',
+          titulo: 'Livro compartilhado',
+          criado_em: '2026-02-01T00:00:00.000Z',
+        },
+      },
+    ])
+    mockFrom.mockReturnValueOnce(meusProjetosChain).mockReturnValueOnce(colaboracoesChain)
+    const { listarProjetos } = await import('@/lib/projetos/actions')
+
+    const resultado = await listarProjetos()
+
+    expect(resultado).toEqual([
+      expect.objectContaining({
+        id: 'projeto-colab',
+        tipo_acesso: 'colaborador',
+        papel_colaborador: 'coautor',
+      }),
+      expect.objectContaining({
+        id: 'projeto-dono',
+        tipo_acesso: 'dono',
+        papel_colaborador: null,
+      }),
+    ])
   })
 
   it('excluirProjeto verifica propriedade antes de deletar', async () => {

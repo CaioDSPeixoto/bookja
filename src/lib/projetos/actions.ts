@@ -200,7 +200,7 @@ export async function excluirProjeto(id: string, locale: string) {
 export async function listarProjetos() {
   const { supabase, user } = await obterUsuarioOuErro()
 
-  const { data, error } = await supabase
+  const { data: meusProjetos, error } = await supabase
     .from('projeto')
     .select('*, documento(count), comentario(count)')
     .eq('dono_id', user.id)
@@ -209,7 +209,33 @@ export async function listarProjetos() {
   if (error) {
     return []
   }
-  return data ?? []
+
+  const { data: colaboracoes } = await supabase
+    .from('projeto_colaborador')
+    .select('papel, projeto:projeto_id(*, documento(count), comentario(count))')
+    .eq('usuario_id', user.id)
+    .not('aceito_em', 'is', null)
+
+  const projetosColaborando = (colaboracoes || [])
+    .map((colaboracao) => {
+      const projeto = Array.isArray(colaboracao.projeto) ? colaboracao.projeto[0] : colaboracao.projeto
+      if (!projeto) return null
+      return {
+        ...projeto,
+        tipo_acesso: 'colaborador' as const,
+        papel_colaborador: colaboracao.papel,
+      }
+    })
+    .filter((projeto): projeto is NonNullable<typeof projeto> => Boolean(projeto))
+
+  const projetosDoUsuario = (meusProjetos || []).map((projeto) => ({
+    ...projeto,
+    tipo_acesso: 'dono' as const,
+    papel_colaborador: null,
+  }))
+
+  return [...projetosDoUsuario, ...projetosColaborando]
+    .sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
 }
 
 export async function obterProjeto(id: string) {

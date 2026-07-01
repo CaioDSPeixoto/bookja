@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import { Upload, FileText, Check, X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { MAX_CAPITULOS_IMPORTACAO, TAMANHO_MAXIMO_ARQUIVO_IMPORTACAO } from '@/lib/importacao/limites'
 
 interface CapituloPreview {
   titulo: string
@@ -37,6 +38,11 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
       return
     }
 
+    if (arquivo.size > TAMANHO_MAXIMO_ARQUIVO_IMPORTACAO) {
+      setErro('Arquivo excede o limite de 5MB')
+      return
+    }
+
     setErro('')
     setCarregando(true)
     setNomeArquivo(arquivo.name)
@@ -55,10 +61,18 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
         return
       }
 
-      setCapitulos(json.dados.capitulos.map((c: { titulo: string; conteudo: unknown }) => ({
+      const capitulosProcessados = json.dados.capitulos.map((c: { titulo: string; conteudo: unknown }) => ({
         ...c,
+        titulo: c.titulo?.trim() || 'Capítulo sem título',
         selecionado: true,
-      })))
+      }))
+
+      if (capitulosProcessados.length > MAX_CAPITULOS_IMPORTACAO) {
+        setErro(`O arquivo gerou ${capitulosProcessados.length} capítulos. Importe no máximo ${MAX_CAPITULOS_IMPORTACAO} por vez.`)
+        return
+      }
+
+      setCapitulos(capitulosProcessados)
       setEtapa('preview')
     } catch {
       setErro(t('erroProcessar'))
@@ -76,7 +90,12 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
   }
 
   async function handleConfirmar() {
-    const selecionados = capitulos.filter(c => c.selecionado)
+    const selecionados = capitulos
+      .filter(c => c.selecionado)
+      .map((capitulo, indice) => ({
+        ...capitulo,
+        titulo: capitulo.titulo.trim() || `Capítulo ${indice + 1}`,
+      }))
     if (selecionados.length === 0) return
 
     setEtapa('importando')
@@ -106,6 +125,7 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
   }
 
   const selecionadosCount = capitulos.filter(c => c.selecionado).length
+  const todosSelecionados = capitulos.length > 0 && selecionadosCount === capitulos.length
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -120,7 +140,7 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
       <h1 className="mb-2 text-3xl font-bold text-gray-900">{t('titulo')}</h1>
       <p className="mb-8 text-gray-500">{t('descricao')}</p>
       <p className="mb-6 rounded-md border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
-        Os capítulos importados entram como rascunho. Depois você pode revisar, solicitar revisão supervisionada ou publicar cada capítulo no editor.
+        Os capítulos importados entram como rascunho. Depois você revisa, solicita revisão supervisionada ou publica cada capítulo no editor. Limites: EPUB/DOCX até 5MB e até {MAX_CAPITULOS_IMPORTACAO} capítulos por importação.
       </p>
 
       {/* Etapa: Upload */}
@@ -128,7 +148,7 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
         <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center transition-colors hover:border-indigo-300 hover:bg-indigo-50/30">
           <Upload size={48} className="mx-auto mb-4 text-gray-400" />
           <p className="mb-2 text-lg font-medium text-gray-700">{t('arrasteOuClique')}</p>
-          <p className="mb-6 text-sm text-gray-400">{t('formatosAceitos')}</p>
+          <p className="mb-6 text-sm text-gray-400">{t('formatosAceitos')} · até 5MB</p>
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md">
             <Upload size={16} />
             {t('selecionarArquivo')}
@@ -165,15 +185,15 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
             </button>
           </div>
 
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm text-gray-500">
               {t('selecionados', { count: selecionadosCount, total: capitulos.length })}
             </span>
             <button
-              onClick={() => setCapitulos(prev => prev.map(c => ({ ...c, selecionado: true })))}
+              onClick={() => setCapitulos(prev => prev.map(c => ({ ...c, selecionado: !todosSelecionados })))}
               className="text-sm text-indigo-600 hover:text-indigo-700"
             >
-              {t('selecionarTodos')}
+              {todosSelecionados ? 'Desmarcar todos' : t('selecionarTodos')}
             </button>
           </div>
 
@@ -196,11 +216,15 @@ export default function ImportarPage({ params }: { params: Promise<{ id: string 
                 >
                   {cap.selecionado && <Check size={12} />}
                 </button>
-                <input
-                  value={cap.titulo}
-                  onChange={(e) => editarTitulo(idx, e.target.value)}
-                  className="flex-1 rounded border-0 bg-transparent px-2 py-1 text-sm font-medium text-gray-800 focus:bg-white focus:ring-2 focus:ring-indigo-200"
-                />
+                <div className="min-w-0 flex-1">
+                  <input
+                    value={cap.titulo}
+                    onChange={(e) => editarTitulo(idx, e.target.value)}
+                    maxLength={140}
+                    className="w-full rounded border-0 bg-transparent px-2 py-1 text-sm font-medium text-gray-800 focus:bg-white focus:ring-2 focus:ring-indigo-200"
+                  />
+                  {!cap.titulo.trim() && <span className="px-2 text-xs text-amber-600">Será importado como capítulo sem título</span>}
+                </div>
                 <span className="text-xs text-gray-400">#{idx + 1}</span>
               </li>
             ))}

@@ -38,12 +38,21 @@ function validarIdUsuario(usuarioId: unknown): string {
 }
 
 function normalizarNomeUsuario(nomeUsuario: unknown): string {
-  const nome = typeof nomeUsuario === 'string' ? nomeUsuario.trim() : ''
+  const nome = typeof nomeUsuario === 'string' ? nomeUsuario.trim().replace(/^@+/, '') : ''
   if (!nome) {
     throw erroPublico('Nome de usuário obrigatório')
   }
 
   return nome
+}
+
+function normalizarBuscaUsuario(termo: unknown): string {
+  const busca = typeof termo === 'string' ? termo.trim().replace(/^@+/, '') : ''
+  if (busca.length < 2) {
+    throw erroPublico('Digite pelo menos 2 caracteres')
+  }
+
+  return busca.replaceAll('%', '').replaceAll('_', '').slice(0, 40)
 }
 
 function validarPapelColaborador(papel: unknown): PapelColaborador {
@@ -67,11 +76,23 @@ export async function convidarColaborador(projetoId: string, nomeUsuario: string
 
   const { data: convidado } = await supabase
     .from('perfil')
-    .select('id')
+    .select('id, nome_usuario, nome_exibicao, avatar_url')
     .eq('nome_usuario', nomeUsuarioValidado)
     .single()
 
   if (!convidado) throw erroPublico('Usuário não encontrado')
+  if (convidado.id === user.id) throw erroPublico('Você já é o dono do projeto')
+
+  const { data: existente } = await supabase
+    .from('projeto_colaborador')
+    .select('usuario_id')
+    .eq('projeto_id', projetoIdValidado)
+    .eq('usuario_id', convidado.id)
+    .maybeSingle()
+
+  if (existente) throw erroPublico('Este usuário já foi convidado')
+
+  const convidadoEm = new Date().toISOString()
 
   const { error } = await supabase
     .from('projeto_colaborador')
@@ -79,7 +100,7 @@ export async function convidarColaborador(projetoId: string, nomeUsuario: string
       projeto_id: projetoIdValidado,
       usuario_id: convidado.id,
       papel: papelValidado,
-      convidado_em: new Date().toISOString(),
+      convidado_em: convidadoEm,
     })
 
   if (error) throw erroColaborador('Não foi possível convidar o colaborador')
@@ -96,6 +117,43 @@ export async function convidarColaborador(projetoId: string, nomeUsuario: string
     projeto_id: projetoIdValidado,
     mensagem: projeto?.titulo || 'Projeto',
   })
+
+  return {
+    usuario_id: convidado.id,
+    papel: papelValidado,
+    convidado_em: convidadoEm,
+    aceito_em: null,
+    perfil: {
+      nome_usuario: convidado.nome_usuario,
+      nome_exibicao: convidado.nome_exibicao,
+      avatar_url: convidado.avatar_url,
+    },
+  }
+}
+
+export async function buscarUsuariosParaConvite(projetoId: string, termo: string) {
+  const { supabase, user } = await obterUsuarioOuErro()
+  const projetoIdValidado = validarIdProjeto(projetoId)
+  const busca = normalizarBuscaUsuario(termo)
+  await verificarDono(supabase, projetoIdValidado, user.id)
+
+  const { data: convidados } = await supabase
+    .from('projeto_colaborador')
+    .select('usuario_id')
+    .eq('projeto_id', projetoIdValidado)
+
+  const idsConvidados = new Set((convidados || []).map((item) => item.usuario_id))
+  idsConvidados.add(user.id)
+
+  const { data, error } = await supabase
+    .from('perfil')
+    .select('id, nome_usuario, nome_exibicao, avatar_url')
+    .or(`nome_usuario.ilike.%${busca}%,nome_exibicao.ilike.%${busca}%`)
+    .limit(8)
+
+  if (error) throw erroColaborador('Não foi possível buscar usuários')
+
+  return (data || []).filter((perfil) => !idsConvidados.has(perfil.id))
 }
 
 export async function removerColaborador(projetoId: string, usuarioId: string) {

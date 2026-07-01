@@ -30,7 +30,10 @@ function criarChain(dados: unknown = null, erro: unknown = null) {
     update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     single: vi.fn(() => ({ data: dados, error: erro })),
+    maybeSingle: vi.fn(() => ({ data: dados, error: erro })),
     get data() { return dados },
     get error() { return erro },
   }
@@ -62,11 +65,18 @@ describe('Server Actions - Colaboradores', () => {
   })
 
   it('convidarColaborador normaliza nome e cria convite', async () => {
-    const perfilChain = criarChain({ id: USUARIO_ID })
+    const perfilChain = criarChain({
+      id: USUARIO_ID,
+      nome_usuario: 'caio',
+      nome_exibicao: 'Caio',
+      avatar_url: null,
+    })
+    const existenteChain = criarChain(null)
     const conviteChain = criarChain(null)
     const projetoChain = criarChain({ titulo: 'Livro' })
     mockFrom
       .mockReturnValueOnce(perfilChain)
+      .mockReturnValueOnce(existenteChain)
       .mockReturnValueOnce(conviteChain)
       .mockReturnValueOnce(projetoChain)
 
@@ -89,15 +99,46 @@ describe('Server Actions - Colaboradores', () => {
     })
   })
 
+  it('convidarColaborador rejeita usuário já convidado', async () => {
+    const perfilChain = criarChain({ id: USUARIO_ID })
+    const existenteChain = criarChain({ usuario_id: USUARIO_ID })
+    mockFrom.mockReturnValueOnce(perfilChain).mockReturnValueOnce(existenteChain)
+
+    const { convidarColaborador } = await import('@/lib/colaboradores/actions')
+
+    await expect(convidarColaborador(PROJETO_ID, 'caio', 'coautor')).rejects.toThrow(
+      'Este usuário já foi convidado',
+    )
+  })
+
   it('convidarColaborador não expõe erro técnico do banco', async () => {
     const perfilChain = criarChain({ id: USUARIO_ID })
+    const existenteChain = criarChain(null)
     const conviteChain = criarChain(null, { message: 'duplicate key value violates unique constraint' })
-    mockFrom.mockReturnValueOnce(perfilChain).mockReturnValueOnce(conviteChain)
+    mockFrom.mockReturnValueOnce(perfilChain).mockReturnValueOnce(existenteChain).mockReturnValueOnce(conviteChain)
 
     const { convidarColaborador } = await import('@/lib/colaboradores/actions')
 
     await expect(convidarColaborador(PROJETO_ID, 'caio', 'coautor')).rejects.toThrow(
       'Não foi possível convidar o colaborador',
     )
+  })
+
+  it('buscarUsuariosParaConvite busca perfis e remove dono/convidados', async () => {
+    const convidadosChain = criarChain([{ usuario_id: USUARIO_ID }])
+    const perfisChain = criarChain([
+      { id: USUARIO_ID, nome_usuario: 'caio', nome_exibicao: 'Caio', avatar_url: null },
+      { id: '323e4567-e89b-12d3-a456-426614174000', nome_usuario: 'caio2', nome_exibicao: 'Caio Dois', avatar_url: null },
+      { id: 'dono-1', nome_usuario: 'dono', nome_exibicao: 'Dono', avatar_url: null },
+    ])
+    mockFrom.mockReturnValueOnce(convidadosChain).mockReturnValueOnce(perfisChain)
+
+    const { buscarUsuariosParaConvite } = await import('@/lib/colaboradores/actions')
+    const resultado = await buscarUsuariosParaConvite(PROJETO_ID, '@ca')
+
+    expect(perfisChain.or).toHaveBeenCalledWith('nome_usuario.ilike.%ca%,nome_exibicao.ilike.%ca%')
+    expect(resultado).toEqual([
+      { id: '323e4567-e89b-12d3-a456-426614174000', nome_usuario: 'caio2', nome_exibicao: 'Caio Dois', avatar_url: null },
+    ])
   })
 })

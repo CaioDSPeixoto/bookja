@@ -13,6 +13,8 @@ type Projeto = {
   sinopse: string | null
   status: string
   criado_em: string
+  tipo_acesso?: 'dono' | 'colaborador'
+  papel_colaborador?: string | null
   contagem_visualizacoes?: number
   media_avaliacao?: number
   contagem_avaliacoes?: number
@@ -96,10 +98,17 @@ export default function PainelPage() {
           {filtrados.map((projeto) => (
             <Link
               key={projeto.id}
-              href={`/${locale}/projeto/${projeto.id}/editar`}
+              href={`/${locale}/projeto/${projeto.id}/${projeto.tipo_acesso === 'colaborador' ? 'escrita' : 'editar'}`}
               className={`group block rounded-lg border border-gray-200 border-l-4 ${bordaStatus[projeto.status] || bordaStatus.rascunho} bg-white p-4 transition hover:shadow-md`}
             >
-              <h2 className="truncate text-sm font-semibold text-gray-900 group-hover:text-indigo-600">{projeto.titulo}</h2>
+              <div className="flex items-start gap-2">
+                <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900 group-hover:text-indigo-600">{projeto.titulo}</h2>
+                {projeto.tipo_acesso === 'colaborador' && (
+                  <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
+                    Colaborando
+                  </span>
+                )}
+              </div>
               {projeto.sinopse && (
                 <p className="mt-1 line-clamp-2 text-xs text-gray-500">{projeto.sinopse}</p>
               )}
@@ -110,7 +119,9 @@ export default function PainelPage() {
                   {projeto.documento?.[0]?.count ?? 0}
                 </span>
                 <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeStatus[projeto.status] || badgeStatus.rascunho}`}>
-                  {t(projeto.status)}
+                  {projeto.tipo_acesso === 'colaborador'
+                    ? projeto.papel_colaborador === 'revisor' ? 'Revisor' : 'Coautor'
+                    : t(projeto.status)}
                 </span>
               </div>
               <div className="mt-2 flex items-center gap-3 border-t border-gray-100 pt-2 text-[11px] text-gray-500">
