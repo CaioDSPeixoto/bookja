@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { AlertCircle, Calendar, CheckCircle2, Lock, Loader2, Mail, Sparkles, User } from 'lucide-react'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 import CampoForm from '@/components/auth/CampoForm'
+import OverlayCarregando from '@/components/ui/OverlayCarregando'
 
 export default function CadastroPage() {
   const t = useTranslations('auth')
@@ -79,6 +80,7 @@ export default function CadastroPage() {
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-xl shadow-indigo-100/40">
+      <OverlayCarregando ativo={enviando} mensagem="Criando sua conta…" />
       <div className="mb-6 flex flex-col items-center text-center">
         <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-sm">
           <Sparkles className="h-6 w-6" aria-hidden="true" />

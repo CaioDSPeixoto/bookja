@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { AlertCircle, BookOpen, Loader2, Lock, Mail } from 'lucide-react'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 import CampoForm from '@/components/auth/CampoForm'
+import OverlayCarregando from '@/components/ui/OverlayCarregando'
 
 export default function EntrarPage() {
   const t = useTranslations('auth')
@@ -35,6 +36,7 @@ export default function EntrarPage() {
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-xl shadow-indigo-100/40">
+      <OverlayCarregando ativo={enviando} mensagem="Entrando…" />
       <div className="mb-6 flex flex-col items-center text-center">
         <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-sm">
           <BookOpen className="h-6 w-6" aria-hidden="true" />
