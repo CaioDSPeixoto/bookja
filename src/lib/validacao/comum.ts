@@ -12,7 +12,10 @@ export function eRegistro(valor: unknown): valor is Record<string, unknown> {
 }
 
 export function eJson(valor: unknown): valor is Json {
-  if (valor === null) return true
+  // undefined é tratado como ausente (é descartado na serialização JSON). Isso
+  // evita rejeitar conteúdo do editor TipTap, que pode ter atributos undefined
+  // (ex.: capítulos importados) — antes quebrava o autosave com 500.
+  if (valor === null || valor === undefined) return true
 
   switch (typeof valor) {
     case 'string':

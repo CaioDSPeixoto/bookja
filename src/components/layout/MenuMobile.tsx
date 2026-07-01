@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Menu, X, LogOut, Home, BookOpen, Library, User, LogIn, UserPlus, type LucideIcon } from 'lucide-react'
+import { Menu, X, Home, BookOpen, Library, User, LogIn, UserPlus, type LucideIcon } from 'lucide-react'
 import Link from 'next/link'
+import BotaoSair from './BotaoSair'
 
 interface Props {
   logado: boolean
@@ -112,15 +113,11 @@ export default function MenuMobile({ logado, nomeUsuario, nomeExibicao = '', sai
             {logado && sairAction && (
               <div className="border-t border-gray-100 p-3">
                 <form action={sairAction}>
-                  <button
-                    type="submit"
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                  >
-                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
-                      <LogOut className="h-[18px] w-[18px]" aria-hidden="true" />
-                    </span>
-                    {t('sair')}
-                  </button>
+                  <BotaoSair
+                    comTile
+                    label={t('sair')}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-60"
+                  />
                 </form>
               </div>
             )}

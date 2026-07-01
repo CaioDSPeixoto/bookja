@@ -77,13 +77,9 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
         </div>
       )}
 
-      <section className="mb-8">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">{t('historiasEscritas')}</h2>
-        {projetos.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center text-sm text-gray-500">
-            {t('semHistorias')}
-          </div>
-        ) : (
+      {projetos.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-4 text-xl font-semibold text-gray-900">{t('historiasEscritas')}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {(projetos as ProjetoPerfil[]).map((p) => (
               <Link
@@ -117,8 +113,8 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
               </Link>
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {leituras.length > 0 && (
         <section>

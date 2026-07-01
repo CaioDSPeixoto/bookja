@@ -173,7 +173,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
                     {idx + 1}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-gray-800 group-hover:text-indigo-700">{cap.titulo}</span>
+                    <span className="block truncate font-medium text-gray-800 group-hover:text-indigo-700">{cap.titulo || `Capítulo ${idx + 1}`}</span>
                     {cap.publicado_em && (
                       <span className="text-xs text-gray-400">
                         {new Date(cap.publicado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}

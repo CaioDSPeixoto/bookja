@@ -84,7 +84,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
                 Capítulo {idxAtual + 1} de {lista.length}
               </p>
               <h1 className="mt-2 text-3xl font-bold leading-tight tracking-normal text-gray-950 sm:text-4xl">
-                {documento.titulo}
+                {documento.titulo || `Capítulo ${idxAtual + 1}`}
               </h1>
             </div>
           </div>
@@ -98,11 +98,13 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
         />
 
         {notas.length > 0 && (
-          <section className="mt-12 border-t border-amber-200 pt-6">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-amber-700">
-              <StickyNote size={16} /> Bastidores do capítulo
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2">
+          <details className="group mt-12">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-amber-700 transition-colors hover:text-amber-800">
+              <StickyNote size={15} className="shrink-0" />
+              <span>Bastidores do capítulo ({notas.length})</span>
+              <ChevronRight size={15} className="ml-auto shrink-0 transition-transform group-open:rotate-90" />
+            </summary>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {notas.map((nota) => (
                 <div key={nota.id} className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
                   <p className="whitespace-pre-line break-words">{nota.conteudo}</p>
@@ -112,7 +114,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
                 </div>
               ))}
             </div>
-          </section>
+          </details>
         )}
 
         {perfilAutor?.chave_pix && (
@@ -133,7 +135,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
               <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 group-hover:text-indigo-600">
                 <ChevronLeft size={14} /> {t('capituloAnterior')}
               </span>
-              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{anterior.titulo}</span>
+              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{anterior.titulo || `Capítulo ${idxAtual}`}</span>
             </Link>
           ) : <div />}
           {proximo ? (
@@ -141,7 +143,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
               <span className="inline-flex items-center justify-end gap-1 text-xs font-medium text-gray-400 group-hover:text-indigo-600">
                 {t('proximoCapitulo')} <ChevronRight size={14} />
               </span>
-              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{proximo.titulo}</span>
+              <span className="mt-1 block text-sm font-semibold text-gray-800 line-clamp-2">{proximo.titulo || `Capítulo ${idxAtual + 2}`}</span>
             </Link>
           ) : <div />}
         </nav>
