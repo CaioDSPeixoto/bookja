@@ -155,6 +155,42 @@ describe('Server Actions - Documentos', () => {
     )
   })
 
+  it('aprovarRevisaoDocumento aprova apenas pendência do usuário atual', async () => {
+    const buscarChain = setupChain({
+      id: DOCUMENTO_ID,
+      projeto_id: PROJETO_ID,
+      status: 'revisao_supervisionada',
+    })
+    const aprovarChain = setupChain({ documento_id: DOCUMENTO_ID })
+    mockFrom.mockReturnValueOnce(buscarChain).mockReturnValueOnce(aprovarChain)
+    const { aprovarRevisaoDocumento } = await import('@/lib/documentos/actions')
+
+    await aprovarRevisaoDocumento(DOCUMENTO_ID)
+
+    expect(aprovarChain.update).toHaveBeenCalledWith({
+      aprovado_em: expect.any(String),
+    })
+    expect(aprovarChain.eq).toHaveBeenCalledWith('documento_id', DOCUMENTO_ID)
+    expect(aprovarChain.eq).toHaveBeenCalledWith('usuario_id', 'user-123')
+    expect(aprovarChain.is).toHaveBeenCalledWith('aprovado_em', null)
+    expect(aprovarChain.select).toHaveBeenCalledWith('documento_id')
+  })
+
+  it('aprovarRevisaoDocumento informa quando não há aprovação pendente', async () => {
+    const buscarChain = setupChain({
+      id: DOCUMENTO_ID,
+      projeto_id: PROJETO_ID,
+      status: 'revisao_supervisionada',
+    })
+    const aprovarChain = setupChain(null, { code: 'PGRST116' })
+    mockFrom.mockReturnValueOnce(buscarChain).mockReturnValueOnce(aprovarChain)
+    const { aprovarRevisaoDocumento } = await import('@/lib/documentos/actions')
+
+    await expect(aprovarRevisaoDocumento(DOCUMENTO_ID)).rejects.toThrow(
+      'Você não possui aprovação pendente para este capítulo',
+    )
+  })
+
   it('atualizarDocumento rejeita conteúdo inválido antes de buscar o documento', async () => {
     const { atualizarDocumento } = await import('@/lib/documentos/actions')
 

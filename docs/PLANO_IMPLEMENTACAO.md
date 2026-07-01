@@ -177,7 +177,9 @@ Objetivo: fechar o ciclo de capítulo do ponto de vista de autor/colaborador.
 Tarefas:
 
 - Validar regra: rascunho → revisão ou revisão supervisionada → publicado.
-- Melhorar feedback quando publicação é bloqueada por falta de revisão/aprovação.
+- [x] Repensar fluxo de coautores/revisores. Feito em 2026-07-01: tela de colaboradores ganhou busca de usuários por nome/usuário, explicação do processo, cards de papel com descrição, resumo de aceitos/pendentes, aceite como pré-condição de acesso, remoção com confirmação e mensagens de erro/sucesso específicas; criação de projeto também explica convites e aceita `@nome`. Após aceitar convite, o colaborador é levado para a escrita e passa a ver o projeto na biblioteca como colaboração.
+- [x] Melhorar feedback quando publicação é bloqueada por falta de revisão/aprovação. Feito em 2026-07-01: a UI do editor passa a exibir a mensagem pública retornada pela Server Action em vez de erro genérico.
+- [x] Impedir aprovação supervisionada "fantasma". Feito em 2026-07-01: `aprovarRevisaoDocumento` só confirma sucesso quando existe aprovação pendente para o usuário atual; caso contrário retorna mensagem pública.
 - Criar visão simples de pendências de revisão supervisionada para colaboradores ou destacar melhor no fluxo existente.
 - Confirmar que excluir capítulo atualiza sumário e estado ativo sem quebrar a escrita.
 - Confirmar que capítulos importados entram como rascunho.
@@ -199,6 +201,7 @@ Tarefas:
 - Validar notificação de convite.
 - Validar notificação de novo capítulo para favoritos.
 - Revisar links das notificações para levar ao lugar correto.
+- [x] Melhorar usabilidade das notificações. Feito em 2026-07-01: página ganhou loading, erro recuperável, contador de não lidas, botão de atualização, layout mobile com ações empilhadas e aceite de convite com feedback. Popup do sino agora mostra erro e estado de aceite em andamento.
 - Marcar como lida individualmente e em lote.
 - Avaliar polling simples ou atualização ao abrir popup/página.
 
@@ -217,7 +220,7 @@ Tarefas:
 
 - [x] Revisar policies/RPCs tocadas nas migrations 015 e 016. RPCs validam `auth.uid()` e foram revogadas de `public`; `documento_aprovacao` escopada a dono/colaborador.
 - [x] Testar acesso público vs privado para projeto, capítulo, notas e reações. Achado e corrigido: SELECT público de `documento` exigia só `publico = true` — migration `017` endurece para capítulo publicado em projeto publicado. Verificado com `set role anon` (4/16 documentos, 1 projeto).
-- [ ] Revisar endpoints de importação/exportação com arquivos inválidos, formatos inválidos e projeto sem permissão.
+- [~] Revisar endpoints de importação/exportação com arquivos inválidos, formatos inválidos e projeto sem permissão. Importação revisada em 2026-07-01: limite centralizado de 5MB/80 capítulos, preview mostra limites, seleção/desmarcação em massa, títulos normalizados e confirmação sempre cria capítulos privados em rascunho. Exportação ainda pendente.
 - [ ] Revisar bloqueio de colaborador pendente no editor, importação, exportação e documentos.
 - [x] Remover ou corrigir strings com mojibake visível. Varredura em 2026-06-28 não encontrou mojibake em `src`/`supabase`.
 - [~] Rodar `npm run lint`, `npm run test`, `npm run build` e E2E básico. Em 2026-06-28: lint, test (106) e build passaram. E2E não executado neste worktree por ausência de `.env.local` (rodar no checkout principal com env válido).

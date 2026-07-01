@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Bell, Mail, MessageSquare, BookOpen } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Bell, Mail, MessageSquare, BookOpen, Loader2 } from 'lucide-react'
 import { listarNotificacoes, marcarComoLida } from '@/lib/notificacoes/actions'
 import { aceitarConvite } from '@/lib/colaboradores/actions'
 import { criarClienteBrowser } from '@/lib/supabase/client'
@@ -21,8 +22,11 @@ function tempoRelativo(data: string) {
 }
 
 export default function NotificacoesPopup({ locale }: { locale: string }) {
+  const router = useRouter()
   const [aberto, setAberto] = useState(false)
   const [notifs, setNotifs] = useState<Notificacao[]>([])
+  const [erro, setErro] = useState('')
+  const [aceitandoId, setAceitandoId] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -59,9 +63,19 @@ export default function NotificacoesPopup({ locale }: { locale: string }) {
   }
 
   async function handleAceitar(n: Notificacao) {
-    await aceitarConvite(n.projeto_id!)
-    await marcarComoLida(n.id)
-    setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, lida: true } : x))
+    setErro('')
+    setAceitandoId(n.id)
+    try {
+      await aceitarConvite(n.projeto_id!)
+      await marcarComoLida(n.id)
+      setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, lida: true } : x))
+      setAberto(false)
+      router.push(`/${locale}/projeto/${n.projeto_id}/escrita`)
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : 'Não foi possível aceitar o convite')
+    } finally {
+      setAceitandoId(null)
+    }
   }
 
   function handleAbrir(n: Notificacao) {
@@ -95,6 +109,11 @@ export default function NotificacoesPopup({ locale }: { locale: string }) {
           <div className="sticky top-0 flex items-center justify-between border-b bg-white px-4 py-2">
             <span className="text-sm font-semibold">Notificações</span>
           </div>
+          {erro && (
+            <div className="border-b bg-red-50 px-4 py-2 text-xs text-red-700">
+              {erro}
+            </div>
+          )}
           {notifs.length === 0 ? (
             <p className="p-4 text-center text-sm text-gray-500">Nenhuma notificação</p>
           ) : (
@@ -121,7 +140,14 @@ export default function NotificacoesPopup({ locale }: { locale: string }) {
                       <div className={`${base} flex-1`}>{corpo}</div>
                     )}
                     {n.tipo === 'convite' && !n.lida && (
-                      <button onClick={() => handleAceitar(n)} className="shrink-0 self-center rounded bg-green-600 px-2 py-0.5 text-xs text-white hover:bg-green-700 mr-3">Aceitar</button>
+                      <button
+                        onClick={() => handleAceitar(n)}
+                        disabled={aceitandoId === n.id}
+                        className="mr-3 inline-flex shrink-0 items-center gap-1 self-center rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 disabled:opacity-60"
+                      >
+                        {aceitandoId === n.id && <Loader2 size={12} className="animate-spin" />}
+                        Aceitar
+                      </button>
                     )}
                   </li>
                 )

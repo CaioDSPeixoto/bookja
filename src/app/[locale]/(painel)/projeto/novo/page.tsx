@@ -44,7 +44,7 @@ export default function NovoProjetoPage() {
   }
 
   function adicionarColaborador() {
-    const nome = nomeColab.trim()
+    const nome = nomeColab.trim().replace(/^@+/, '')
     if (!nome || colaboradores.some(c => c.nomeUsuario === nome)) return
     setColaboradores(prev => [...prev, { nomeUsuario: nome, papel: papelColab }])
     setNomeColab('')
@@ -169,16 +169,19 @@ export default function NovoProjetoPage() {
           </div>
 
           {/* Colaboradores */}
-          <div>
-            <h2 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+          <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
               <Users size={14} /> Colaboradores
             </h2>
-            <div className="flex gap-2">
+            <p className="mt-1 text-xs leading-5 text-gray-500">
+              Opcional. Convide pelo nome de usuário; a pessoa só acessa o projeto depois de aceitar nas notificações.
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_140px_auto]">
               <input
                 value={nomeColab}
                 onChange={e => setNomeColab(e.target.value)}
-                placeholder="Nome de usuário"
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="@nome-de-usuario"
+                className="min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
               />
               <select
                 value={papelColab}
@@ -191,17 +194,19 @@ export default function NovoProjetoPage() {
               <button
                 type="button"
                 onClick={adicionarColaborador}
-                className="rounded-lg bg-gray-100 px-3 py-2 text-gray-600 hover:bg-gray-200"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-gray-200 hover:bg-gray-50"
               >
-                <Plus size={16} />
+                <Plus size={16} /> Adicionar
               </button>
             </div>
             {colaboradores.length > 0 && (
-              <ul className="mt-2 space-y-1">
+              <ul className="mt-3 space-y-2">
                 {colaboradores.map((c, i) => (
-                  <li key={i} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-1.5 text-sm">
-                    <span>{c.nomeUsuario} <span className="text-gray-400">({c.papel})</span></span>
-                    <button type="button" onClick={() => setColaboradores(prev => prev.filter((_, idx) => idx !== i))}>
+                  <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-gray-200">
+                    <span className="min-w-0 truncate">
+                      @{c.nomeUsuario} <span className="text-gray-400">({c.papel === 'coautor' ? 'coautor' : 'revisor'})</span>
+                    </span>
+                    <button type="button" onClick={() => setColaboradores(prev => prev.filter((_, idx) => idx !== i))} aria-label="Remover colaborador da lista">
                       <X size={14} className="text-gray-400 hover:text-red-500" />
                     </button>
                   </li>

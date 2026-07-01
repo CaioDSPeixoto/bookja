@@ -8,11 +8,10 @@ import {
 } from '@/lib/api/respostas'
 import { importarDocx } from '@/lib/importacao/docx'
 import { importarEpub } from '@/lib/importacao/epub'
+import { MAX_CAPITULOS_IMPORTACAO, TAMANHO_MAXIMO_ARQUIVO_IMPORTACAO } from '@/lib/importacao/limites'
 import { registrarErroInterno } from '@/lib/observabilidade/logger'
 import { verificarAcessoProjeto } from '@/lib/projetos/acesso'
 import { criarClienteServidor } from '@/lib/supabase/server'
-
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
       return responderErro('Arquivo não enviado', 400)
     }
 
-    if (arquivo.size > MAX_SIZE) {
+    if (arquivo.size > TAMANHO_MAXIMO_ARQUIVO_IMPORTACAO) {
       return responderErro('Arquivo excede o limite de 5MB', 400)
     }
 
@@ -58,6 +57,10 @@ export async function POST(request: NextRequest) {
       capitulos = await importarDocx(buffer)
     } else {
       return responderErro('Formato não suportado. Use .epub ou .docx', 400)
+    }
+
+    if (capitulos.length > MAX_CAPITULOS_IMPORTACAO) {
+      return responderErro(`O arquivo gerou ${capitulos.length} capítulos. Importe no máximo ${MAX_CAPITULOS_IMPORTACAO} por vez.`, 400)
     }
 
     return NextResponse.json({ dados: { capitulos } })

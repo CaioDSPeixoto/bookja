@@ -61,6 +61,10 @@ function horarioAtual() {
   })
 }
 
+function mensagemErro(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 export default function EditorCapitulo({
   documento,
   projetoId,
@@ -200,9 +204,9 @@ export default function EditorCapitulo({
     try {
       await alterarStatusDocumento(documento.id, novoStatus)
       onAtualizado()
-    } catch {
+    } catch (error) {
       setStatusEditorial(statusAnterior)
-      setErroSalvamento('Não foi possível alterar o status agora.')
+      setErroSalvamento(mensagemErro(error, 'Não foi possível alterar o status agora.'))
     } finally {
       setAlterandoStatus(false)
     }
@@ -214,6 +218,8 @@ export default function EditorCapitulo({
     try {
       await aprovarRevisaoDocumento(documento.id)
       onAtualizado()
+    } catch (error) {
+      setErroSalvamento(mensagemErro(error, 'Não foi possível aprovar a revisão agora.'))
     } finally {
       setAprovando(false)
     }

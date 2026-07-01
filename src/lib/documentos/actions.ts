@@ -304,13 +304,16 @@ export async function aprovarRevisaoDocumento(id: string) {
   if (!doc) throw erroPublico('Documento não encontrado')
   await verificarAcesso(supabase, doc.projeto_id)
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('documento_aprovacao')
     .update({ aprovado_em: new Date().toISOString() })
     .eq('documento_id', documentoId)
     .eq('usuario_id', user.id)
+    .is('aprovado_em', null)
+    .select('documento_id')
+    .single()
 
-  if (error) throw erroDocumento('Não foi possível aprovar a revisão')
+  if (error || !data) throw erroPublico('Você não possui aprovação pendente para este capítulo')
 }
 
 export async function atualizarDocumento(
