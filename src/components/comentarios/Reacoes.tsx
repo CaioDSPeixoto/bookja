@@ -41,13 +41,15 @@ export function Reacoes({ comentarioId }: ReacoesProps) {
         <button
           onClick={() => setAberto(!aberto)}
           className="rounded-full border border-gray-200 p-1 text-gray-400 hover:bg-gray-50"
+          aria-label="Adicionar reação"
+          aria-expanded={aberto}
         >
-          <Plus size={12} />
+          <Plus size={12} aria-hidden="true" />
         </button>
         {aberto && (
           <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-lg border bg-white p-2 shadow-lg">
             {EMOJIS.map((e) => (
-              <button key={e} onClick={() => handleReagir(e)} className="text-lg hover:scale-125 transition-transform">
+              <button key={e} onClick={() => handleReagir(e)} className="text-lg hover:scale-125 transition-transform" aria-label={`Reagir com ${e}`}>
                 {e}
               </button>
             ))}

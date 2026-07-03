@@ -183,13 +183,15 @@ export default function MuralPerfil({
                       <button
                         onClick={() => setEmojiAberto(emojiAberto === c.id ? null : c.id)}
                         className="rounded-full border border-gray-200 p-1 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                        aria-label="Adicionar reação"
+                        aria-expanded={emojiAberto === c.id}
                       >
-                        <SmilePlus size={12} />
+                        <SmilePlus size={12} aria-hidden="true" />
                       </button>
                       {emojiAberto === c.id && (
                         <div className="absolute left-0 top-8 z-10 flex gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
                           {EMOJIS.map(em => (
-                            <button key={em} onClick={() => handleReagir(c.id, em)} className="text-lg hover:scale-125 transition-transform">
+                            <button key={em} onClick={() => handleReagir(c.id, em)} className="text-lg hover:scale-125 transition-transform" aria-label={`Reagir com ${em}`}>
                               {em}
                             </button>
                           ))}
@@ -223,8 +225,8 @@ export default function MuralPerfil({
                             <p className="text-sm text-gray-600">{r.conteudo}</p>
                           </div>
                           {podeDeletar(r) && (
-                            <button onClick={() => handleExcluir(r.id)} className="rounded p-1 text-gray-400 hover:text-red-600">
-                              <Trash2 size={12} />
+                            <button onClick={() => handleExcluir(r.id)} className="rounded p-1 text-gray-400 hover:text-red-600" aria-label="Excluir resposta">
+                              <Trash2 size={12} aria-hidden="true" />
                             </button>
                           )}
                         </li>
@@ -247,8 +249,9 @@ export default function MuralPerfil({
                       onClick={() => handleResponder(c.id)}
                       disabled={!textoResposta.trim()}
                       className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                      aria-label="Enviar resposta"
                     >
-                      <Send size={12} />
+                      <Send size={12} aria-hidden="true" />
                     </button>
                   </div>
                 )}

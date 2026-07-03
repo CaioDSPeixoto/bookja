@@ -102,8 +102,8 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
               </button>
             )}
             {usuarioId === c.autor_id && (
-              <button onClick={() => handleExcluir(c.id)} className="text-xs text-red-400 hover:text-red-600">
-                <Trash2 size={12} />
+              <button onClick={() => handleExcluir(c.id)} className="text-xs text-red-400 hover:text-red-600" aria-label="Excluir comentário">
+                <Trash2 size={12} aria-hidden="true" />
               </button>
             )}
           </div>

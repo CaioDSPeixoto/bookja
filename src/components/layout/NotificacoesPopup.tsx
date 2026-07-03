@@ -95,8 +95,13 @@ export default function NotificacoesPopup({ locale }: { locale: string }) {
 
   return (
     <div ref={ref} className="relative">
-      <button onClick={abrir} className="relative p-2 hover:bg-gray-100 rounded-full">
-        <Bell className="h-5 w-5" />
+      <button
+        onClick={abrir}
+        className="relative p-2 hover:bg-gray-100 rounded-full"
+        aria-label={naoLidas > 0 ? `Notificações (${naoLidas} não lidas)` : 'Notificações'}
+        aria-expanded={aberto}
+      >
+        <Bell className="h-5 w-5" aria-hidden="true" />
         {naoLidas > 0 && (
           <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
             {naoLidas > 9 ? '9+' : naoLidas}

@@ -224,6 +224,33 @@ export async function buscarCatalogo(filtros: { busca?: string; tagId?: string; 
   return { projetos: projetosComProgresso, total, totalPaginas: Math.ceil(total / POR_PAGINA) }
 }
 
+export async function buscarFavoritos() {
+  const supabase = await criarClienteServidor()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const idadeUsuario = await obterIdadeUsuario()
+
+  const { data } = await supabase
+    .from('favorito')
+    .select(`
+      projeto:projeto(
+        id, titulo, sinopse, capa_url, media_avaliacao, status, publicado_em,
+        perfil:dono_id(nome_usuario, nome_exibicao, avatar_url),
+        projeto_tag(tag:tag_id(id, nome, categoria))
+      )
+    `)
+    .eq('usuario_id', user.id)
+
+  // Só favoritos cujo projeto ainda está publicado (evita cards quebrados/404).
+  const projetos = (data || [])
+    .map((f) => (Array.isArray(f.projeto) ? f.projeto[0] : f.projeto))
+    .filter((p): p is NonNullable<typeof p> => !!p && p.status === 'publicado')
+
+  const permitidos = filtrarPorIdade(projetos, idadeUsuario)
+  return anexarProgressoLeitura(permitidos)
+}
+
 export async function buscarTagsDisponiveis() {
   const supabase = await criarClienteServidor()
 
