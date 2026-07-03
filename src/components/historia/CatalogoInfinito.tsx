@@ -12,6 +12,7 @@ type ProjetoCatalogo = {
   sinopse: string | null
   capa_url: string | null
   media_avaliacao: number | null
+  progresso_percentual?: number | null
   perfil: { nome_exibicao?: string; nome_usuario?: string } | { nome_exibicao?: string; nome_usuario?: string }[] | null
   projeto_tag?: Array<{ tag: { id: number | string; nome: string } }>
 }
@@ -33,6 +34,7 @@ function cardProps(p: ProjetoCatalogo, locale: string) {
     tags,
     avaliacao: p.media_avaliacao,
     capa_url: p.capa_url,
+    progresso: p.progresso_percentual,
     href: `/${locale}/historia/${p.id}`,
   }
 }

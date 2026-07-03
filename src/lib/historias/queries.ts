@@ -62,6 +62,68 @@ function filtrarPorIdade<T extends ProjetoComTags>(projetos: T[], idadeUsuario: 
   })
 }
 
+/**
+ * Anexa o percentual de progresso de leitura a cada projeto, quando houver
+ * usuário logado com leitura registrada. Usa duas consultas (leitura + capítulos
+ * publicados) apenas para os projetos exibidos — projetos sem leitura ficam sem o
+ * campo (a barra não é exibida).
+ */
+async function anexarProgressoLeitura<T extends { id: string }>(
+  projetos: T[],
+): Promise<Array<T & { progresso_percentual?: number }>> {
+  if (projetos.length === 0) return projetos
+
+  const supabase = await criarClienteServidor()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return projetos
+
+  const ids = projetos.map((p) => p.id)
+  const { data: leituras } = await supabase
+    .from('leitura_atual')
+    .select('projeto_id, ultimo_documento_id')
+    .eq('usuario_id', user.id)
+    .in('projeto_id', ids)
+
+  if (!leituras || leituras.length === 0) return projetos
+
+  const idsComLeitura = leituras
+    .filter((l) => l.ultimo_documento_id)
+    .map((l) => l.projeto_id)
+  if (idsComLeitura.length === 0) return projetos
+
+  const { data: docs } = await supabase
+    .from('documento')
+    .select('id, projeto_id, ordem')
+    .in('projeto_id', idsComLeitura)
+    .eq('publico', true)
+    .eq('status', 'publicado')
+
+  const capitulosPorProjeto = new Map<string, Array<{ id: string; ordem: number }>>()
+  for (const d of docs || []) {
+    const lista = capitulosPorProjeto.get(d.projeto_id) ?? []
+    lista.push({ id: d.id, ordem: d.ordem })
+    capitulosPorProjeto.set(d.projeto_id, lista)
+  }
+
+  const percentualPorProjeto = new Map<string, number>()
+  for (const leitura of leituras) {
+    const capitulos = (capitulosPorProjeto.get(leitura.projeto_id) ?? [])
+      .sort((a, b) => a.ordem - b.ordem)
+    if (capitulos.length === 0 || !leitura.ultimo_documento_id) continue
+    const indice = capitulos.findIndex((c) => c.id === leitura.ultimo_documento_id)
+    if (indice < 0) continue
+    percentualPorProjeto.set(
+      leitura.projeto_id,
+      Math.round(((indice + 1) / capitulos.length) * 100),
+    )
+  }
+
+  return projetos.map((p) => {
+    const percentual = percentualPorProjeto.get(p.id)
+    return percentual != null ? { ...p, progresso_percentual: percentual } : p
+  })
+}
+
 export async function buscarHistoriaPublica(id: string) {
   const supabase = await criarClienteServidor()
   const idadeUsuario = await obterIdadeUsuario()
@@ -119,7 +181,23 @@ export async function buscarCatalogo(filtros: { busca?: string; tagId?: string; 
     .range(de, ate)
 
   if (filtros.busca) {
-    query = query.ilike('titulo', `%${filtros.busca}%`)
+    // Remove caracteres que quebram a sintaxe do filtro `or` do PostgREST.
+    const termo = filtros.busca.trim().replace(/[,()]/g, ' ').slice(0, 80)
+    if (termo) {
+      // Também casa pelo nome do autor: busca os perfis correspondentes e inclui
+      // seus projetos no resultado (título, sinopse ou autor).
+      const { data: autores } = await supabase
+        .from('perfil')
+        .select('id')
+        .or(`nome_exibicao.ilike.%${termo}%,nome_usuario.ilike.%${termo}%`)
+
+      const condicoes = [`titulo.ilike.%${termo}%`, `sinopse.ilike.%${termo}%`]
+      const idsAutores = (autores || []).map((a) => a.id)
+      if (idsAutores.length > 0) {
+        condicoes.push(`dono_id.in.(${idsAutores.join(',')})`)
+      }
+      query = query.or(condicoes.join(','))
+    }
   }
 
   if (filtros.tagId) {
@@ -139,8 +217,11 @@ export async function buscarCatalogo(filtros: { busca?: string; tagId?: string; 
   // Filtrar por classificação etária
   projetos = filtrarPorIdade(projetos, idadeUsuario)
 
+  // Anexa progresso de leitura para a barra nos cards (usuário logado).
+  const projetosComProgresso = await anexarProgressoLeitura(projetos)
+
   const total = count || 0
-  return { projetos, total, totalPaginas: Math.ceil(total / POR_PAGINA) }
+  return { projetos: projetosComProgresso, total, totalPaginas: Math.ceil(total / POR_PAGINA) }
 }
 
 export async function buscarTagsDisponiveis() {

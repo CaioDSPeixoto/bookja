@@ -187,7 +187,7 @@
   },
   "catalogo": {
     "titulo": "Histórias",
-    "buscar": "Buscar histórias...",
+    "buscar": "Buscar por título, autor...",
     "filtrarTags": "Filtrar por tags",
     "todasTags": "Todas",
     "semResultados": "Nenhuma história encontrada",

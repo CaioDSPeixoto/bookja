@@ -10,17 +10,26 @@ interface CardHistoriaProps {
   avaliacao?: number | null
   capa_url?: string | null
   href: string
+  progresso?: number | null
 }
 
-export function CardHistoria({ titulo, autor, sinopse, tags, avaliacao, capa_url, href }: CardHistoriaProps) {
+export function CardHistoria({ titulo, autor, sinopse, tags, avaliacao, capa_url, href, progresso }: CardHistoriaProps) {
+  const temProgresso = progresso != null && progresso > 0
   return (
     <Link href={href} className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md">
-      <div className="aspect-[3/4] w-full overflow-hidden bg-gray-100">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100">
         {capa_url ? (
           <Image src={capa_url} alt={titulo} width={360} height={480} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" unoptimized />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-50">
             <span className="text-4xl font-bold text-indigo-200">{titulo.charAt(0)}</span>
+          </div>
+        )}
+        {temProgresso && (
+          <div className="absolute inset-x-0 bottom-0" title={`${progresso}% lido`}>
+            <div className="h-1.5 w-full bg-black/25">
+              <div className="h-full bg-indigo-500 transition-all" style={{ width: `${progresso}%` }} />
+            </div>
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import { buscarHistoriaPublica, registrarVisualizacao } from '@/lib/historias/qu
 import { criarClienteServidor } from '@/lib/supabase/server'
 import { ListaComentarios } from '@/components/comentarios/ListaComentarios'
 import { BotaoFavoritar } from '@/components/historia/BotaoFavoritar'
+import AvaliacaoHistoria from '@/components/historia/AvaliacaoHistoria'
 
 export default async function HistoriaPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params
@@ -198,6 +199,9 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
           </a>
         </div>
       )}
+
+      {/* Avaliação por estrelas (independente do comentário) */}
+      {user && user.id !== historia.dono_id && <AvaliacaoHistoria projetoId={id} />}
 
       {/* Comentários */}
       <ListaComentarios projetoId={id} usuarioId={user?.id || null} />

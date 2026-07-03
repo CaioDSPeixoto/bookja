@@ -153,7 +153,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ locale
         </section>
 
         <section className="mt-12 border-t border-gray-200 pt-8">
-          <ListaComentarios projetoId={id} documentoId={docId} usuarioId={user?.id ?? null} permitirAvaliacao={false} />
+          <ListaComentarios projetoId={id} documentoId={docId} usuarioId={user?.id ?? null} />
         </section>
       </div>
     </main>

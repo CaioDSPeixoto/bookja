@@ -101,7 +101,10 @@ export async function listarMural(perfilId: string) {
       .in('comentario_id', todosIds)
 
     if (erroReacoes) throw erroOperacao('Não foi possível listar reações do mural')
-    reacoes = react || []
+    // Ignora reações de usuários que o visitante bloqueou.
+    reacoes = bloqueados.size > 0
+      ? (react || []).filter((r) => !bloqueados.has(r.usuario_id))
+      : (react || [])
   }
 
   return { comentarios, respostas: respostas || [], reacoes }

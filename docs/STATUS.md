@@ -4,18 +4,18 @@ Snapshot do andamento do projeto. Complementa os documentos vivos:
 [ESTADO_DO_PROJETO.md](ESTADO_DO_PROJETO.md) (mapa técnico) e
 [PLANO_IMPLEMENTACAO.md](PLANO_IMPLEMENTACAO.md) (plano da 1ª entrega).
 
-Última atualização: 2026-06-29.
+Última atualização: 2026-07-01.
 
 ## Resumo executivo
 
 A base funcional do MVP está completa e o foco recente foi **destravar o banco
 remoto, segurança (RLS), usabilidade mobile, padronização visual e correção de
-bugs**. O banco remoto (`ezdtqfmpornhkyilaxlh`) está alinhado às migrations 015→025.
+bugs**. O banco remoto (`ezdtqfmpornhkyilaxlh`) está alinhado às migrations 015→026.
 Não há pendências de **alta prioridade** em aberto; o que resta são validações
 manuais (2 usuários / device físico) e itens de **backlog**.
 
 Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run test`
-(109 testes) e `npm run build` com sucesso.
+e `npm run build` com sucesso.
 
 ---
 
@@ -33,6 +33,7 @@ Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run tes
 - **023** — `data_nascimento` movida para `perfil_privado` (privacidade; coluna pública removida).
 - **024** — `notificacao` no Realtime.
 - **025** — RPC `existe_bloqueio` para bloqueio recíproco.
+- **026** — normalização de nomes de usuário legados inválidos (corrige 404 de perfil).
 - Verificações de RLS feitas com `set role anon` e testes transacionais com rollback.
 
 ### Mobile e usabilidade
@@ -54,7 +55,14 @@ Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run tes
 - **Progresso de leitura** na página da história (barra + continuar lendo).
 - **PWA** (base): manifest standalone, ícone, theme-color, meta Apple.
 - **Notificações em tempo real** (#19).
-- **Bloqueio entre usuários** (#20): bloquear/desbloquear no perfil; oculta conteúdo de bloqueados; impede post no mural.
+- **Bloqueio entre usuários** (#20): bloquear/desbloquear no perfil; oculta conteúdo **e reações** de bloqueados; impede post no mural.
+- **Leitura**: barra de capítulos do topo removida, reações movidas para baixo, "Bastidores" recolhível.
+- **Obra**: data de publicação por capítulo + nota exibida; **notificações** com nome da obra/capítulo e link clicável.
+- **Loading**: overlay bloqueante em entrar/cadastro; loading no "Sair".
+- **Avaliação por estrelas dedicada**: widget na página da história que salva na hora, separado do comentário.
+- **Progresso de leitura no card** do catálogo (barra sobre a capa, usuário logado).
+- **Busca com debounce** no catálogo, casando título, sinopse **e autor**.
+- Correções: autosave 500 em capítulos importados (`eJson` tolera `undefined`); criação de projeto com coautor não trava mais; fundo cinza p/ contraste dos cards; `engines` em Node 24.
 - Correções: avaliação recalculada ao excluir comentário; favoritos despublicados ocultados.
 
 ---
@@ -77,13 +85,11 @@ Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run tes
 ## 🔭 Ajustes e ideias futuras (backlog)
 
 ### Curto prazo (bom retorno)
-- Filtrar **reações** (comentário/mural) por autor bloqueado (hoje só os comentários são ocultados).
 - **PWA offline**: service worker (via `next-pwa`) para cache e prompt de instalação no Android.
-- **Avaliação por estrelas dedicada**, separada do comentário (UX mais clara).
-- Barra de **progresso de leitura no card** (catálogo/biblioteca).
+- Progresso de leitura no card também na **biblioteca/favoritos** (hoje só no catálogo).
 
 ### Médio prazo
-- Busca com **debounce** e por autor/tag combinados.
+- Busca por **múltiplas tags combinadas** (hoje uma tag por vez; texto+autor já com debounce).
 - Edição de comentários; denúncia/moderação de conteúdo.
 - Acessibilidade: revisar `aria-label` de botões só de ícone.
 - Substituir tipos manuais do Supabase por tipos gerados pela CLI.
@@ -101,7 +107,7 @@ Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run tes
 `015` status/notificações · `016` aprovação revisão · `017` RLS documento ·
 `018` favorito não-dono · `019` RLS comentário · `020` dedup tags ·
 `021` 1 avaliação/usuário · `022` RPC avaliação · `023` perfil_privado ·
-`024` realtime notificação · `025` helper bloqueio.
+`024` realtime notificação · `025` helper bloqueio · `026` normaliza usernames legados.
 
 Repositório e banco remoto estão sincronizados.
 

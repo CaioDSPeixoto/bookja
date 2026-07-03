@@ -22,15 +22,13 @@ interface ListaComentariosProps {
   projetoId: string
   documentoId?: string | null
   usuarioId?: string | null
-  permitirAvaliacao?: boolean
 }
 
-export function ListaComentarios({ projetoId, documentoId, usuarioId, permitirAvaliacao = true }: ListaComentariosProps) {
+export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaComentariosProps) {
   const t = useTranslations('comentarios')
   const locale = useLocale()
   const [comentarios, setComentarios] = useState<Comentario[]>([])
   const [conteudo, setConteudo] = useState('')
-  const [nota, setNota] = useState(0)
   const [respondendoId, setRespondendoId] = useState<string | null>(null)
   const [respostaTexto, setRespostaTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -46,9 +44,8 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId, permitirAv
     e.preventDefault()
     if (!conteudo.trim()) return
     setEnviando(true)
-    await criarComentario(projetoId, documentoId || null, conteudo, permitirAvaliacao ? (nota || undefined) : undefined)
+    await criarComentario(projetoId, documentoId || null, conteudo)
     setConteudo('')
-    setNota(0)
     await carregar()
     setEnviando(false)
   }
@@ -148,13 +145,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId, permitirAv
             rows={3}
             className="w-full resize-none rounded-lg border border-gray-300 bg-gray-50/60 px-4 py-2.5 text-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           />
-          <div className="flex items-center justify-between">
-            {permitirAvaliacao ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">{t('avaliacao')}:</span>
-                <Estrelas valor={nota} onChange={setNota} tamanho={20} />
-              </div>
-            ) : <span />}
+          <div className="flex justify-end">
             <button
               type="submit"
               disabled={enviando || !conteudo.trim()}

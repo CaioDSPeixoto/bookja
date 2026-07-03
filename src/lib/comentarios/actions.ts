@@ -136,6 +136,80 @@ export async function criarComentario(
   }
 }
 
+/**
+ * Retorna a nota que o usuário logado deu ao projeto (1 a 5) ou null se não
+ * avaliou. Usada para pré-selecionar as estrelas no widget de avaliação.
+ */
+export async function obterMinhaAvaliacao(projetoId: string): Promise<number | null> {
+  const projetoIdValidado = validarIdProjeto(projetoId)
+  const supabase = await criarClienteServidor()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data } = await supabase
+    .from('comentario')
+    .select('nota')
+    .eq('projeto_id', projetoIdValidado)
+    .eq('autor_id', user.id)
+    .not('nota', 'is', null)
+    .maybeSingle()
+
+  return (data?.nota as number | undefined) ?? null
+}
+
+/**
+ * Registra, atualiza ou remove (nota = 0) a avaliação por estrelas do usuário,
+ * de forma independente de comentário. Mantém uma única nota por usuário no
+ * projeto e recalcula a média de forma atômica.
+ */
+export async function avaliarProjeto(projetoId: string, nota: number) {
+  const projetoIdValidado = validarIdProjeto(projetoId)
+  const notaValidada = nota === 0 ? null : normalizarNota(nota)
+  const supabase = await criarClienteServidor()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw erroPublico('Autenticação necessária')
+
+  const { data: projeto } = await supabase
+    .from('projeto')
+    .select('status, dono_id')
+    .eq('id', projetoIdValidado)
+    .single()
+
+  if (!projeto || projeto.status !== 'publicado') throw erroPublico('Projeto não publicado')
+  if (projeto.dono_id === user.id) throw erroPublico('Você não pode avaliar a própria história')
+
+  // Uma nota por usuário: zera a nota de qualquer avaliação anterior (inclusive
+  // a que estiver em um comentário com texto).
+  await supabase
+    .from('comentario')
+    .update({ nota: null })
+    .eq('projeto_id', projetoIdValidado)
+    .eq('autor_id', user.id)
+    .not('nota', 'is', null)
+
+  // Remove linhas de avaliação sem texto anteriores, evitando acúmulo.
+  await supabase
+    .from('comentario')
+    .delete()
+    .eq('projeto_id', projetoIdValidado)
+    .eq('autor_id', user.id)
+    .eq('conteudo', '')
+
+  if (notaValidada) {
+    const { error } = await supabase.from('comentario').insert({
+      projeto_id: projetoIdValidado,
+      documento_id: null,
+      autor_id: user.id,
+      conteudo: '',
+      nota: notaValidada,
+    })
+
+    if (error) throw erroComentario('Não foi possível registrar a avaliação')
+  }
+
+  await recalcularAvaliacaoProjeto(supabase, projetoIdValidado)
+}
+
 export async function excluirComentario(id: string) {
   const comentarioId = validarIdComentario(id)
   const supabase = await criarClienteServidor()
@@ -179,10 +253,13 @@ export async function listarComentarios(projetoId: string, documentoId?: string 
   const { data, error } = await query
   if (error) throw erroComentario('Não foi possível listar comentários')
 
+  // Remove linhas de avaliação por estrelas (sem texto), que não são comentários.
+  const comentarios = (data || []).filter((c) => ((c.conteudo as string) ?? '').trim() !== '')
+
   // Oculta comentários de usuários que o visitante bloqueou.
   const bloqueados = new Set(await listarIdsBloqueados())
-  if (bloqueados.size === 0) return data || []
-  return (data || []).filter((c) => !bloqueados.has(c.autor_id as string))
+  if (bloqueados.size === 0) return comentarios
+  return comentarios.filter((c) => !bloqueados.has(c.autor_id as string))
 }
 
 export async function responderComentario(comentarioId: string, conteudo: string) {
@@ -258,8 +335,12 @@ export async function listarReacoes(comentarioId: string) {
 
   if (error) throw erroComentario('Não foi possível listar reações')
 
+  // Ignora reações de usuários que o visitante bloqueou.
+  const bloqueados = new Set(await listarIdsBloqueados())
+
   const reacoes: Record<string, { contagem: number; reagiu: boolean }> = {}
   for (const r of data || []) {
+    if (bloqueados.has(r.usuario_id as string)) continue
     if (!reacoes[r.emoji]) reacoes[r.emoji] = { contagem: 0, reagiu: false }
     reacoes[r.emoji].contagem++
     if (user && r.usuario_id === user.id) reacoes[r.emoji].reagiu = true
