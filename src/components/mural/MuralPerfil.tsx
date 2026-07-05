@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
-import { MessageSquare, Send, Trash2, Reply, SmilePlus } from 'lucide-react'
-import { listarMural, criarComentarioMural, excluirComentarioMural, reagirMural } from '@/lib/mural/actions'
+import { MessageSquare, Send, Trash2, Reply, SmilePlus, Pencil } from 'lucide-react'
+import { listarMural, criarComentarioMural, editarComentarioMural, excluirComentarioMural, reagirMural } from '@/lib/mural/actions'
 
 type Autor = { id: string; nome_usuario: string; nome_exibicao: string | null; avatar_url: string | null }
-type Comentario = { id: string; conteudo: string; criado_em: string; pai_id: string | null; autor: Autor | Autor[] | null }
+type Comentario = { id: string; conteudo: string; criado_em: string; atualizado_em: string | null; pai_id: string | null; autor: Autor | Autor[] | null }
 type Reacao = { comentario_id: string; emoji: string; usuario_id: string }
 
 const EMOJIS = ['❤️', '🔥', '😂', '👏', '😢']
@@ -38,6 +38,8 @@ export default function MuralPerfil({
   const [novoTexto, setNovoTexto] = useState('')
   const [respondendoId, setRespondendoId] = useState<string | null>(null)
   const [textoResposta, setTextoResposta] = useState('')
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [edicaoTexto, setEdicaoTexto] = useState('')
   const [emojiAberto, setEmojiAberto] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -77,6 +79,21 @@ export default function MuralPerfil({
     })
   }
 
+  function iniciarEdicao(c: Comentario) {
+    setEditandoId(c.id)
+    setEdicaoTexto(c.conteudo)
+  }
+
+  function handleEditar(id: string) {
+    if (!edicaoTexto.trim()) return
+    startTransition(async () => {
+      await editarComentarioMural(id, edicaoTexto.trim())
+      setEditandoId(null)
+      setEdicaoTexto('')
+      await carregar()
+    })
+  }
+
   function handleReagir(comentarioId: string, emoji: string) {
     startTransition(async () => {
       await reagirMural(comentarioId, emoji)
@@ -104,6 +121,11 @@ export default function MuralPerfil({
     if (!usuarioLogadoId) return false
     const autor = getAutor(c)
     return autor?.id === usuarioLogadoId || perfilId === usuarioLogadoId
+  }
+
+  function podeEditar(c: Comentario): boolean {
+    if (!usuarioLogadoId) return false
+    return getAutor(c)?.id === usuarioLogadoId
   }
 
   return (
@@ -154,16 +176,50 @@ export default function MuralPerfil({
                     <div>
                       <Link href={`/${locale}/perfil/${autor?.nome_usuario}`} className="text-sm font-medium hover:text-indigo-600 hover:underline">{autor?.nome_exibicao || autor?.nome_usuario}</Link>
                       <span className="ml-2 text-xs text-gray-400">{tempoRelativo(c.criado_em)}</span>
+                      {c.atualizado_em && <span className="ml-1 text-xs text-gray-400">· {t('editado')}</span>}
                     </div>
                   </div>
-                  {podeDeletar(c) && (
-                    <button onClick={() => handleExcluir(c.id)} className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label={t('excluir')}>
-                      <Trash2 size={14} />
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {podeEditar(c) && (
+                      <button onClick={() => iniciarEdicao(c)} className="rounded p-1 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600" aria-label={t('editar')}>
+                        <Pencil size={14} aria-hidden="true" />
+                      </button>
+                    )}
+                    {podeDeletar(c) && (
+                      <button onClick={() => handleExcluir(c.id)} className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label={t('excluir')}>
+                        <Trash2 size={14} aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <p className="mt-2 text-sm text-gray-700">{c.conteudo}</p>
+                {editandoId === c.id ? (
+                  <div className="mt-2">
+                    <textarea
+                      value={edicaoTexto}
+                      onChange={(e) => setEdicaoTexto(e.target.value)}
+                      rows={2}
+                      className="w-full resize-none rounded-lg border border-gray-300 bg-gray-50/60 px-3 py-1.5 text-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                    />
+                    <div className="mt-1 flex gap-2">
+                      <button
+                        onClick={() => handleEditar(c.id)}
+                        disabled={isPending || !edicaoTexto.trim()}
+                        className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                      >
+                        {t('salvar')}
+                      </button>
+                      <button
+                        onClick={() => { setEditandoId(null); setEdicaoTexto('') }}
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700"
+                      >
+                        {t('cancelar')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-gray-700">{c.conteudo}</p>
+                )}
 
                 {/* Reações */}
                 <div className="mt-2 flex flex-wrap items-center gap-1">

@@ -232,6 +232,10 @@
     "enviar": "Enviar",
     "responder": "Responder",
     "excluir": "Excluir",
+    "editar": "Editar",
+    "editado": "editado",
+    "salvar": "Salvar",
+    "cancelar": "Cancelar",
     "vazio": "Nenhuma mensagem no mural ainda. Seja o primeiro!",
     "loginParaComentar": "Faça login para deixar uma mensagem no mural."
   },

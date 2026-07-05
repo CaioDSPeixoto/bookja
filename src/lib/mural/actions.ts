@@ -65,7 +65,7 @@ export async function listarMural(perfilId: string) {
 
   const { data, error } = await supabase
     .from('mural_comentario')
-    .select('id, conteudo, criado_em, pai_id, autor:perfil!mural_comentario_autor_id_fkey(id, nome_usuario, nome_exibicao, avatar_url)')
+    .select('id, conteudo, criado_em, atualizado_em, pai_id, autor:perfil!mural_comentario_autor_id_fkey(id, nome_usuario, nome_exibicao, avatar_url)')
     .eq('perfil_id', perfilIdValidado)
     .is('pai_id', null)
     .order('criado_em', { ascending: false })
@@ -84,7 +84,7 @@ export async function listarMural(perfilId: string) {
   if (ids.length > 0) {
     const { data: resp, error: erroRespostas } = await supabase
       .from('mural_comentario')
-      .select('id, conteudo, criado_em, pai_id, autor:perfil!mural_comentario_autor_id_fkey(id, nome_usuario, nome_exibicao, avatar_url)')
+      .select('id, conteudo, criado_em, atualizado_em, pai_id, autor:perfil!mural_comentario_autor_id_fkey(id, nome_usuario, nome_exibicao, avatar_url)')
       .in('pai_id', ids)
       .order('criado_em', { ascending: true })
 
@@ -135,6 +135,27 @@ export async function criarComentarioMural(perfilId: string, conteudo: string, p
     })
 
   if (error) throw erroOperacao('Não foi possível criar o comentário no mural')
+}
+
+export async function editarComentarioMural(comentarioId: string, conteudo: string) {
+  const { supabase, user } = await obterUsuarioOuErro()
+  const comentarioIdValidado = validarIdComentario(comentarioId)
+  const conteudoValidado = normalizarConteudo(conteudo)
+
+  const { data: comentario } = await supabase
+    .from('mural_comentario')
+    .select('autor_id')
+    .eq('id', comentarioIdValidado)
+    .single()
+
+  if (!comentario || comentario.autor_id !== user.id) throw erroPublico('Sem permissão')
+
+  const { error } = await supabase
+    .from('mural_comentario')
+    .update({ conteudo: conteudoValidado, atualizado_em: new Date().toISOString() })
+    .eq('id', comentarioIdValidado)
+
+  if (error) throw erroOperacao('Não foi possível editar o comentário do mural')
 }
 
 export async function excluirComentarioMural(comentarioId: string) {
