@@ -109,9 +109,9 @@ export async function criarNotificacao(dados: DadosNotificacao) {
   const { error } = await supabase.rpc('criar_notificacao_sistema', {
     p_usuario_id: payload.usuario_id,
     p_tipo: payload.tipo,
-    p_projeto_id: payload.projeto_id,
-    p_documento_id: payload.documento_id,
-    p_comentario_id: payload.comentario_id,
+    p_projeto_id: payload.projeto_id ?? undefined,
+    p_documento_id: payload.documento_id ?? undefined,
+    p_comentario_id: payload.comentario_id ?? undefined,
     p_mensagem: payload.mensagem,
   })
 

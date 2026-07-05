@@ -82,12 +82,14 @@ describe('Server Actions - Notificações', () => {
       mensagem: 'Convite',
     })
 
+    // Campos ausentes viram undefined (tipo do RPC aceita string | undefined;
+    // o servidor aplica o default null quando omitidos).
     expect(mockRpc).toHaveBeenCalledWith('criar_notificacao_sistema', {
       p_usuario_id: USUARIO_ID,
       p_tipo: 'convite',
       p_projeto_id: '323e4567-e89b-12d3-a456-426614174000',
-      p_documento_id: null,
-      p_comentario_id: null,
+      p_documento_id: undefined,
+      p_comentario_id: undefined,
       p_mensagem: 'Convite',
     })
   })

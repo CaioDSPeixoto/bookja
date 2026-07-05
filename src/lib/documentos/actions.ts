@@ -254,7 +254,7 @@ export async function alterarStatusDocumento(id: string, status: StatusDocumento
   if (!doc) throw erroPublico('Documento não encontrado')
   await verificarAcesso(supabase, doc.projeto_id)
 
-  const statusAnterior = doc.status
+  const statusAnterior = doc.status as StatusDocumento
   if (status === 'publicado') {
     await validarPublicacaoDocumento(supabase, documentoId, statusAnterior)
   }

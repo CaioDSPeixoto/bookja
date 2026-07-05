@@ -287,7 +287,7 @@ export async function registrarVisualizacao(projetoId: string, usuarioId?: strin
   const supabase = await criarClienteServidor()
   await supabase.rpc('incrementar_visualizacao', {
     p_projeto_id: projetoId,
-    p_usuario_id: usuarioId || null,
+    p_usuario_id: usuarioId ?? undefined,
   })
 }
 

@@ -46,7 +46,8 @@ export async function adquirirLock(documentoId: string) {
     return { sucesso: true }
   }
 
-  return data?.sucesso !== false ? { sucesso: true } : { sucesso: false, travadoPor: data.travado_por_nome }
+  const resultado = data as { sucesso?: boolean; travado_por_nome?: string } | null
+  return resultado?.sucesso !== false ? { sucesso: true } : { sucesso: false, travadoPor: resultado.travado_por_nome }
 }
 
 export async function liberarLock(documentoId: string) {

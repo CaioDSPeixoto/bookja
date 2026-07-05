@@ -47,7 +47,7 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ id: st
         setProjeto(data)
         setTitulo(data.titulo)
         setSinopse(data.sinopse || '')
-        setStatus(data.status)
+        setStatus(data.status as StatusProjeto)
         setCapaUrl(data.capa_url || null)
       })
       listarColaboradores(id).then((cols) => {

@@ -48,7 +48,7 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
   }
 
   const recarregar = useCallback(async (pid: string) => {
-    const docs = await listarDocumentos(pid)
+    const docs = (await listarDocumentos(pid)) as Documento[]
     setDocumentos(docs)
     return docs
   }, [])
