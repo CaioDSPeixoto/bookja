@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
-import { MessageCircle, Trash2 } from 'lucide-react'
-import { criarComentario, excluirComentario, listarComentarios, responderComentario } from '@/lib/comentarios/actions'
+import { MessageCircle, Pencil, Trash2 } from 'lucide-react'
+import { criarComentario, editarComentario, excluirComentario, listarComentarios, responderComentario } from '@/lib/comentarios/actions'
 import { Estrelas } from './Estrelas'
 import { Reacoes } from './Reacoes'
 
@@ -13,6 +13,7 @@ interface Comentario {
   conteudo: string
   nota: number | null
   criado_em: string
+  atualizado_em: string | null
   autor_id: string
   pai_id: string | null
   perfil: { nome_usuario: string; nome_exibicao: string; avatar_url?: string }
@@ -31,6 +32,8 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
   const [conteudo, setConteudo] = useState('')
   const [respondendoId, setRespondendoId] = useState<string | null>(null)
   const [respostaTexto, setRespostaTexto] = useState('')
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [edicaoTexto, setEdicaoTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
 
   const carregar = useCallback(async () => {
@@ -65,6 +68,21 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
     await carregar()
   }
 
+  function iniciarEdicao(c: Comentario) {
+    setEditandoId(c.id)
+    setEdicaoTexto(c.conteudo)
+  }
+
+  async function handleEditar(id: string) {
+    if (!edicaoTexto.trim()) return
+    setEnviando(true)
+    await editarComentario(id, edicaoTexto)
+    setEditandoId(null)
+    setEdicaoTexto('')
+    await carregar()
+    setEnviando(false)
+  }
+
   function dataRelativa(data: string) {
     const diff = Date.now() - new Date(data).getTime()
     const min = Math.floor(diff / 60000)
@@ -88,9 +106,36 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
           <div className="flex items-center gap-2">
             <Link href={`/${locale}/perfil/${c.perfil.nome_usuario}`} className="text-sm font-medium hover:text-indigo-600 hover:underline">{c.perfil.nome_exibicao || c.perfil.nome_usuario}</Link>
             <span className="text-xs text-gray-400">{dataRelativa(c.criado_em)}</span>
+            {c.atualizado_em && <span className="text-xs text-gray-400">· {t('editado')}</span>}
             {c.nota && <Estrelas valor={c.nota} tamanho={12} />}
           </div>
-          <p className="mt-1 text-sm text-gray-700 whitespace-pre-line break-words">{c.conteudo}</p>
+          {editandoId === c.id ? (
+            <div className="mt-1">
+              <textarea
+                value={edicaoTexto}
+                onChange={(e) => setEdicaoTexto(e.target.value)}
+                rows={2}
+                className="w-full resize-none rounded-lg border border-gray-300 bg-gray-50/60 px-3 py-1.5 text-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+              />
+              <div className="mt-1 flex gap-2">
+                <button
+                  onClick={() => handleEditar(c.id)}
+                  disabled={enviando || !edicaoTexto.trim()}
+                  className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {t('salvar')}
+                </button>
+                <button
+                  onClick={() => { setEditandoId(null); setEdicaoTexto('') }}
+                  className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700"
+                >
+                  {t('cancelar')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-gray-700 whitespace-pre-line break-words">{c.conteudo}</p>
+          )}
           <div className="mt-2 flex items-center gap-3">
             <Reacoes comentarioId={c.id} />
             {!isReply && usuarioId && (
@@ -102,9 +147,14 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
               </button>
             )}
             {usuarioId === c.autor_id && (
-              <button onClick={() => handleExcluir(c.id)} className="text-xs text-red-400 hover:text-red-600" aria-label="Excluir comentário">
-                <Trash2 size={12} aria-hidden="true" />
-              </button>
+              <>
+                <button onClick={() => iniciarEdicao(c)} className="text-xs text-gray-400 hover:text-indigo-600" aria-label="Editar comentário">
+                  <Pencil size={12} aria-hidden="true" />
+                </button>
+                <button onClick={() => handleExcluir(c.id)} className="text-xs text-red-400 hover:text-red-600" aria-label="Excluir comentário">
+                  <Trash2 size={12} aria-hidden="true" />
+                </button>
+              </>
             )}
           </div>
           {respondendoId === c.id && (

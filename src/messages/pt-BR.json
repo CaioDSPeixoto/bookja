@@ -110,6 +110,10 @@
     "reagir": "Reagir",
     "respostas": "{count, plural, one {# resposta} other {# respostas}}",
     "ha": "há",
+    "editar": "Editar",
+    "editado": "editado",
+    "salvar": "Salvar",
+    "cancelar": "Cancelar",
     "loginParaComentar": "Faça login para comentar"
   },
   "perfil": {

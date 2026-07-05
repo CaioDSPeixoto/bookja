@@ -262,6 +262,31 @@ export async function listarComentarios(projetoId: string, documentoId?: string 
   return comentarios.filter((c) => !bloqueados.has(c.autor_id as string))
 }
 
+export async function editarComentario(id: string, conteudo: string) {
+  const comentarioId = validarIdComentario(id)
+  const conteudoValidado = normalizarConteudo(conteudo)
+  const supabase = await criarClienteServidor()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw erroPublico('Autenticação necessária')
+
+  const { data: comentario } = await supabase
+    .from('comentario')
+    .select('autor_id, conteudo')
+    .eq('id', comentarioId)
+    .single()
+
+  if (!comentario || comentario.autor_id !== user.id) throw erroPublico('Sem permissão')
+  // Linhas de avaliação (sem texto) não são comentários editáveis.
+  if (((comentario.conteudo as string) ?? '').trim() === '') throw erroPublico('Comentário não encontrado')
+
+  const { error } = await supabase
+    .from('comentario')
+    .update({ conteudo: conteudoValidado, atualizado_em: new Date().toISOString() })
+    .eq('id', comentarioId)
+
+  if (error) throw erroComentario('Não foi possível editar o comentário')
+}
+
 export async function responderComentario(comentarioId: string, conteudo: string) {
   const comentarioIdValidado = validarIdComentario(comentarioId)
   const conteudoValidado = normalizarConteudo(conteudo)
