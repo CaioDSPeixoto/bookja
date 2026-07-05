@@ -162,7 +162,7 @@ export async function buscarHistoriaPublica(id: string) {
   return { ...data, documento: documentosPublicos }
 }
 
-export async function buscarCatalogo(filtros: { busca?: string; tagId?: string; pagina?: number }) {
+export async function buscarCatalogo(filtros: { busca?: string; tags?: string[]; pagina?: number }) {
   const supabase = await criarClienteServidor()
   const idadeUsuario = await obterIdadeUsuario()
   const pagina = filtros.pagina || 1
@@ -200,22 +200,34 @@ export async function buscarCatalogo(filtros: { busca?: string; tagId?: string; 
     }
   }
 
-  if (filtros.tagId) {
-    query = query.eq('projeto_tag.tag_id', Number(filtros.tagId))
+  // Filtro por múltiplas tags (semântica E: o projeto precisa ter todas).
+  const tagsSelecionadas = [...new Set((filtros.tags || []).map(Number).filter(Number.isInteger))]
+  if (tagsSelecionadas.length > 0) {
+    const { data: vinculos } = await supabase
+      .from('projeto_tag')
+      .select('projeto_id, tag_id')
+      .in('tag_id', tagsSelecionadas)
+
+    const tagsPorProjeto = new Map<string, Set<number>>()
+    for (const v of vinculos || []) {
+      const set = tagsPorProjeto.get(v.projeto_id) ?? new Set<number>()
+      set.add(v.tag_id as number)
+      tagsPorProjeto.set(v.projeto_id, set)
+    }
+    const idsComTodas = [...tagsPorProjeto.entries()]
+      .filter(([, set]) => set.size >= tagsSelecionadas.length)
+      .map(([id]) => id)
+
+    if (idsComTodas.length === 0) return { projetos: [], total: 0, totalPaginas: 0 }
+    query = query.in('id', idsComTodas)
   }
 
   const { data, count, error } = await query
 
   if (error) return { projetos: [], total: 0, totalPaginas: 0 }
 
-  // Se filtrando por tag, remover projetos que não tiveram match na tag
-  let projetos = data || []
-  if (filtros.tagId) {
-    projetos = projetos.filter((p: { projeto_tag: unknown[] }) => p.projeto_tag.length > 0)
-  }
-
   // Filtrar por classificação etária
-  projetos = filtrarPorIdade(projetos, idadeUsuario)
+  const projetos = filtrarPorIdade(data || [], idadeUsuario)
 
   // Anexa progresso de leitura para a barra nos cards (usuário logado).
   const projetosComProgresso = await anexarProgressoLeitura(projetos)

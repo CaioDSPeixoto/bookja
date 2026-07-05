@@ -118,7 +118,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
               {tags.map((tag) => (
                 <Link
                   key={tag.id}
-                  href={`/${locale}/historias?tag=${tag.id}`}
+                  href={`/${locale}/historias?tags=${tag.id}`}
                   className="rounded-full bg-indigo-50 px-3 py-1 text-sm text-indigo-700 hover:bg-indigo-100"
                 >
                   {tag.nome}

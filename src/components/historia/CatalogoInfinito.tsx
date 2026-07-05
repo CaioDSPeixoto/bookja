@@ -21,7 +21,7 @@ interface Props {
   inicial: ProjetoCatalogo[]
   totalPaginas: number
   busca?: string
-  tagId?: string
+  tags?: string[]
 }
 
 function cardProps(p: ProjetoCatalogo, locale: string) {
@@ -39,7 +39,7 @@ function cardProps(p: ProjetoCatalogo, locale: string) {
   }
 }
 
-export default function CatalogoInfinito({ inicial, totalPaginas, busca, tagId }: Props) {
+export default function CatalogoInfinito({ inicial, totalPaginas, busca, tags }: Props) {
   const locale = useLocale()
   const [projetos, setProjetos] = useState<ProjetoCatalogo[]>(inicial)
   const [pagina, setPagina] = useState(1)
@@ -47,19 +47,21 @@ export default function CatalogoInfinito({ inicial, totalPaginas, busca, tagId }
   const sentinelaRef = useRef<HTMLDivElement>(null)
 
   const temMais = pagina < totalPaginas
+  // Chave estável do array de tags para dependências de efeito/callback.
+  const tagsKey = (tags || []).join(',')
 
   // Reinicia ao mudar filtros (nova lista vinda do servidor).
   useEffect(() => {
     setProjetos(inicial)
     setPagina(1)
-  }, [inicial, busca, tagId])
+  }, [inicial, busca, tagsKey])
 
   const carregarMais = useCallback(async () => {
     if (carregando) return
     setCarregando(true)
     try {
       const proxima = pagina + 1
-      const { projetos: novos } = await carregarHistorias({ busca, tagId, pagina: proxima })
+      const { projetos: novos } = await carregarHistorias({ busca, tags: tagsKey ? tagsKey.split(',') : [], pagina: proxima })
       setProjetos((atuais) => {
         const vistos = new Set(atuais.map((p) => p.id))
         return [...atuais, ...(novos as ProjetoCatalogo[]).filter((p) => !vistos.has(p.id))]
@@ -68,7 +70,7 @@ export default function CatalogoInfinito({ inicial, totalPaginas, busca, tagId }
     } finally {
       setCarregando(false)
     }
-  }, [carregando, pagina, busca, tagId])
+  }, [carregando, pagina, busca, tagsKey])
 
   useEffect(() => {
     const alvo = sentinelaRef.current

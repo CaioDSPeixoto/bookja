@@ -62,6 +62,7 @@ e `npm run build` com sucesso.
 - **Avaliação por estrelas dedicada**: widget na página da história que salva na hora, separado do comentário.
 - **Progresso de leitura no card** do catálogo **e favoritos** (barra sobre a capa; favoritos padronizados com `CardHistoria`).
 - **Busca com debounce** no catálogo, casando título, sinopse **e autor**.
+- **Filtro por múltiplas tags** (semântica E: história precisa ter todas as selecionadas), com compat de link antigo.
 - **Acessibilidade**: `aria-label` em botões só de ícone (favoritar, reações, excluir, notificações, mural).
 - **Edição de comentários**: autor edita o próprio comentário inline (na obra **e no mural**), com marca "editado".
 - Correções: autosave 500 em capítulos importados (`eJson` tolera `undefined`); criação de projeto com coautor não trava mais; fundo cinza p/ contraste dos cards; `engines` em Node 24.
@@ -90,7 +91,6 @@ e `npm run build` com sucesso.
 - **PWA offline**: service worker (via `next-pwa`) para cache e prompt de instalação no Android.
 
 ### Médio prazo
-- Busca por **múltiplas tags combinadas** (hoje uma tag por vez; texto+autor já com debounce).
 - Denúncia/moderação de conteúdo (comentários e mural).
 - Acessibilidade: estender `aria-label` aos botões só de ícone restantes (editor, painéis internos).
 - Substituir tipos manuais do Supabase por tipos gerados pela CLI.
