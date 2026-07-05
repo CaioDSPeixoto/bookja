@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import RegistrarServiceWorker from '@/components/pwa/RegistrarServiceWorker'
 
 export const metadata: Metadata = {
   title: { default: 'Bookja', template: '%s · Bookja' },
@@ -22,7 +23,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <RegistrarServiceWorker />
+        {children}
+      </body>
     </html>
   )
 }
