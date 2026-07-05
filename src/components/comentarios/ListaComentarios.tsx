@@ -7,6 +7,7 @@ import { MessageCircle, Pencil, Trash2 } from 'lucide-react'
 import { criarComentario, editarComentario, excluirComentario, listarComentarios, responderComentario } from '@/lib/comentarios/actions'
 import { Estrelas } from './Estrelas'
 import { Reacoes } from './Reacoes'
+import BotaoDenunciar from '@/components/denuncias/BotaoDenunciar'
 
 interface Comentario {
   id: string
@@ -156,6 +157,7 @@ export function ListaComentarios({ projetoId, documentoId, usuarioId }: ListaCom
                 </button>
               </>
             )}
+            {usuarioId && usuarioId !== c.autor_id && <BotaoDenunciar tipoAlvo="comentario" alvoId={c.id} />}
           </div>
           {respondendoId === c.id && (
             <div className="mt-2 flex gap-2">

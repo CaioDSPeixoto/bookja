@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { MessageSquare, Send, Trash2, Reply, SmilePlus, Pencil } from 'lucide-react'
 import { listarMural, criarComentarioMural, editarComentarioMural, excluirComentarioMural, reagirMural } from '@/lib/mural/actions'
+import BotaoDenunciar from '@/components/denuncias/BotaoDenunciar'
 
 type Autor = { id: string; nome_usuario: string; nome_exibicao: string | null; avatar_url: string | null }
 type Comentario = { id: string; conteudo: string; criado_em: string; atualizado_em: string | null; pai_id: string | null; autor: Autor | Autor[] | null }
@@ -189,6 +190,9 @@ export default function MuralPerfil({
                       <button onClick={() => handleExcluir(c.id)} className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label={t('excluir')}>
                         <Trash2 size={14} aria-hidden="true" />
                       </button>
+                    )}
+                    {usuarioLogadoId && getAutor(c)?.id !== usuarioLogadoId && (
+                      <BotaoDenunciar tipoAlvo="mural" alvoId={c.id} />
                     )}
                   </div>
                 </div>

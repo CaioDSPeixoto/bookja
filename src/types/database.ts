@@ -152,6 +152,47 @@ export type Database = {
           },
         ]
       }
+      denuncia: {
+        Row: {
+          alvo_id: string
+          criado_em: string
+          denunciante_id: string
+          id: string
+          motivo: string
+          resolvida: boolean
+          resolvida_em: string | null
+          tipo_alvo: string
+        }
+        Insert: {
+          alvo_id: string
+          criado_em?: string
+          denunciante_id: string
+          id?: string
+          motivo: string
+          resolvida?: boolean
+          resolvida_em?: string | null
+          tipo_alvo: string
+        }
+        Update: {
+          alvo_id?: string
+          criado_em?: string
+          denunciante_id?: string
+          id?: string
+          motivo?: string
+          resolvida?: boolean
+          resolvida_em?: string | null
+          tipo_alvo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "denuncia_denunciante_id_fkey"
+            columns: ["denunciante_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documento: {
         Row: {
           atualizado_em: string | null
@@ -859,6 +900,10 @@ export type Database = {
           p_usuario_id: string
         }
         Returns: undefined
+      }
+      eh_admin: {
+        Args: { p_usuario_id: string }
+        Returns: boolean
       }
       eh_colaborador: {
         Args: { p_projeto_id: string; p_usuario_id: string }

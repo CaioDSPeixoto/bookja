@@ -10,7 +10,7 @@ Snapshot do andamento do projeto. Complementa os documentos vivos:
 
 A base funcional do MVP está completa e o foco recente foi **destravar o banco
 remoto, segurança (RLS), usabilidade mobile, padronização visual e correção de
-bugs**. O banco remoto (`ezdtqfmpornhkyilaxlh`) está alinhado às migrations 015→026.
+bugs**. O banco remoto (`ezdtqfmpornhkyilaxlh`) está alinhado às migrations 015→027.
 Não há pendências de **alta prioridade** em aberto; o que resta são validações
 manuais (2 usuários / device físico) e itens de **backlog**.
 
@@ -66,6 +66,7 @@ e `npm run build` com sucesso.
 - **Acessibilidade**: `aria-label` em botões só de ícone (favoritar, reações, excluir, notificações, mural).
 - **Edição de comentários**: autor edita o próprio comentário inline (na obra **e no mural**), com marca "editado".
 - **Tipos do Supabase gerados** (substituem os manuais frouxos): `src/types/database.ts` canônico; estreitamentos de tipo corrigidos no app.
+- **Denúncia/moderação de conteúdo**: botão de denunciar em comentários e mural; tabela `denuncia` + RLS (migration 027); painel `/moderacao` restrito a admin (`papel = 'admin'`).
 - Correções: autosave 500 em capítulos importados (`eJson` tolera `undefined`); criação de projeto com coautor não trava mais; fundo cinza p/ contraste dos cards; `engines` em Node 24.
 - Correções: avaliação recalculada ao excluir comentário; favoritos despublicados ocultados.
 
@@ -82,6 +83,7 @@ e `npm run build` com sucesso.
 
 ### Configuração (fora do código)
 - Habilitar **Leaked Password Protection** no dashboard do Supabase (Auth).
+- **Conceder admin** (acesso ao `/moderacao`): `update perfil set papel = 'admin' where nome_usuario = '<usuario>';`
 - Sincronizar a `main` **local** no diretório principal (`git stash` + `git pull`) — está atrás do remoto.
 
 ---
@@ -92,8 +94,8 @@ e `npm run build` com sucesso.
 - **PWA offline**: service worker (via `next-pwa`) para cache e prompt de instalação no Android.
 
 ### Médio prazo
-- Denúncia/moderação de conteúdo (comentários e mural).
 - Acessibilidade: estender `aria-label` aos botões só de ícone restantes (editor, painéis internos).
+- Moderação: enriquecer o painel com prévia do conteúdo denunciado e ação de remover direto.
 
 ### Maior esforço
 - Edição simultânea real (CRDT/Yjs) no editor.
@@ -108,7 +110,8 @@ e `npm run build` com sucesso.
 `015` status/notificações · `016` aprovação revisão · `017` RLS documento ·
 `018` favorito não-dono · `019` RLS comentário · `020` dedup tags ·
 `021` 1 avaliação/usuário · `022` RPC avaliação · `023` perfil_privado ·
-`024` realtime notificação · `025` helper bloqueio · `026` normaliza usernames legados.
+`024` realtime notificação · `025` helper bloqueio · `026` normaliza usernames legados ·
+`027` denúncias + helper `eh_admin`.
 
 Repositório e banco remoto estão sincronizados.
 
