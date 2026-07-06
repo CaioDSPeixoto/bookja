@@ -397,13 +397,12 @@ export async function reordenarDocumentos(projetoId: string, ordens: OrdemDocume
   const ordensValidadas = normalizarOrdens(ordens)
   await verificarAcesso(supabase, projetoIdValidado)
 
-  for (const { id, ordem } of ordensValidadas) {
-    const { error } = await supabase
-      .from('documento')
-      .update({ ordem })
-      .eq('id', id)
-      .eq('projeto_id', projetoIdValidado)
+  // Reordenação atômica via RPC: todas as ordens são aplicadas de uma vez
+  // (tudo ou nada), evitando ordem parcialmente aplicada se algo falhar.
+  const { error } = await supabase.rpc('reordenar_documentos', {
+    p_projeto_id: projetoIdValidado,
+    p_ordens: ordensValidadas,
+  })
 
-    if (error) throw erroDocumento('Não foi possível reordenar os documentos')
-  }
+  if (error) throw erroDocumento('Não foi possível reordenar os documentos')
 }

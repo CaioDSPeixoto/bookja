@@ -10,7 +10,7 @@ Snapshot do andamento do projeto. Complementa os documentos vivos:
 
 A base funcional do MVP está completa e o foco recente foi **destravar o banco
 remoto, segurança (RLS), usabilidade mobile, padronização visual e correção de
-bugs**. O banco remoto (`ezdtqfmpornhkyilaxlh`) está alinhado às migrations 015→027.
+bugs**. O banco remoto (`ezdtqfmpornhkyilaxlh`) está alinhado às migrations 015→028.
 Não há pendências de **alta prioridade** em aberto; o que resta são validações
 manuais (2 usuários / device físico) e itens de **backlog**.
 
@@ -68,6 +68,7 @@ e `npm run build` com sucesso.
 - **Edição de comentários**: autor edita o próprio comentário inline (na obra **e no mural**), com marca "editado".
 - **Tipos do Supabase gerados** (substituem os manuais frouxos): `src/types/database.ts` canônico; estreitamentos de tipo corrigidos no app.
 - **Denúncia/moderação de conteúdo**: botão de denunciar em comentários e mural; tabela `denuncia` + RLS (migration 027); painel `/moderacao` restrito a admin (`papel = 'admin'`).
+- **Reordenação transacional de capítulos** (migration 028): RPC `reordenar_documentos` aplica todas as ordens de uma vez (tudo ou nada), no lugar do loop de UPDATEs que podia deixar a ordem parcialmente aplicada.
 - Correções: autosave 500 em capítulos importados (`eJson` tolera `undefined`); criação de projeto com coautor não trava mais; fundo cinza p/ contraste dos cards; `engines` em Node 24.
 - Correções: avaliação recalculada ao excluir comentário; favoritos despublicados ocultados.
 
@@ -100,7 +101,6 @@ e `npm run build` com sucesso.
 
 ### Maior esforço
 - Edição simultânea real (CRDT/Yjs) no editor.
-- Reordenação transacional de capítulos por RPC.
 - `plataforma_config`: decidir se vira feature flags ou é removida.
 - Internacionalização app-wide quando houver 2º idioma.
 
@@ -112,7 +112,7 @@ e `npm run build` com sucesso.
 `018` favorito não-dono · `019` RLS comentário · `020` dedup tags ·
 `021` 1 avaliação/usuário · `022` RPC avaliação · `023` perfil_privado ·
 `024` realtime notificação · `025` helper bloqueio · `026` normaliza usernames legados ·
-`027` denúncias + helper `eh_admin`.
+`027` denúncias + helper `eh_admin` · `028` RPC reordenação atômica.
 
 Repositório e banco remoto estão sincronizados.
 

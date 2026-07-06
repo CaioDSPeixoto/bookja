@@ -933,6 +933,10 @@ export type Database = {
         Args: { p_projeto_id: string }
         Returns: undefined
       }
+      reordenar_documentos: {
+        Args: { p_ordens: Json; p_projeto_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

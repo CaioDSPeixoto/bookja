@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 const mockFrom = vi.fn()
+const mockRpc = vi.fn()
 const mockObterUsuarioAutenticado = vi.fn()
 const mockVerificarAcessoProjeto = vi.fn()
 const mockNotificarFavoritosNovoCapitulo = vi.fn()
@@ -11,6 +12,7 @@ const DOCUMENTO_ID = '223e4567-e89b-12d3-a456-426614174000'
 vi.mock('@/lib/supabase/server', () => ({
   criarClienteServidor: vi.fn(() => ({
     from: mockFrom,
+    rpc: mockRpc,
   })),
 }))
 
@@ -48,6 +50,8 @@ describe('Server Actions - Documentos', () => {
     vi.clearAllMocks()
     // clearAllMocks não limpa a fila de mockReturnValueOnce; reset garante isolamento entre testes.
     mockFrom.mockReset()
+    mockRpc.mockReset()
+    mockRpc.mockResolvedValue({ error: null })
     mockObterUsuarioAutenticado.mockResolvedValue({ id: 'user-123' })
     mockVerificarAcessoProjeto.mockResolvedValue(undefined)
   })
@@ -222,5 +226,32 @@ describe('Server Actions - Documentos', () => {
 
     const enviado = (atualizarChain.update.mock.calls[0][0] as { conteudo: unknown }).conteudo
     expect(enviado).toEqual({ type: 'doc', content: [{ type: 'text', text: 'x' }] })
+  })
+
+  it('reordenarDocumentos aplica as ordens de forma atômica via RPC', async () => {
+    const { reordenarDocumentos } = await import('@/lib/documentos/actions')
+
+    const ordens = [
+      { id: DOCUMENTO_ID, ordem: 2 },
+      { id: '323e4567-e89b-12d3-a456-426614174000', ordem: 1 },
+    ]
+    await reordenarDocumentos(PROJETO_ID, ordens)
+
+    // Uma única chamada atômica (não um UPDATE por documento).
+    expect(mockRpc).toHaveBeenCalledTimes(1)
+    expect(mockRpc).toHaveBeenCalledWith('reordenar_documentos', {
+      p_projeto_id: PROJETO_ID,
+      p_ordens: ordens,
+    })
+    expect(mockFrom).not.toHaveBeenCalled()
+  })
+
+  it('reordenarDocumentos não expõe erro técnico do banco', async () => {
+    mockRpc.mockResolvedValue({ error: { message: 'permission denied' } })
+    const { reordenarDocumentos } = await import('@/lib/documentos/actions')
+
+    await expect(
+      reordenarDocumentos(PROJETO_ID, [{ id: DOCUMENTO_ID, ordem: 1 }]),
+    ).rejects.toThrow('Não foi possível reordenar os documentos')
   })
 })
