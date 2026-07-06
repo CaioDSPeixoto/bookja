@@ -48,6 +48,7 @@ e `npm run build` com sucesso.
 - Redesenho de entrar, cadastro, perfil, detalhe da história, home, catálogo, configurações,
   favoritos, documentos, prévia e componentes (CardHistoria, comentários, mural, reações, popup).
 - Correção de bug de layout: `<html>/<body>` aninhados entre root e locale layout.
+- **Otimização de imagens** (`next/image` nativo da Vercel): removido `unoptimized` de capas/avatares; `sizes` responsivo + `srcset`, AVIF/WebP e lazy-loading; `priority` na capa da obra (LCP). Impacto direto em performance mobile.
 
 ### Funcionalidades
 - Perfil: cards de histórias com **capa, nota e visualizações**; cadastro valida nome de usuário.

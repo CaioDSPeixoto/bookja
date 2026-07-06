@@ -63,7 +63,7 @@ export default async function HistoriaPage({ params }: { params: Promise<{ local
         <div className="w-full flex-shrink-0 md:w-64">
           <div className="aspect-[3/4] overflow-hidden rounded-2xl border border-gray-100 bg-gray-100 shadow-sm">
             {historia.capa_url ? (
-              <Image src={historia.capa_url} alt={historia.titulo} width={384} height={512} className="h-full w-full object-cover" unoptimized />
+              <Image src={historia.capa_url} alt={historia.titulo} width={384} height={512} sizes="(min-width: 768px) 256px, 100vw" priority className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-50">
                 <BookOpen size={64} className="text-indigo-200" />

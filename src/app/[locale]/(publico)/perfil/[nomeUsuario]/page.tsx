@@ -43,7 +43,7 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
         <div className="flex items-start gap-4 px-5 pb-5">
           <div className="-mt-10 flex-shrink-0">
             {perfil.avatar_url ? (
-              <Image src={perfil.avatar_url} alt={perfil.nome_exibicao || ''} width={80} height={80} className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-sm" unoptimized />
+              <Image src={perfil.avatar_url} alt={perfil.nome_exibicao || ''} width={80} height={80} sizes="80px" className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-sm" />
             ) : (
               <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-indigo-600 to-violet-600 text-2xl font-bold text-white shadow-sm">
                 {iniciais}
@@ -89,7 +89,7 @@ export default async function PerfilAutorPage({ params }: { params: Promise<{ lo
               >
                 <div className="h-24 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-indigo-50 to-violet-50">
                   {p.capa_url ? (
-                    <Image src={p.capa_url} alt={p.titulo} width={64} height={96} className="h-full w-full object-cover" unoptimized />
+                    <Image src={p.capa_url} alt={p.titulo} width={64} height={96} sizes="64px" className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center text-indigo-200">
                       <BookOpen size={22} />

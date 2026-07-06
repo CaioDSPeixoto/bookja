@@ -19,7 +19,7 @@ export function CardHistoria({ titulo, autor, sinopse, tags, avaliacao, capa_url
     <Link href={href} className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md">
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100">
         {capa_url ? (
-          <Image src={capa_url} alt={titulo} width={360} height={480} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" unoptimized />
+          <Image src={capa_url} alt={titulo} width={360} height={480} sizes="(min-width: 1024px) 16vw, (min-width: 768px) 24vw, (min-width: 640px) 32vw, 48vw" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-50">
             <span className="text-4xl font-bold text-indigo-200">{titulo.charAt(0)}</span>
