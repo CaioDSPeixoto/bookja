@@ -64,7 +64,7 @@ e `npm run build` com sucesso.
 - **Progresso de leitura no card** do catálogo **e favoritos** (barra sobre a capa; favoritos padronizados com `CardHistoria`).
 - **Busca com debounce** no catálogo, casando título, sinopse **e autor**.
 - **Filtro por múltiplas tags** (semântica E: história precisa ter todas as selecionadas), com compat de link antigo.
-- **Acessibilidade**: `aria-label` em botões só de ícone (favoritar, reações, excluir, notificações, mural).
+- **Acessibilidade**: `aria-label` em botões só de ícone (favoritar, reações, excluir, notificações, mural) **e no editor** (toolbar de formatação, sumário, baú de informações, ficha, cabeçalho da escrita), com `aria-pressed`/`aria-expanded` em toggles e `aria-hidden` nos ícones.
 - **Edição de comentários**: autor edita o próprio comentário inline (na obra **e no mural**), com marca "editado".
 - **Tipos do Supabase gerados** (substituem os manuais frouxos): `src/types/database.ts` canônico; estreitamentos de tipo corrigidos no app.
 - **Denúncia/moderação de conteúdo**: botão de denunciar em comentários e mural; tabela `denuncia` + RLS (migration 027); painel `/moderacao` restrito a admin (`papel = 'admin'`).
@@ -93,7 +93,6 @@ e `npm run build` com sucesso.
 ## 🔭 Ajustes e ideias futuras (backlog)
 
 ### Médio prazo
-- Acessibilidade: estender `aria-label` aos botões só de ícone restantes (editor, painéis internos).
 - Moderação: enriquecer o painel com prévia do conteúdo denunciado e ação de remover direto.
 
 ### Maior esforço

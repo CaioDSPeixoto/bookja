@@ -133,17 +133,19 @@ export default function EditorFicha({ documento, onAtualizado }: Props) {
                   type="button"
                   onClick={() => atualizarCampo(c.id, { tipo: c.tipo === 'curto' ? 'longo' : 'curto' })}
                   title={c.tipo === 'curto' ? 'Transformar em texto longo' : 'Transformar em linha curta'}
+                  aria-label={c.tipo === 'curto' ? 'Transformar em texto longo' : 'Transformar em linha curta'}
                   className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-400 hover:bg-gray-50 hover:text-indigo-600"
                 >
-                  {c.tipo === 'curto' ? <Type size={13} /> : <AlignLeft size={13} />}
+                  {c.tipo === 'curto' ? <Type size={13} aria-hidden="true" /> : <AlignLeft size={13} aria-hidden="true" />}
                 </button>
                 <button
                   type="button"
                   onClick={() => removerCampo(c.id)}
                   title="Remover campo"
+                  aria-label="Remover campo"
                   className="rounded-md p-1 text-gray-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
                 >
-                  <Trash2 size={13} />
+                  <Trash2 size={13} aria-hidden="true" />
                 </button>
               </div>
               {c.tipo === 'curto' ? (

@@ -59,10 +59,11 @@ export default function PainelNotasAutor({ projetoId, documentoId }: Props) {
       <button
         type="button"
         onClick={() => setAberto(!aberto)}
+        aria-expanded={aberto}
         className="flex w-full items-center gap-2 px-4 py-2 text-xs font-medium text-amber-700 sm:px-6"
       >
-        {aberto ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <StickyNote size={14} />
+        {aberto ? <ChevronDown size={14} aria-hidden="true" /> : <ChevronRight size={14} aria-hidden="true" />}
+        <StickyNote size={14} aria-hidden="true" />
         Bastidores do capítulo{notas.length > 0 ? ` (${notas.length})` : ''}
       </button>
 

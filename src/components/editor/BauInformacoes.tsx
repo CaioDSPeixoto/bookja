@@ -72,8 +72,10 @@ export default function BauInformacoes({ documentos, projetoId, ativoId, onSelec
             onClick={() => setMenuAberto(!menuAberto)}
             className="rounded-md p-1 text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
             title={t('novoItem')}
+            aria-label={t('novoItem')}
+            aria-expanded={menuAberto}
           >
-            <Plus size={16} />
+            <Plus size={16} aria-hidden="true" />
           </button>
           {menuAberto && (
             <div className="absolute right-0 top-full z-10 mt-1 w-44 rounded-xl border border-gray-100 bg-white py-1 shadow-lg">
@@ -180,9 +182,10 @@ export default function BauInformacoes({ documentos, projetoId, ativoId, onSelec
                       <button
                         onClick={(e) => { e.stopPropagation(); handleExcluir(doc.id) }}
                         title="Excluir"
+                        aria-label="Excluir item"
                         className="rounded p-0.5 text-gray-300 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={12} aria-hidden="true" />
                       </button>
                     </div>
                     <p className="ml-5 truncate text-[11px] text-gray-400">{resumo}</p>

@@ -102,26 +102,30 @@ export default function EscritaPage({ params }: { params: Promise<{ id: string }
           <button
             type="button"
             onClick={() => navegarAposSalvar(`/${locale}/projeto/${projetoId}/editar`)}
+            aria-label={t('voltarEditor')}
             className="flex flex-shrink-0 items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-indigo-600"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={16} aria-hidden="true" />
             <span className="hidden sm:inline">{t('voltarEditor')}</span>
           </button>
           <button
             type="button"
             onClick={() => setSumarioAberto(true)}
+            aria-label={t('sumario')}
+            aria-expanded={sumarioAberto}
             className="flex min-w-0 items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
           >
-            <ListOrdered size={16} className="flex-shrink-0" />
+            <ListOrdered size={16} className="flex-shrink-0" aria-hidden="true" />
             <span className="truncate">{capituloAtivo?.titulo || t('semCapitulos')}</span>
           </button>
         </div>
         <button
           type="button"
           onClick={() => navegarAposSalvar(`/${locale}/projeto/${projetoId}/previa`)}
+          aria-label={t('previa')}
           className="inline-flex flex-shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-indigo-700 hover:shadow-md sm:px-4"
         >
-          <Eye size={16} />
+          <Eye size={16} aria-hidden="true" />
           <span className="hidden sm:inline">{t('previa')}</span>
         </button>
       </header>

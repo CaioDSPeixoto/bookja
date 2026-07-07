@@ -140,8 +140,9 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
                   className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-30"
                   disabled={index === 0 || operandoEste}
                   title="Mover para cima"
+                  aria-label="Mover capítulo para cima"
                 >
-                  <ChevronUp size={14} />
+                  <ChevronUp size={14} aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -149,8 +150,9 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
                   className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-30"
                   disabled={index === capitulos.length - 1 || operandoEste}
                   title="Mover para baixo"
+                  aria-label="Mover capítulo para baixo"
                 >
-                  <ChevronDown size={14} />
+                  <ChevronDown size={14} aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -162,13 +164,14 @@ export default function SumarioCapitulos({ capitulos, capituloAtivoId, onSelecio
                   }`}
                   disabled={operandoEste}
                   title="Excluir capítulo"
+                  aria-label={confirmandoExclusaoId === capitulo.id ? 'Confirmar exclusão do capítulo' : 'Excluir capítulo'}
                 >
                   {operandoEste ? (
-                    <Loader2 size={14} className="animate-spin" />
+                    <Loader2 size={14} className="animate-spin" aria-hidden="true" />
                   ) : confirmandoExclusaoId === capitulo.id ? (
                     'Confirmar'
                   ) : (
-                    <Trash2 size={14} />
+                    <Trash2 size={14} aria-hidden="true" />
                   )}
                 </button>
               </div>
