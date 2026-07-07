@@ -5,14 +5,18 @@
 //  - Nunca cacheia POST, outra origem (ex.: Supabase), /api ou /auth.
 // Ao mudar a lógica, incrementar a versão para invalidar caches antigos.
 
-const VERSAO = 'v1'
+const VERSAO = 'v2'
 const CACHE_PAGINAS = `bookja-paginas-${VERSAO}`
 const CACHE_ASSETS = `bookja-assets-${VERSAO}`
 const SHELL_OFFLINE = '/pt-BR'
+const PAGINA_OFFLINE = '/offline.html'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_PAGINAS).then((cache) => cache.add(SHELL_OFFLINE)).catch(() => undefined),
+    caches
+      .open(CACHE_PAGINAS)
+      .then((cache) => cache.addAll([SHELL_OFFLINE, PAGINA_OFFLINE]))
+      .catch(() => undefined),
   )
   self.skipWaiting()
 })
@@ -56,6 +60,8 @@ async function networkFirst(request, cacheName) {
   } catch {
     const cacheado = await cache.match(request)
     if (cacheado) return cacheado
+    const offline = await cache.match(PAGINA_OFFLINE)
+    if (offline) return offline
     const shell = await cache.match(SHELL_OFFLINE)
     if (shell) return shell
     return new Response('Você está offline.', {
