@@ -54,7 +54,7 @@ e `npm run build` com sucesso.
 - Perfil: cards de histórias com **capa, nota e visualizações**; cadastro valida nome de usuário.
 - Painel "Meus Projetos": visualizações, nota média e nº de comentários por card.
 - **Progresso de leitura** na página da história (barra + continuar lendo).
-- **PWA**: manifest standalone, ícone, theme-color, meta Apple **+ service worker offline** (`public/sw.js`, sem dependências): shell e assets em cache, navegação network-first com fallback offline; registrado só em produção.
+- **PWA**: manifest standalone, ícone, theme-color, meta Apple **+ service worker offline** (`public/sw.js`, sem dependências): shell e assets em cache, navegação network-first com fallback offline; registrado só em produção. **Botão de instalação** (`beforeinstallprompt`) discreto no header, com dispensa persistida.
 - **Notificações em tempo real** (#19).
 - **Bloqueio entre usuários** (#20): bloquear/desbloquear no perfil; oculta conteúdo **e reações** de bloqueados; impede post no mural.
 - **Leitura**: barra de capítulos do topo removida, reações movidas para baixo, "Bastidores" recolhível.
@@ -93,7 +93,7 @@ e `npm run build` com sucesso.
 ## 🔭 Ajustes e ideias futuras (backlog)
 
 ### Curto prazo (bom retorno)
-- **Prompt de instalação** PWA customizado (`beforeinstallprompt`) e página offline dedicada.
+- Página **offline dedicada** (hoje o fallback offline reusa o shell `/pt-BR`).
 
 ### Médio prazo
 - Acessibilidade: estender `aria-label` aos botões só de ícone restantes (editor, painéis internos).

@@ -7,6 +7,7 @@ import SeletorIdioma from './SeletorIdioma'
 import MenuMobile from './MenuMobile'
 import DropdownPerfil from './DropdownPerfil'
 import NotificacoesPopup from './NotificacoesPopup'
+import BotaoInstalarPWA from '@/components/pwa/BotaoInstalarPWA'
 
 export default async function Cabecalho() {
   const t = await getTranslations('navegacao')
@@ -56,6 +57,7 @@ export default async function Cabecalho() {
 
         {/* Direita */}
         <div className="flex items-center gap-3">
+          <BotaoInstalarPWA />
           <SeletorIdioma />
 
           {user ? (
