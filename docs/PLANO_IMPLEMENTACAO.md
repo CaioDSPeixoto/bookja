@@ -240,7 +240,7 @@ Itens importantes, mas não bloqueadores da primeira entrega se os critérios ac
 - Fallback de auto-save para fechamento abrupto com rota API/`sendBeacon`.
 - Baú de informações redesenhado em local próprio.
 - Sistema de bloqueio entre usuários aplicado em perfil, mural, comentários e reações.
-- `plataforma_config`: decidir se vira feature flags/config global ou se será removida.
+- ~~`plataforma_config`: decidir se vira feature flags/config global ou se será removida.~~ **Removida** (migration 029 — tabela sem uso e vazia).
 - Substituir tipos manuais por tipos gerados pela Supabase CLI.
 - Internacionalização app-wide quando houver segundo idioma.
 - Remover `any` e casts restantes em queries Supabase.

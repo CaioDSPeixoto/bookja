@@ -12,7 +12,7 @@ O projeto está em **estado de lançamento** para uma 1ª entrega no plano Free.
 Sobre o MVP funcional, esta fase adicionou uma camada de **features de valor,
 performance e endurecimento** — tudo commitado, **deployado (Vercel verde)** e
 verificado onde foi possível automatizar. O banco remoto (`ezdtqfmpornhkyilaxlh`)
-está alinhado às migrations 015→028.
+está alinhado às migrations 015→029.
 
 Destaques recentes: busca com debounce (título/sinopse/autor), filtro por múltiplas
 tags, avaliação por estrelas dedicada, progresso de leitura nos cards, edição de
@@ -107,7 +107,6 @@ Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run tes
 
 ### Maior esforço
 - Edição simultânea real (CRDT/Yjs) no editor.
-- `plataforma_config`: tabela key-value criada na migration 001, **sem uso no código e vazia** (scaffolding morto). Decidir: virar sistema de feature flags ou **remover**.
 - Internacionalização app-wide quando houver 2º idioma.
 
 ---
@@ -118,7 +117,8 @@ Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run tes
 `018` favorito não-dono · `019` RLS comentário · `020` dedup tags ·
 `021` 1 avaliação/usuário · `022` RPC avaliação · `023` perfil_privado ·
 `024` realtime notificação · `025` helper bloqueio · `026` normaliza usernames legados ·
-`027` denúncias + helper `eh_admin` · `028` RPC reordenação atômica.
+`027` denúncias + helper `eh_admin` · `028` RPC reordenação atômica ·
+`029` remove `plataforma_config` (tabela morta).
 
 Repositório e banco remoto estão sincronizados.
 

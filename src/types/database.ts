@@ -687,21 +687,6 @@ export type Database = {
           },
         ]
       }
-      plataforma_config: {
-        Row: {
-          chave: string
-          valor: string | null
-        }
-        Insert: {
-          chave: string
-          valor?: string | null
-        }
-        Update: {
-          chave?: string
-          valor?: string | null
-        }
-        Relationships: []
-      }
       projeto: {
         Row: {
           atualizado_em: string | null

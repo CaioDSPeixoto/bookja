@@ -238,7 +238,6 @@ Migrations em `supabase/migrations` definem:
 - `documento_nota`: notas/curiosidades do autor (post-its) por capítulo, visíveis na leitura.
 - `documento_reacao`: reações (emoji) de leitores por capítulo.
 - `projeto_visualizacao`: analytics de visualizações.
-- `plataforma_config`: chave/valor global.
 - `favorito`: favoritos por usuário.
 - `leitura_atual`: progresso de leitura.
 - `notificacao`: notificações para usuário.
@@ -442,7 +441,7 @@ Status: validado localmente em 2026-06-26 com Chromium do Playwright instalado. 
 ### Baixa prioridade
 
 - Remover assets padrão não usados em `public/`, se não forem necessários.
-- Avaliar se `plataforma_config` e `bloqueio` já têm fluxo de UI ou são apenas preparação de modelo.
+- (Resolvido) `bloqueio` tem fluxo de UI completo; `plataforma_config` foi removida (migration 029).
 - Avaliar testes para importação/exportação e catálogo, que são áreas com lógica significativa.
 
 ## Como continuar o desenvolvimento
