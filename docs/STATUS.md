@@ -4,18 +4,29 @@ Snapshot do andamento do projeto. Complementa os documentos vivos:
 [ESTADO_DO_PROJETO.md](ESTADO_DO_PROJETO.md) (mapa técnico) e
 [PLANO_IMPLEMENTACAO.md](PLANO_IMPLEMENTACAO.md) (plano da 1ª entrega).
 
-Última atualização: 2026-07-01.
+Última atualização: 2026-07-08.
 
 ## Resumo executivo
 
-A base funcional do MVP está completa e o foco recente foi **destravar o banco
-remoto, segurança (RLS), usabilidade mobile, padronização visual e correção de
-bugs**. O banco remoto (`ezdtqfmpornhkyilaxlh`) está alinhado às migrations 015→028.
-Não há pendências de **alta prioridade** em aberto; o que resta são validações
-manuais (2 usuários / device físico) e itens de **backlog**.
+O projeto está em **estado de lançamento** para uma 1ª entrega no plano Free.
+Sobre o MVP funcional, esta fase adicionou uma camada de **features de valor,
+performance e endurecimento** — tudo commitado, **deployado (Vercel verde)** e
+verificado onde foi possível automatizar. O banco remoto (`ezdtqfmpornhkyilaxlh`)
+está alinhado às migrations 015→028.
+
+Destaques recentes: busca com debounce (título/sinopse/autor), filtro por múltiplas
+tags, avaliação por estrelas dedicada, progresso de leitura nos cards, edição de
+comentários (obra + mural), **denúncia/moderação** (`/moderacao`), **otimização de
+imagens** (AVIF/WebP), **PWA completo** (offline + instalação), **reordenação
+transacional** de capítulos, **tipos gerados** do Supabase e acessibilidade ampla.
+
+Não há pendências de **alta prioridade** em aberto. O caminho crítico restante é
+**validação humana** (checagem visual + realtime em 2 navegadores; passada mobile
+em device físico) — não código. Os fluxos de colaboração, notificação, bloqueio e
+denúncia já foram validados no nível **banco/RLS/RPC** com 2 usuários reais.
 
 Qualidade contínua: a cada bloco de mudança rodou `npm run lint`, `npm run test`
-e `npm run build` com sucesso.
+(119) e `npm run build` com sucesso.
 
 ---
 
@@ -96,7 +107,7 @@ e `npm run build` com sucesso.
 
 ### Maior esforço
 - Edição simultânea real (CRDT/Yjs) no editor.
-- `plataforma_config`: decidir se vira feature flags ou é removida.
+- `plataforma_config`: tabela key-value criada na migration 001, **sem uso no código e vazia** (scaffolding morto). Decidir: virar sistema de feature flags ou **remover**.
 - Internacionalização app-wide quando houver 2º idioma.
 
 ---
