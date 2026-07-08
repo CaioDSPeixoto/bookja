@@ -77,15 +77,14 @@ e `npm run build` com sucesso.
 ## ⏳ Pendente
 
 ### Validações manuais (precisam de ambiente real / 2 contas)
-- Fluxo editorial completo com **colaborador** (convite → aceite → aprovar revisão) ponta a ponta no app.
-- **Notificações em tempo real** e de favorito/novo capítulo com duas contas no preview.
-- **Bloqueio (#20)** validado visualmente com duas contas.
+- ✅ **Nível banco/RLS/RPC validado** com 2 usuários reais (2026-07-07): colaborador (convite→aceite→aprovar + guards), notificação de novo capítulo, bloqueio (`existe_bloqueio` + lista) e denúncia/moderação (visibilidade + resolver + duplicata). Usuários de teste criados e deletados.
+- Falta só o que não dá por SQL: **entrega realtime no navegador** (websocket do popup) e **render visual** desses fluxos logado (2 navegadores).
 - Passada **visual mobile** ampla em dispositivo físico (telas autenticadas).
 - **E2E (Playwright)** no checkout principal (com `.env.local`).
 
 ### Configuração (fora do código)
-- Habilitar **Leaked Password Protection** no dashboard do Supabase (Auth).
-- **Conceder admin** (acesso ao `/moderacao`): `update perfil set papel = 'admin' where nome_usuario = '<usuario>';`
+- ✅ **Admin concedido** à conta `caiowinrar@gmail.com` (acesso ao `/moderacao`). Para outros: `update perfil set papel = 'admin' where nome_usuario = '<usuario>';`
+- **Leaked Password Protection**: **Pro-only** — indisponível no plano Free atual. Reavaliar ao migrar para Pro. No Free, dá para exigir comprimento mínimo/caracteres de senha na mesma tela (Auth → Providers → Email).
 - Sincronizar a `main` **local** no diretório principal (`git stash` + `git pull`) — está atrás do remoto.
 
 ---
